@@ -1,7 +1,7 @@
 # Racket Science
 Modules for the VCV Rack virtual modular synthesizer.
 
-![](./img/boogie.gif)
+![](./img/boogie.png)
 
 ## Boogie Bay
 

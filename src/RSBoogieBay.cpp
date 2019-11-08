@@ -38,6 +38,10 @@ struct RSBoogieBay : Module {
 
 	}
 
+    void step() override {
+        
+    }
+
     void onReset() override {
     }
 
@@ -61,6 +65,18 @@ struct RSBoogieBay : Module {
 
 
 struct RSBoogieBayWidget : ModuleWidget {
+    RSBoogieBay* _module;
+
+    PortWidget *ina, *inb;
+
+    RSLabel* topScaleaLabel;
+    RSLabel* midScaleaLabel;
+    RSLabel* botScaleaLabel;
+
+    RSLabel* topScalebLabel;
+    RSLabel* midScalebLabel;
+    RSLabel* botScalebLabel;
+   
 	RSBoogieBayWidget(RSBoogieBay *module) {
 		setModule(module);
         _module = module;
@@ -74,69 +90,50 @@ struct RSBoogieBayWidget : ModuleWidget {
 
         addOutput(createOutputCentered<RSJackMonoOut>(mm2px(Vec(7, 110)), module, RSBoogieBay::OUTA_OUTPUT));
         addOutput(createOutputCentered<RSJackMonoOut>(mm2px(Vec(18, 110)), module, RSBoogieBay::OUTB_OUTPUT));
+
+        addChild(topScaleaLabel = new RSLabel(3,  58, "0", COLOR_GREEN));
+        addChild(midScaleaLabel = new RSLabel(3, 177, "0", COLOR_RS_GREY));
+        addChild(botScaleaLabel = new RSLabel(3, 296, "0", COLOR_RED));
+
+        addChild(topScalebLabel = new RSLabel(67,  58, "0", COLOR_GREEN));
+        addChild(midScalebLabel = new RSLabel(67, 177, "0", COLOR_RS_GREY));
+        addChild(botScalebLabel = new RSLabel(67, 296, "0", COLOR_RED));
     }
-
-    RSBoogieBay* _module;
-
-    bool init = true;
-
-    PortWidget *ina, *inb;
-
-    Label* topScaleaLabel;
-    Label* midScaleaLabel;
-    Label* botScaleaLabel;
-
-    Label* topScalebLabel;
-    Label* midScalebLabel;
-    Label* botScalebLabel;
-
 
     void step() override {
         if(!_module) return;
 
-        if(init) {
-            addChild(topScaleaLabel = addLabel(-5,  45));
-            addChild(midScaleaLabel = addLabel(-5, 164));
-            addChild(botScaleaLabel = addLabel(-5, 283));
-
-            addChild(topScalebLabel = addLabel(50,  45));
-            addChild(midScalebLabel = addLabel(50, 164));
-            addChild(botScalebLabel = addLabel(50, 283));
-            
-            init = false;
-        }
-
         if(_module->menuaChanged) {
             switch(_module->vrangea) {
                 case 0: // 0 - 1
-                    topScaleaLabel->text = "1";   topScaleaLabel->box.pos.x = -5; topScaleaLabel->color = COLOR_GREEN;
-                    midScaleaLabel->text = ".5";  midScaleaLabel->box.pos.x = -5; midScaleaLabel->color = COLOR_GREEN;
-                    botScaleaLabel->text = "0";   botScaleaLabel->box.pos.x = -5; botScaleaLabel->color = COLOR_RS_GREY;
+                    topScaleaLabel->text = "1";   topScaleaLabel->box.pos.x = 3; topScaleaLabel->color = COLOR_GREEN;
+                    midScaleaLabel->text = ".5";  midScaleaLabel->box.pos.x = 3; midScaleaLabel->color = COLOR_GREEN;
+                    botScaleaLabel->text = "0";   botScaleaLabel->box.pos.x = 3; botScaleaLabel->color = COLOR_RS_GREY;
                     break;
                 case 1: // 0 - 5
-                    topScaleaLabel->text = "5";   topScaleaLabel->box.pos.x = -5; topScaleaLabel->color = COLOR_GREEN;
-                    midScaleaLabel->text = "2.5"; midScaleaLabel->box.pos.x = -6; midScaleaLabel->color = COLOR_GREEN;
-                    botScaleaLabel->text = "0";   botScaleaLabel->box.pos.x = -5; botScaleaLabel->color = COLOR_RS_GREY;
+                    topScaleaLabel->text = "5";   topScaleaLabel->box.pos.x = 3; topScaleaLabel->color = COLOR_GREEN;
+                    midScaleaLabel->text = "2.5"; midScaleaLabel->box.pos.x = 3; midScaleaLabel->color = COLOR_GREEN;
+                    botScaleaLabel->text = "0";   botScaleaLabel->box.pos.x = 3; botScaleaLabel->color = COLOR_RS_GREY;
                     break;
                 case 2: // 0 - 10
-                    topScaleaLabel->text = "10";  topScaleaLabel->box.pos.x = -5; topScaleaLabel->color = COLOR_GREEN;
-                    midScaleaLabel->text = "5";   midScaleaLabel->box.pos.x = -5; midScaleaLabel->color = COLOR_GREEN;
-                    botScaleaLabel->text = "0";   botScaleaLabel->box.pos.x = -5; botScaleaLabel->color = COLOR_RS_GREY;
+                    topScaleaLabel->text = "10";  topScaleaLabel->box.pos.x = 3; topScaleaLabel->color = COLOR_GREEN;
+                    midScaleaLabel->text = "5";   midScaleaLabel->box.pos.x = 3; midScaleaLabel->color = COLOR_GREEN;
+                    botScaleaLabel->text = "0";   botScaleaLabel->box.pos.x = 3; botScaleaLabel->color = COLOR_RS_GREY;
                     break;
                 case 3: // -2 - 2
-                    topScaleaLabel->text = "2";   topScaleaLabel->box.pos.x = -5; topScaleaLabel->color = COLOR_GREEN;
-                    midScaleaLabel->text = "0";   midScaleaLabel->box.pos.x = -5; midScaleaLabel->color = COLOR_RS_GREY;
-                    botScaleaLabel->text = "2";   botScaleaLabel->box.pos.x = -5; botScaleaLabel->color = COLOR_RED;
+                    topScaleaLabel->text = "2";   topScaleaLabel->box.pos.x = 3; topScaleaLabel->color = COLOR_GREEN;
+                    midScaleaLabel->text = "0";   midScaleaLabel->box.pos.x = 3; midScaleaLabel->color = COLOR_RS_GREY;
+                    botScaleaLabel->text = "2";   botScaleaLabel->box.pos.x = 3; botScaleaLabel->color = COLOR_RED;
                     break;
                 case 4: // -5 - 5
-                    topScaleaLabel->text = "5";   topScaleaLabel->box.pos.x = -5; topScaleaLabel->color = COLOR_GREEN;
-                    midScaleaLabel->text = "0";   midScaleaLabel->box.pos.x = -5; midScaleaLabel->color = COLOR_RS_GREY;
-                    botScaleaLabel->text = "5";   botScaleaLabel->box.pos.x = -5; botScaleaLabel->color = COLOR_RED;
+                    topScaleaLabel->text = "5";   topScaleaLabel->box.pos.x = 3; topScaleaLabel->color = COLOR_GREEN;
+                    midScaleaLabel->text = "0";   midScaleaLabel->box.pos.x = 3; midScaleaLabel->color = COLOR_RS_GREY;
+                    botScaleaLabel->text = "5";   botScaleaLabel->box.pos.x = 3; botScaleaLabel->color = COLOR_RED;
                     break;
                 case 5: // -10 - 10
-                    topScaleaLabel->text = "10";  topScaleaLabel->box.pos.x = -5; topScaleaLabel->color = COLOR_GREEN;
-                    midScaleaLabel->text = "0";   midScaleaLabel->box.pos.x = -5; midScaleaLabel->color = COLOR_RS_GREY;
-                    botScaleaLabel->text = "10";  botScaleaLabel->box.pos.x = -5; botScaleaLabel->color = COLOR_RED;
+                    topScaleaLabel->text = "10";  topScaleaLabel->box.pos.x = 3; topScaleaLabel->color = COLOR_GREEN;
+                    midScaleaLabel->text = "0";   midScaleaLabel->box.pos.x = 3; midScaleaLabel->color = COLOR_RS_GREY;
+                    botScaleaLabel->text = "10";  botScaleaLabel->box.pos.x = 3; botScaleaLabel->color = COLOR_RED;
                     break;
             }
             _module->menuaChanged = false;
@@ -145,34 +142,34 @@ struct RSBoogieBayWidget : ModuleWidget {
         if(_module->menubChanged) {
             switch(_module->vrangeb) {
                 case 0: // 0 - 1
-                    topScalebLabel->text = "1";   topScalebLabel->box.pos.x = 58; topScalebLabel->color = COLOR_GREEN;
-                    midScalebLabel->text = ".5";  midScalebLabel->box.pos.x = 56; midScalebLabel->color = COLOR_GREEN;
-                    botScalebLabel->text = "0";   botScalebLabel->box.pos.x = 58; botScalebLabel->color = COLOR_RS_GREY;
+                    topScalebLabel->text = "1";   topScalebLabel->box.pos.x = 67; topScalebLabel->color = COLOR_GREEN;
+                    midScalebLabel->text = ".5";  midScalebLabel->box.pos.x = 65; midScalebLabel->color = COLOR_GREEN;
+                    botScalebLabel->text = "0";   botScalebLabel->box.pos.x = 67; botScalebLabel->color = COLOR_RS_GREY;
                     break;
                 case 1: // 0 - 5
-                    topScalebLabel->text = "5";   topScalebLabel->box.pos.x = 58; topScalebLabel->color = COLOR_GREEN;
-                    midScalebLabel->text = "2.5"; midScalebLabel->box.pos.x = 53; midScalebLabel->color = COLOR_GREEN;
-                    botScalebLabel->text = "0";   botScalebLabel->box.pos.x = 58; botScalebLabel->color = COLOR_RS_GREY;
+                    topScalebLabel->text = "5";   topScalebLabel->box.pos.x = 67; topScalebLabel->color = COLOR_GREEN;
+                    midScalebLabel->text = "2.5"; midScalebLabel->box.pos.x = 63; midScalebLabel->color = COLOR_GREEN;
+                    botScalebLabel->text = "0";   botScalebLabel->box.pos.x = 67; botScalebLabel->color = COLOR_RS_GREY;
                     break;
                 case 2: // 0 - 10
-                    topScalebLabel->text = "10";  topScalebLabel->box.pos.x = 53; topScalebLabel->color = COLOR_GREEN;
-                    midScalebLabel->text = "5";   midScalebLabel->box.pos.x = 58; midScalebLabel->color = COLOR_GREEN;
-                    botScalebLabel->text = "0";   botScalebLabel->box.pos.x = 58; botScalebLabel->color = COLOR_RS_GREY;
+                    topScalebLabel->text = "10";  topScalebLabel->box.pos.x = 64; topScalebLabel->color = COLOR_GREEN;
+                    midScalebLabel->text = "5";   midScalebLabel->box.pos.x = 67; midScalebLabel->color = COLOR_GREEN;
+                    botScalebLabel->text = "0";   botScalebLabel->box.pos.x = 67; botScalebLabel->color = COLOR_RS_GREY;
                     break;
                 case 3: // -2 - 2
-                    topScalebLabel->text = "2";   topScalebLabel->box.pos.x = 58; topScalebLabel->color = COLOR_GREEN;
-                    midScalebLabel->text = "0";   midScalebLabel->box.pos.x = 58; midScalebLabel->color = COLOR_RS_GREY;
-                    botScalebLabel->text = "2";   botScalebLabel->box.pos.x = 58; botScalebLabel->color = COLOR_RED;
+                    topScalebLabel->text = "2";   topScalebLabel->box.pos.x = 67; topScalebLabel->color = COLOR_GREEN;
+                    midScalebLabel->text = "0";   midScalebLabel->box.pos.x = 67; midScalebLabel->color = COLOR_RS_GREY;
+                    botScalebLabel->text = "2";   botScalebLabel->box.pos.x = 67; botScalebLabel->color = COLOR_RED;
                     break;
                 case 4: // -5 - 5
-                    topScalebLabel->text = "5";   topScalebLabel->box.pos.x = 58; topScalebLabel->color = COLOR_GREEN;
-                    midScalebLabel->text = "0";   midScalebLabel->box.pos.x = 58; midScalebLabel->color = COLOR_RS_GREY;
-                    botScalebLabel->text = "5";   botScalebLabel->box.pos.x = 58; botScalebLabel->color = COLOR_RED;
+                    topScalebLabel->text = "5";   topScalebLabel->box.pos.x = 67; topScalebLabel->color = COLOR_GREEN;
+                    midScalebLabel->text = "0";   midScalebLabel->box.pos.x = 67; midScalebLabel->color = COLOR_RS_GREY;
+                    botScalebLabel->text = "5";   botScalebLabel->box.pos.x = 67; botScalebLabel->color = COLOR_RED;
                     break;
                 case 5: // -10 - 10
-                    topScalebLabel->text = "10";  topScalebLabel->box.pos.x = 53; topScalebLabel->color = COLOR_GREEN;
-                    midScalebLabel->text = "0";   midScalebLabel->box.pos.x = 58; midScalebLabel->color = COLOR_RS_GREY;
-                    botScalebLabel->text = "10";  botScalebLabel->box.pos.x = 53; botScalebLabel->color = COLOR_RED;
+                    topScalebLabel->text = "10";  topScalebLabel->box.pos.x = 64; topScalebLabel->color = COLOR_GREEN;
+                    midScalebLabel->text = "0";   midScalebLabel->box.pos.x = 67; midScalebLabel->color = COLOR_RS_GREY;
+                    botScalebLabel->text = "10";  botScalebLabel->box.pos.x = 64; botScalebLabel->color = COLOR_RED;
                     break;
             }
             _module->menubChanged = false;

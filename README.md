@@ -9,7 +9,7 @@ You've seen flying faders, with Boogie Bay you have sliding sockets for all of y
 
 ## Vector Victor
 
-Shortly after I first got into VCV around May 2019 I found myself looking for a real time CV loop recorder yet couldn't find one, once the VCV Prototype module appeared I created a simple precursor of Vector Victor, also inpsired by the ZZC phase based way of timing.
+Shortly after I first got into VCV around May 2019 I found myself looking for a real time CV loop recorder yet couldn't find one, once the VCV Prototype module appeared I created a simple precursor of Vector Victor, also inspired by the ZZC phase based way of timing.
 
 Vector Victor is a phase driven CV recorder, if you're familiar with programming think of it as a thousand element array indexed by the phase input as that's exactly what it is.  You get two for the price of one!
 

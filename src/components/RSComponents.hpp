@@ -3,8 +3,6 @@
 	(C) 2019 Ewen Bates
 */
 
-//using namespace rack;
-
 // Colours
 
 #define COLOR_BLACK  nvgRGB(0x00, 0x00, 0x00)
@@ -21,6 +19,7 @@
 
 
 // Labels
+
 /*
 struct RSLabel : Label {
 	RSLabel(int x, int y, const char* str = "", const NVGcolor& colour = COLOR_RS_GREY) {
@@ -31,6 +30,8 @@ struct RSLabel : Label {
 	};
 };
 */
+
+
 struct RSLabel : LedDisplay {
 	std::shared_ptr<Font> font;
 	std::string text;
@@ -39,9 +40,10 @@ struct RSLabel : LedDisplay {
 	RSLabel(int x, int y, const char* str = "", const NVGcolor& colour = COLOR_RS_GREY) {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Ubuntu Condensed 400.ttf"));
 		box.pos = Vec(x, y);
+		box.size = Vec(120, 12);
 		text = str;
 		color = colour;
-	};
+	}
 
 	void draw(const DrawArgs &args) override {
 		if(font->handle >= 0) {
@@ -51,12 +53,14 @@ struct RSLabel : LedDisplay {
 			nvgFontFaceId(args.vg, font->handle);
 			nvgTextLetterSpacing(args.vg, 0);
 
+			nvgBeginPath(args.vg);
 			nvgFillColor(args.vg, color);
 			nvgText(args.vg, 0, 0, text.c_str(), NULL);
+			nvgStroke(args.vg);
 
 			bndSetFont(APP->window->uiFont->handle);
 		}
-	};
+	}
 };
 
 
@@ -74,7 +78,7 @@ struct RSScribbleStrip : LedDisplayTextField {
 		multiline = false; // Doesn't appear to have the desired effect
 		text = str;
 		color = colour;
-	};
+	}
 
 	// We want scribbles without background
 	void draw(const DrawArgs &args) override {
@@ -99,7 +103,7 @@ struct RSScribbleStrip : LedDisplayTextField {
 			bndSetFont(APP->window->uiFont->handle);
 		}
 		nvgResetScissor(args.vg);
-	};
+	}
 };
 
 

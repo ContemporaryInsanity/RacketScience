@@ -9,9 +9,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="15mm"
-   height="15mm"
-   viewBox="0 0 15 15"
+   width="90"
+   height="90"
+   viewBox="0 0 23.8125 23.8125"
    version="1.1"
    id="svg826"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="22.207361"
-     inkscape:cx="28.346457"
-     inkscape:cy="28.346457"
+     inkscape:zoom="9.4333333"
+     inkscape:cx="45"
+     inkscape:cy="45"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -36,19 +36,26 @@
      gridtolerance="10"
      inkscape:snap-others="false"
      inkscape:snap-intersection-paths="true"
-     inkscape:window-width="2209"
-     inkscape:window-height="1700"
+     inkscape:window-width="1920"
+     inkscape:window-height="1080"
      inkscape:window-x="2972"
      inkscape:window-y="232"
      inkscape:window-maximized="0"
-     borderlayer="true">
+     borderlayer="true"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     units="px">
     <inkscape:grid
        type="xygrid"
        id="grid5078"
        units="mm"
        spacingx="0.19999999"
        spacingy="0.19999999"
-       snapvisiblegridlinesonly="false" />
+       snapvisiblegridlinesonly="false"
+       originx="-0.014776792"
+       originy="0.020992962" />
   </sodipodi:namedview>
   <metadata
      id="metadata823">
@@ -66,20 +73,18 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-282)">
-    <ellipse
-       style="opacity:1;fill:#2a2a2a;fill-opacity:1;stroke:#858739;stroke-width:0.36578816;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"
+     transform="translate(-0.0147768,-273.2085)">
+    <circle
+       style="opacity:1;fill:#2a2a2a;fill-opacity:1;stroke:#858739;stroke-width:0.58058053;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"
        id="path5084"
-       cx="7.5105667"
-       cy="289.51398"
-       rx="7.3128953"
-       ry="7.3241153" />
-    <ellipse
-       style="opacity:1;fill:#151515;fill-opacity:1;fill-rule:nonzero;stroke:#858739;stroke-width:0.37;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       cx="11.921027"
+       cy="285.11475"
+       r="11.61596" />
+    <circle
+       style="opacity:1;fill:#151515;fill-opacity:1;fill-rule:nonzero;stroke:#858739;stroke-width:0.48424533;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="path819"
-       cx="7.4889736"
-       cy="285.15652"
-       rx="2.3719192"
-       ry="2.3124983" />
+       cx="11.921027"
+       cy="277.44702"
+       r="3.0651691" />
   </g>
 </svg>

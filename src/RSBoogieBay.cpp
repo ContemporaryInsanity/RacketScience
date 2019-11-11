@@ -1,6 +1,7 @@
 #include "plugin.hpp"
 
 #include "components/RSComponents.hpp"
+#include "RSUtils.hpp"
 
 
 struct RSBoogieBay : Module {
@@ -175,8 +176,8 @@ struct RSBoogieBayWidget : ModuleWidget {
             _module->menubChanged = false;
         }
 
-        float inav = module->inputs[RSBoogieBay::INA_INPUT].getVoltage();
-        float inbv = module->inputs[RSBoogieBay::INB_INPUT].getVoltage();
+        float inav = clamp10V(module->inputs[RSBoogieBay::INA_INPUT].getVoltage());
+        float inbv = clamp10V(module->inputs[RSBoogieBay::INB_INPUT].getVoltage());
         int yposa = 0, yposb = 0;
 
         switch(_module->vrangea) {

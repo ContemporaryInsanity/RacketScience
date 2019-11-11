@@ -1,6 +1,8 @@
 #include "plugin.hpp"
 
 #include "components/RSComponents.hpp"
+#include "RSUtils.hpp"
+
 
 struct RSBoogieBayH8 : Module {
 	enum ParamIds {
@@ -116,14 +118,14 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 			init = false;
 		}
 
-		float in1v = module->inputs[RSBoogieBayH8::IN1_INPUT].getVoltage();
-		float in2v = module->inputs[RSBoogieBayH8::IN2_INPUT].getVoltage();
-		float in3v = module->inputs[RSBoogieBayH8::IN3_INPUT].getVoltage();
-		float in4v = module->inputs[RSBoogieBayH8::IN4_INPUT].getVoltage();
-		float in5v = module->inputs[RSBoogieBayH8::IN5_INPUT].getVoltage();
-		float in6v = module->inputs[RSBoogieBayH8::IN6_INPUT].getVoltage();
-		float in7v = module->inputs[RSBoogieBayH8::IN7_INPUT].getVoltage();
-		float in8v = module->inputs[RSBoogieBayH8::IN8_INPUT].getVoltage();
+		float in1v = clamp10V(module->inputs[RSBoogieBayH8::IN1_INPUT].getVoltage());
+		float in2v = clamp10V(module->inputs[RSBoogieBayH8::IN2_INPUT].getVoltage());
+		float in3v = clamp10V(module->inputs[RSBoogieBayH8::IN3_INPUT].getVoltage());
+		float in4v = clamp10V(module->inputs[RSBoogieBayH8::IN4_INPUT].getVoltage());
+		float in5v = clamp10V(module->inputs[RSBoogieBayH8::IN5_INPUT].getVoltage());
+		float in6v = clamp10V(module->inputs[RSBoogieBayH8::IN6_INPUT].getVoltage());
+		float in7v = clamp10V(module->inputs[RSBoogieBayH8::IN7_INPUT].getVoltage());
+		float in8v = clamp10V(module->inputs[RSBoogieBayH8::IN8_INPUT].getVoltage());
 
 		int xpos1, xpos2, xpos3, xpos4, xpos5, xpos6, xpos7, xpos8;
 

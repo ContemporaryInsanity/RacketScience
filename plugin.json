@@ -1,12 +1,12 @@
 {
   "slug": "RacketScience",
-  "name": "RacketScience",
+  "name": "Racket Science",
   "version": "1.0.0",
   "license": "GPL-3.0",
-  "brand": "RacketScience",
-  "author": "Ewen Bates",
+  "brand": "Racket Science",
+  "author": "ContemporaryInsanity",
   "authorEmail": "ContemporaryInsanity@gmail.com",
-  "authorUrl": "",
+  "authorUrl": "https://github.com/ContemporaryInsanity",
   "pluginUrl": "https://github.com/ContemporaryInsanity/RacketScience",
   "manualUrl": "https://github.com/ContemporaryInsanity/RacketScience",
   "sourceUrl": "https://github.com/ContemporaryInsanity/RacketScience",
@@ -18,7 +18,8 @@
       "description": "Phase driven CV loop recorder",
       "tags": [
         "Recording",
-        "Sequencer"
+        "Sequencer",
+        "Utility"
       ]
     },
     {
@@ -33,6 +34,21 @@
     {
       "slug": "RSBoogieBayH8",
       "name": "RSBoogieBayH8",
+      "description": "",
+      "tags": [
+        "Visual",
+        "Utility"
+      ]
+    },
+    {
+      "slug": "RSMFH",
+      "name": "RSMFH",
+      "description": "Module From Hell",
+      "tags": []
+    },
+    {
+      "slug": "RSScratch",
+      "name": "RSScratch",
       "description": "",
       "tags": []
     }

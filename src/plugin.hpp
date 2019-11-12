@@ -12,5 +12,6 @@ extern Plugin *pluginInstance;
 extern Model *modelRSVectorVictor;
 extern Model *modelRSBoogieBay;
 extern Model *modelRSBoogieBayH8;
+extern Model *modelRSMFH;
 
-//extern Model *modelRSScratch;
+extern Model *modelRSScratch;

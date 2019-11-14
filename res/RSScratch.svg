@@ -9,9 +9,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="127mm"
+   width="508mm"
    height="128.5mm"
-   viewBox="0 0 127 128.5"
+   viewBox="0 0 508 128.5"
    version="1.1"
    id="svg8"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
@@ -25,8 +25,8 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.7481031"
-     inkscape:cx="240"
+     inkscape:zoom="0.58125"
+     inkscape:cx="1200"
      inkscape:cy="242.83465"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -36,8 +36,8 @@
      inkscape:showpageshadow="false"
      inkscape:window-width="1917"
      inkscape:window-height="1080"
-     inkscape:window-x="2879"
-     inkscape:window-y="1053"
+     inkscape:window-x="2396"
+     inkscape:window-y="562"
      inkscape:window-maximized="0"
      showguides="true"
      inkscape:guide-bbox="true"
@@ -70,7 +70,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -81,12 +81,12 @@
      style="display:inline"
      inkscape:groupmode="layer">
     <rect
-       style="opacity:1;fill:#191919;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.26735854;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="opacity:1;fill:#191919;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:4.53417158;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect1002"
-       width="126.9859"
-       height="128.54521"
+       width="508"
+       height="128.5"
        x="0"
-       y="168.41252" />
+       y="168.45773" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93888855px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#b4b4b4;fill-opacity:1;stroke:none;stroke-width:0.26458332"

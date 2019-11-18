@@ -209,13 +209,19 @@ struct RSScratch : Module {
 			else writeB = false;
 
 		if(inputs[WRITE_C_INPUT].isConnected()) {
-			if(inputs[WRITE_C_INPUT].getVoltage() > 0.f) {
+			if(clamp10V(inputs[WRITE_C_INPUT].getVoltage() > 0.f)) {
 				bufferC[idxC] = inC;
-				params[WRITE_C_PARAM].setValue(1);
+				writeC = true;
 			}
-			else params[WRITE_C_PARAM].setValue(0);
+			else writeC = false;
+			params[WRITE_C_PARAM].setValue(writeC);
 		}
-        else if(params[WRITE_C_PARAM].getValue() > 0.f) bufferC[idxC] = inC;
+        else 
+			if(params[WRITE_C_PARAM].getValue() > 0.f) {
+				bufferC[idxC] = inC;
+				writeC = true;
+			}
+			else writeC = false;
 
 
         outputs[OUT_A_OUTPUT].setVoltage(bufferA[idxA]);
@@ -223,7 +229,7 @@ struct RSScratch : Module {
         outputs[OUT_C_OUTPUT].setVoltage(bufferC[idxC]);
 
 		if(logDivider.process()) {
-			INFO("Racket Science: %i", writeA);
+			//INFO("Racket Science: %i", writeA);
 		}
 		// Have a phase out driven from scrub knob
 		// Have a eight playhead version with individal scrub / phase & outs, mono & poly out
@@ -234,7 +240,6 @@ struct RSScratch : Module {
 		//   this should be a static slider, no need to animate & an excuse to create another component.
 		//   Keep it up, keep practicing, you might get back to where you were eventually.
 
-		// Fix scrub knobs so that neg values don't reverse scrub direction
 		// record head white when not recording, red when recording
 	}
 
@@ -382,11 +387,13 @@ struct RSBufferDisplay : TransparentWidget {
 	RSScratch* module;
 	float *buffer;
 	unsigned int *idx;
+	bool *write;
 
-	RSBufferDisplay(RSScratch* module, float buffer[], unsigned int &idx, int x, int y, int xs, int ys) {
+	RSBufferDisplay(RSScratch* module, float buffer[], unsigned int &idx, bool &write, int x, int y, int xs, int ys) {
 		this->module = module;
 		this->buffer = buffer;
 		this->idx = &idx;
+		this->write = &write;
 
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Ubuntu Condensed 400.ttf"));
 
@@ -405,7 +412,7 @@ struct RSBufferDisplay : TransparentWidget {
 		// Bounding box
 		nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
 		nvgFillColor(args.vg, COLOR_BLACK);
-		nvgStrokeWidth(args.vg, 3);
+		nvgStrokeWidth(args.vg, 1.5);
 
 		nvgBeginPath(args.vg);
 		nvgRoundedRect(args.vg, box.pos.x, box.pos.y, box.size.x, box.size.y, 5);
@@ -441,24 +448,41 @@ struct RSBufferDisplay : TransparentWidget {
 			if(buffer[i] < min) min = buffer[i];
 		}
 
-		int scale = 10 - (int)max > (int)min ? int(max) : int(min);
+		/*
 
+One hacky method that may work is to use a Viewbox control. This control will scale the rendering of its content to fit the size available. However, this might lead to your lines and labels looking too thick or thin.
+
+The more sensible method that you're probably after, though, is how to work out at what scale to draw your graph at in the first place. To do that, work out the range of values on a given axis (for example, your Y-axis value might range from 0 to 100). Work out the available drawing space on that axis (for example, your canvas might have 400 pixels of height). Your Y-axis "scale factor" when drawing the graph would be <available space> / <data range> - or, in this case, 4.
+
+Your canvas' coordinates start from zero in the top-left so, to calculate the Y-position for a given data point, you would calculate like this:
+
+double availableSpace = 400.0; // the size of your canvas
+double dataRange = 100.0;      // the range of your values
+double scaleFactor = availableSpace / dataRange;
+
+double currentValue = 42.0;    // the value we're trying to plot
+double plottableY = availableSpace - (currentValue * scaleFactor);  // the position on screen to draw at
+The value of plottableY is the y-coordinate that you would use to draw this point on the canvas.
+
+		*/
+
+		int scale = (int)abs(max) > (int)abs(min) ? int(abs(max)) : int(abs(min));
+		scale = 20; // 1 = +/- .5, 2 = +/-1, 5 = +/- 2.5, 10 = +/-5, 20 = +/-10
 		//INFO("Racket Science: scale=%i min=%i max=%i", scale, int(min), int(max));
 
-		int val = buffer[0] / 20 * box.size.y;
-		nvgMoveTo(args.vg, box.pos.x, box.pos.y + box.size.y / 2);
+		int val = buffer[0] / /*20*/ scale * box.size.y;
+		nvgMoveTo(args.vg, box.pos.x, box.pos.y + box.size.y / 2 - (buffer[0] / /*20*/ scale * box.size.y));
 
 		for(int i = 0; i < box.size.x; i++) {
 			unsigned int idx = SAMPLES / box.size.x * i;
-			//val = buffer[idx] / 20 * box.size.y;
-			val = buffer[idx] / 20 * box.size.y;
+			val = buffer[idx] / /*20*/ scale * box.size.y;
 			nvgLineTo(args.vg, box.pos.x + i, box.pos.y + box.size.y / 2 - val);
 		}
 
 		nvgStroke(args.vg);
 
 		// Index
-		nvgStrokeColor(args.vg, COLOR_RED);
+		nvgStrokeColor(args.vg, *write == true ? COLOR_RED : COLOR_RS_GREY);
 		nvgStrokeWidth(args.vg, 2);
 		nvgBeginPath(args.vg);
 
@@ -482,160 +506,142 @@ struct RSScratchWidget : ModuleWidget {
 
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/RSScratch.svg")));
 
-		// Channel A
-		{
-		int x = 65, y = 65;
-		addParam(createParamCentered<RSKnobMedBlk>(Vec(x, y), module, RSScratch::SCRUB_A_PARAM));
-		addChild(new RSLabel(x - 10, y + 54, "SCRUB"));
-		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::PHASE_A_INPUT));
-		addChild(new RSLabel(x - 10, y + 22, "PHASE"));
-		}
+		int x, y;
 
-		{
-		int x = 138, y = 50;
+		// Channel A
+
+		// SCRUB / PHASE
+		x = 65; y = 70;
+		addParam(createParamCentered<RSKnobMedBlk>(Vec(x, y), module, RSScratch::SCRUB_A_PARAM));
+		addChild(new RSLabelCentered(x, y + 54, "SCRUB"));
+		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::PHASE_A_INPUT));
+		addChild(new RSLabelCentered(x, y + 22, "PHASE"));
+
+		// WRITE
+		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::WRITE_A_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::WRITE_A_INPUT));
-		addChild(new RSLabel(x - 10, y + 52, "WRITE"));
-		}
+		addChild(new RSLabelCentered(x, y + 52, "WRITE"));
 
-		{
-		int x = 210, y = 65;
+		// CV IN
+		x += 73; y += 15;
 		addParam(createParamCentered<RSKnobMedBlk>(Vec(x, y), module, RSScratch::IN_A_PARAM));
-		addChild(new RSLabel(x - 4, y + 54, "CV"));
+		addChild(new RSLabelCentered(x, y + 54, "CV"));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::IN_A_INPUT));
-		addChild(new RSLabel(x - 5, y + 22, "IN"));
-		}
+		addChild(new RSLabelCentered(x, y + 22, "IN"));
 
-		{
-		int x = 283, y = 50;
+		// CLEAR
+		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::CLEAR_A_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::CLEAR_A_INPUT));
-		addChild(new RSLabel(x - 10, y + 52, "CLEAR"));
-		}
+		addChild(new RSLabelCentered(x, y + 52, "CLEAR"));
 
-		{
-		int x = 320, y = 50;
+		// RAND
+		x += 37; y = y;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::RAND_A_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::RAND_A_INPUT));
-		addChild(new RSLabel(x - 10, y + 52, "RAND"));
-		}
+		addChild(new RSLabelCentered(x, y + 52, "RAND"));
 
-		{
-		int x = 357, y = 65;
+		// OUT
+		x += 37; y += 15;
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSScratch::OUT_A_OUTPUT));
-		addChild(new RSLabel(x - 7, y + 22, "OUT"));
-		}
+		addChild(new RSLabelCentered(x, y + 22, "OUT"));
 
-		{
-		int x = 1450, y = 50;
-		addInput(createInputCentered<RSJackPolyIn>(Vec(x, y), module, RSScratch::POLY_A_INPUT));
-		addOutput(createOutputCentered<RSJackPolyOut>(Vec(x, y + 30), module, RSScratch::POLY_A_OUTPUT));
-		}
+		// CHART
+		x += 43; y -= 70;
+		addChild(ss[0] = new RSScribbleStrip(x, y + 5));
+		addChild(new RSBufferDisplay(module, module->bufferA, module->idxA, module->writeA, x / 2, (y / 2) + 10, 501, 100));
+
 
 		// Channel B
-		{
-		int x = 65, y = 185;
-		addParam(createParamCentered<RSKnobMedBlk>(Vec(x, y), module, RSScratch::SCRUB_B_PARAM));
-		addChild(new RSLabel(x - 10, y + 54, "SCRUB"));
-		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::PHASE_B_INPUT));
-		addChild(new RSLabel(x - 10, y + 22, "PHASE"));
-		}
 
-		{
-		int x = 138, y = 170;
+		// SCRUB / PHASE
+		x = 65; y = 190;
+		addParam(createParamCentered<RSKnobMedBlk>(Vec(x, y), module, RSScratch::SCRUB_B_PARAM));
+		addChild(new RSLabelCentered(x, y + 54, "SCRUB"));
+		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::PHASE_B_INPUT));
+		addChild(new RSLabelCentered(x, y + 22, "PHASE"));
+
+		// WRITE
+		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::WRITE_B_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::WRITE_B_INPUT));
-		addChild(new RSLabel(x - 10, y + 52, "WRITE"));
-		}
+		addChild(new RSLabelCentered(x, y + 52, "WRITE"));
 
-		{
-		int x = 210, y = 185;
+		// CV IN
+		x += 73; y += 15;
 		addParam(createParamCentered<RSKnobMedBlk>(Vec(x, y), module, RSScratch::IN_B_PARAM));
-		addChild(new RSLabel(x - 4, y + 54, "CV"));
+		addChild(new RSLabelCentered(x, y + 54, "CV"));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::IN_B_INPUT));
-		addChild(new RSLabel(x - 5, y + 22, "IN"));
-		}
+		addChild(new RSLabelCentered(x, y + 22, "IN"));
 
-		{
-		int x = 283, y = 170;
+		// CLEAR
+		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::CLEAR_B_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::CLEAR_B_INPUT));
-		addChild(new RSLabel(x - 10, y + 52, "CLEAR"));
-		}
+		addChild(new RSLabelCentered(x, y + 52, "CLEAR"));
 
-		{
-		int x = 320, y = 170;
+		// RAND
+		x += 37; y = y;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::RAND_B_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::RAND_B_INPUT));
-		addChild(new RSLabel(x - 10, y + 52, "RAND"));
-		}
+		addChild(new RSLabelCentered(x, y + 52, "RAND"));
 
-		{
-		int x = 357, y = 185;
+		// OUT
+		x += 37; y += 15;
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSScratch::OUT_B_OUTPUT));
-		addChild(new RSLabel(x - 7, y + 22, "OUT"));
-		}
+		addChild(new RSLabelCentered(x, y + 22, "OUT"));
 
-		{
-		int x = 1450, y = 170;
-		addInput(createInputCentered<RSJackPolyIn>(Vec(x, y), module, RSScratch::POLY_B_INPUT));
-		addOutput(createOutputCentered<RSJackPolyOut>(Vec(x, y + 30), module, RSScratch::POLY_B_OUTPUT));
-		}
+		// CHART
+		x += 43; y -= 70;
+		addChild(ss[1] = new RSScribbleStrip(x, y + 5));
+		addChild(new RSBufferDisplay(module, module->bufferB, module->idxB, module->writeB, x / 2,  (y / 2) + 10, 1002, 100));
+
 
 		// Channel C
-		{
-		int x = 65, y = 305;
+		
+		// SCRUB / PHASE
+		x = 65; y = 310;
 		addParam(createParamCentered<RSKnobMedBlk>(Vec(x, y), module, RSScratch::SCRUB_C_PARAM));
-		addChild(new RSLabel(x - 10, y + 54, "SCRUB"));
+		addChild(new RSLabelCentered(x, y + 54, "SCRUB"));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::PHASE_C_INPUT));
-		addChild(new RSLabel(x - 10, y + 22, "PHASE"));
-		}
+		addChild(new RSLabelCentered(x, y + 22, "PHASE"));
 
-		{
-		int x = 138, y = 290;
+		// WRITE
+		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::WRITE_C_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::WRITE_C_INPUT));
-		addChild(new RSLabel(x - 10, y + 52, "WRITE"));
-		}
+		addChild(new RSLabelCentered(x, y + 52, "WRITE"));
 
-		{
-		int x = 210, y = 305;
+		// CV IN
+		x += 73; y += 15;
 		addParam(createParamCentered<RSKnobMedBlk>(Vec(x, y), module, RSScratch::IN_C_PARAM));
-		addChild(new RSLabel(x - 4, y + 54, "CV"));
+		addChild(new RSLabelCentered(x, y + 54, "CV"));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::IN_C_INPUT));
-		addChild(new RSLabel(x - 5, y + 22, "IN"));
-		}
+		addChild(new RSLabelCentered(x, y + 22, "IN"));
 
-		{
-		int x = 283, y = 290;
+		// CLEAR
+		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::CLEAR_C_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::CLEAR_C_INPUT));
-		addChild(new RSLabel(x - 10, y + 52, "CLEAR"));
-		}
+		addChild(new RSLabelCentered(x, y + 52, "CLEAR"));
 
-		{
-		int x = 320, y = 290;
+		// RAND
+		x += 37; y = y;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::RAND_C_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::RAND_C_INPUT));
-		addChild(new RSLabel(x - 10, y + 52, "RAND"));
-		}
+		addChild(new RSLabelCentered(x, y + 52, "RAND"));
 
-		{
-		int x = 357, y = 305;
+		// OUT
+		x += 37; y += 15;
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSScratch::OUT_C_OUTPUT));
-		addChild(new RSLabel(x - 7, y + 22, "OUT"));
-		}
+		addChild(new RSLabelCentered(x, y + 22, "OUT"));
 
-		{
-		int x = 1450, y = 290;
-		addInput(createInputCentered<RSJackPolyIn>(Vec(x, y), module, RSScratch::POLY_C_INPUT));
-		addOutput(createOutputCentered<RSJackPolyOut>(Vec(x, y + 30), module, RSScratch::POLY_C_OUTPUT));
-		}
+		// CHART
+		x += 43; y -= 70;
+		addChild(ss[2] = new RSScribbleStrip(x, y + 5));
+		addChild(new RSBufferDisplay(module, module->bufferC, module->idxC, module->writeC, x / 2, (y / 2) + 10, 1002, 100));
 
-
-		addChild(ss[0] = new RSScribbleStrip(400, 5));
-		addChild(ss[1] = new RSScribbleStrip(400, 125));
-		addChild(ss[2] = new RSScribbleStrip(400, 245));
 
 		if(module) {
 			module->ss[0] = ss[0];
@@ -643,9 +649,12 @@ struct RSScratchWidget : ModuleWidget {
 			module->ss[2] = ss[2];
 		}
 
-		addChild(new RSBufferDisplay(module, module->bufferA, module->idxA, 200,  10, 1002, 100));
-		addChild(new RSBufferDisplay(module, module->bufferB, module->idxB, 200,  70, 1002, 100));
-		addChild(new RSBufferDisplay(module, module->bufferC, module->idxC, 200, 130, 1002, 100));
+		/*
+		addChild(new RSLabelCentered(700, 100, "Test", 14));
+		addChild(new RSLabelCentered(700, 150, "This is a Test", 16));
+		addChild(new RSLabelCentered(700, 200, "Text should be centered", 18));
+		addChild(new RSLabelCentered(700, 250, "Racket Science Custom Label", 24));
+		*/
 	}
 
 	void step() override {

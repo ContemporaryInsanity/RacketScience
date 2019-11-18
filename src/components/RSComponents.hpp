@@ -64,6 +64,40 @@ struct RSLabel : LedDisplay {
 };
 
 
+struct RSLabelCentered : LedDisplay {
+	std::shared_ptr<Font> font;
+	int fontSize;
+	std::string text;
+	NVGcolor color;
+
+	RSLabelCentered(int x, int y, const char* str = "", int fontSize = 10, const NVGcolor& colour = COLOR_RS_GREY) {
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Ubuntu Condensed 400.ttf"));
+		this->fontSize = fontSize;
+		box.pos = Vec(x, y);
+		text = str;
+		color = colour;
+	}
+
+	void draw(const DrawArgs &args) override {
+		if(font->handle >= 0) {
+			bndSetFont(font->handle);
+
+			nvgFontSize(args.vg, fontSize);
+			nvgFontFaceId(args.vg, font->handle);
+			nvgTextLetterSpacing(args.vg, 0);
+			nvgTextAlign(args.vg, NVG_ALIGN_CENTER);
+
+			nvgBeginPath(args.vg);
+			nvgFillColor(args.vg, color);
+			nvgText(args.vg, 0, 0, text.c_str(), NULL);
+			nvgStroke(args.vg);
+
+			bndSetFont(APP->window->uiFont->handle);
+		}
+	}
+};
+
+
 // Scribble Strips
 
 struct RSScribbleStrip : LedDisplayTextField {
@@ -88,21 +122,29 @@ struct RSScribbleStrip : LedDisplayTextField {
 			selection = numChars;
 		}
 
-		nvgScissor(args.vg, RECT_ARGS(args.clipBox));
+		//nvgScissor(args.vg, RECT_ARGS(args.clipBox));
 		if (font->handle >= 0) {
 			bndSetFont(font->handle);
 
-			//NVGcolor highlightColor = color;
-			//highlightColor.a = 0.5;
+			float bounds[4];
+			nvgTextBounds(args.vg, 0.0f, 0.0f, text.c_str(), NULL, bounds);
+			float textWidth = bounds[2];
+
+			// If we subtract textWidth / 2 from parameter 2 textOffset.x we get dynamically centered strips
+			//   however the mouse doesn't position the cursor accordingly
+			NVGcolor highlightColor = color;
+			highlightColor.a = 0.5;
 			int begin = std::min(cursor, selection);
 			int end = (this == APP->event->selectedWidget) ? std::max(cursor, selection) : -1;
+			//INFO("Racket Science: textWidth: %f  box.size.x: %f  box.size.y: %f", textWidth, box.size.x, box.size.y);
+			//INFO("Racket Science: cursor: %i  selection: %i  begin: %i  end: %i", cursor, selection, begin, end);
 			bndIconLabelCaret(args.vg, textOffset.x, textOffset.y,
 				box.size.x - 2*textOffset.x, box.size.y - 2*textOffset.y,
-				-1, color, textSize, text.c_str(), color /* highlightColor */, begin, end);
+				-1, color, textSize, text.c_str(), highlightColor, begin, end);
 
 			bndSetFont(APP->window->uiFont->handle);
 		}
-		nvgResetScissor(args.vg);
+		//nvgResetScissor(args.vg);
 	}
 };
 

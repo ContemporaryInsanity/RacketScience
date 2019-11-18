@@ -25,8 +25,8 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.58125"
-     inkscape:cx="1200"
+     inkscape:zoom="0.7265625"
+     inkscape:cx="960"
      inkscape:cy="242.83465"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -101,7 +101,8 @@
     <g
        aria-label="Racket Science"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93888855px;line-height:1.25;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       id="text1078">
+       id="text1078"
+       transform="translate(190.50001)">
       <path
          d="m 54.259785,293.003 q 0.246944,-0.06 0.47625,-0.06 0.183444,0 0.331611,0.0423 0.148166,0.0423 0.254,0.13406 0.105833,0.0917 0.162278,0.23636 0.05997,0.14464 0.05997,0.34925 0,0.254 -0.09878,0.41275 -0.09525,0.15522 -0.261056,0.23636 0.04233,0.0706 0.105834,0.19403 0.06703,0.11994 0.134055,0.26811 0.07056,0.14464 0.134056,0.29986 0.06703,0.15522 0.112889,0.29634 h -0.3175 q -0.03881,-0.10584 -0.09878,-0.23989 -0.05644,-0.13406 -0.119944,-0.26459 -0.0635,-0.13405 -0.127,-0.254 -0.0635,-0.12347 -0.112889,-0.20814 -0.05644,0.007 -0.116417,0.0106 -0.05997,0.004 -0.119944,0.004 h -0.08819 v 0.9525 h -0.310444 z m 0.310444,1.19592 h 0.134056 q 0.243416,0 0.373944,-0.10936 0.130528,-0.11289 0.130528,-0.38453 0,-0.13758 -0.03528,-0.2293 -0.03175,-0.0953 -0.09525,-0.14817 -0.05997,-0.0564 -0.148167,-0.0811 -0.08467,-0.0247 -0.1905,-0.0247 -0.09172,0 -0.169333,0.0106 z"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:'Ubuntu Condensed';-inkscape-font-specification:'Ubuntu Condensed, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#b4b4b4;fill-opacity:1;stroke-width:0.26458332"

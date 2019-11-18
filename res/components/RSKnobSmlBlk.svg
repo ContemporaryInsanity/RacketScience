@@ -26,7 +26,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="22.463125"
-     inkscape:cx="18.897638"
+     inkscape:cx="10.706436"
      inkscape:cy="18.897638"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -36,8 +36,8 @@
      gridtolerance="10"
      inkscape:snap-others="false"
      inkscape:snap-intersection-paths="true"
-     inkscape:window-width="1933"
-     inkscape:window-height="1275"
+     inkscape:window-width="1920"
+     inkscape:window-height="1080"
      inkscape:window-x="1979"
      inkscape:window-y="210"
      inkscape:window-maximized="0"
@@ -68,14 +68,14 @@
      id="layer1"
      transform="translate(0,-287)">
     <ellipse
-       style="opacity:1;fill:#2a2a2a;fill-opacity:1;stroke:#858739;stroke-width:0.36065182;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"
+       style="opacity:1;fill:#2a2a2a;fill-opacity:1;stroke:#858739;stroke-width:0.396875;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"
        id="path5084"
        cx="5.0026245"
        cy="292.00391"
        rx="4.8277044"
        ry="4.8094106" />
     <ellipse
-       style="opacity:1;fill:#151515;fill-opacity:1;fill-rule:nonzero;stroke:#858739;stroke-width:0.37;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="opacity:1;fill:#151515;fill-opacity:1;fill-rule:nonzero;stroke:#858739;stroke-width:0.396875;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="path819"
        cx="4.9993091"
        cy="289.39087"

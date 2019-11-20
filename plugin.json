@@ -51,6 +51,18 @@
       "name": "RSScratch",
       "description": "",
       "tags": []
+    },
+    {
+      "slug": "RSSkeleton",
+      "name": "RSSkeleton",
+      "description": "",
+      "tags": []
+    },
+    {
+      "slug": "RSHeat",
+      "name": "RSHeat",
+      "description": "",
+      "tags": []
     }
   ]
 }

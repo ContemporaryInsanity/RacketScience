@@ -13,5 +13,8 @@ extern Model *modelRSVectorVictor;
 extern Model *modelRSBoogieBay;
 extern Model *modelRSBoogieBayH8;
 extern Model *modelRSMFH;
+extern Model *modelRSHeat;
 
 extern Model *modelRSScratch;
+
+extern Model *modelRSSkeleton;

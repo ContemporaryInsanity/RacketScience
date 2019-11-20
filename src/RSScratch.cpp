@@ -402,9 +402,6 @@ struct RSBufferDisplay : TransparentWidget {
 	};
 
 	void draw(const DrawArgs& args) override {
-		float min = 0.f;
-		float max = 0.f;
-
 		nvgFontSize(args.vg, 10);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, 0);
@@ -426,7 +423,6 @@ struct RSBufferDisplay : TransparentWidget {
 			if(box.pos.y == 70) nvgText(args.vg, box.pos.x + 350, box.pos.y + 70, "Racket Science", NULL);
 			//if(box.pos.y == 130) nvgText(args.vg, box.pos.x + 350, box.pos.y + 70, "With Knobs On!!!", NULL);
 			nvgStroke(args.vg);
-			INFO("Racket Science: !module");
 			return; // Down here so the module browser thumbnailer gets to see above
 		}
 
@@ -438,15 +434,7 @@ struct RSBufferDisplay : TransparentWidget {
 		nvgLineTo(args.vg, box.pos.x + box.size.x, box.pos.y + (box.size.y / 2));
 		nvgStroke(args.vg);
 
-		// Buffer
-		nvgStrokeColor(args.vg, COLOR_GREEN);
-		nvgStrokeWidth(args.vg, 2);
-		nvgBeginPath(args.vg);
 
-		for(int i = 0; i < SAMPLES; i++) {
-			if(buffer[i] > max) max = buffer[i];
-			if(buffer[i] < min) min = buffer[i];
-		}
 
 		/*
 
@@ -466,20 +454,98 @@ The value of plottableY is the y-coordinate that you would use to draw this poin
 
 		*/
 
-		int scale = (int)abs(max) > (int)abs(min) ? int(abs(max)) : int(abs(min));
-		scale = 20; // 1 = +/- .5, 2 = +/-1, 5 = +/- 2.5, 10 = +/-5, 20 = +/-10
-		//INFO("Racket Science: scale=%i min=%i max=%i", scale, int(min), int(max));
+		/*
+			availableSpace = 100;
+			dataRange = 10; // Will vary according to max
+			scaleFactor = 100 / 10; // == 10
 
-		int val = buffer[0] / /*20*/ scale * box.size.y;
-		nvgMoveTo(args.vg, box.pos.x, box.pos.y + box.size.y / 2 - (buffer[0] / /*20*/ scale * box.size.y));
+		*/
 
-		for(int i = 0; i < box.size.x; i++) {
-			unsigned int idx = SAMPLES / box.size.x * i;
-			val = buffer[idx] / /*20*/ scale * box.size.y;
-			nvgLineTo(args.vg, box.pos.x + i, box.pos.y + box.size.y / 2 - val);
+		// Buffer
+		nvgStrokeColor(args.vg, COLOR_GREEN);
+		nvgStrokeWidth(args.vg, 2);
+		nvgBeginPath(args.vg);
+
+		int centerLine = box.pos.y + box.size.y / 2;
+
+		{	// Full scale
+			nvgMoveTo(args.vg, box.pos.x, centerLine - (buffer[0] / 20 * box.size.y));
+			for(int i = 0; i < box.size.x; i++) {
+				unsigned int idx = SAMPLES / box.size.x * i;
+				int val = buffer[idx] / 20 * box.size.y;
+				nvgLineTo(args.vg, box.pos.x + i, centerLine - val);
+			}
+			nvgStroke(args.vg);
 		}
 
-		nvgStroke(args.vg);
+		{	// Auto scaled
+			float min = 0.f;
+			float max = 0.f;
+			float range = 0.f;
+			for(int i = 0; i < SAMPLES; i++) {
+				if(buffer[i] > max) max = buffer[i];
+				if(buffer[i] < min) min = buffer[i];
+			}
+
+			range = abs(max) > abs(min) ? abs(max) : abs(min);
+			//range = range < 1.f ? 1.f : range;
+
+			//float scaleFactor = box.size.y / range;
+			float scaleFactor = ceil(range * 2);
+			if(scaleFactor < 1.f) scaleFactor = 1.f;
+
+			//INFO("Racket Science:  scaleFactor=%f min=%+2.4f max=%+2.4f range=%2.4f", scaleFactor, min, max, range);
+
+			nvgStrokeColor(args.vg, COLOR_RED);
+			nvgBeginPath(args.vg);
+
+			nvgMoveTo(args.vg, box.pos.x, centerLine - (buffer[0] / scaleFactor * box.size.y));
+			for(int i = 0; i < box.size.x; i++) {
+				unsigned int idx = SAMPLES / box.size.x * i;
+				int val = buffer[idx] / scaleFactor * box.size.y;
+				nvgLineTo(args.vg, box.pos.x + i, centerLine - val);
+			}
+			nvgStroke(args.vg);
+		}
+
+		if(font->handle >= 0) {
+			bndSetFont(font->handle);
+
+			nvgFontSize(args.vg, 10);
+			nvgFontFaceId(args.vg, font->handle);
+			nvgTextLetterSpacing(args.vg, 0);
+			nvgTextAlign(args.vg, NVG_ALIGN_LEFT);
+
+			nvgBeginPath(args.vg);
+			nvgFillColor(args.vg, COLOR_RS_BRONZE);
+			nvgText(args.vg, box.pos.x + 2, box.pos.y + 10, "Test", NULL);
+			nvgStroke(args.vg);
+
+			bndSetFont(APP->window->uiFont->handle);
+		}
+
+
+
+/*
+		bool autoScale = true;
+		int scaleFactor;
+
+		int scale = (int)abs(max) > (int)abs(min) ? int(abs(max)) : int(abs(min));
+
+		if(autoScale) {
+			switch(scale) {
+				case 0:
+				case 1: scaleFactor = 2; break;
+				case 2: scaleFactor = 5; break;
+				case 3: scaleFactor = 10; break;
+				case 4: 
+				case 5:
+				default: scaleFactor = 20; break;
+			}
+		}
+		else scaleFactor = 20; // 1 = +/- .5, 2 = +/-1, 5 = +/- 2.5, 10 = +/-5, 20 = +/-10
+		INFO("Racket Science: scale=%2i scaleFactor=%2i min=%+2.4f max=%+2.4f range=%2.4f", scale, scaleFactor, min, max, range);
+*/
 
 		// Index
 		nvgStrokeColor(args.vg, *write == true ? COLOR_RED : COLOR_RS_GREY);
@@ -550,7 +616,7 @@ struct RSScratchWidget : ModuleWidget {
 		// CHART
 		x += 43; y -= 70;
 		addChild(ss[0] = new RSScribbleStrip(x, y + 5));
-		addChild(new RSBufferDisplay(module, module->bufferA, module->idxA, module->writeA, x / 2, (y / 2) + 10, 501, 100));
+		addChild(new RSBufferDisplay(module, module->bufferA, module->idxA, module->writeA, x / 2, (y / 2) + 10, 1002, 100));
 
 
 		// Channel B
@@ -663,6 +729,5 @@ struct RSScratchWidget : ModuleWidget {
 		ModuleWidget::step();
 	}
 };
-
 
 Model *modelRSScratch = createModel<RSScratch, RSScratchWidget>("RSScratch");

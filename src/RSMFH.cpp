@@ -16,9 +16,7 @@ struct RSMFH : Module {
 		MINF_OUT,
 		PINF_OUT,
 		NAN_OUT,
-		MINF_P_OUT,
-		PINF_P_OUT,
-		NAN_P_OUT,
+		EVIL_OUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -29,28 +27,18 @@ struct RSMFH : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 	}
 
-	dsp::SchmittTrigger trig;
-
 	void process(const ProcessArgs &args) override {
-		static bool once = true;
+		outputs[MINF_OUT].setVoltage(-INFINITY);
+		outputs[PINF_OUT].setVoltage(INFINITY);
+		outputs[NAN_OUT].setVoltage(NAN);
 
-		if(once) {
-			outputs[MINF_OUT].setVoltage(-INFINITY);
-			outputs[PINF_OUT].setVoltage(INFINITY);
-			outputs[NAN_OUT].setVoltage(NAN);
-			once = false;
-		}
-
-		if(trig.process(inputs[TRIG_IN].getVoltage() > 0.f)) {
-			outputs[MINF_P_OUT].setVoltage(-INFINITY);
-			outputs[PINF_P_OUT].setVoltage(INFINITY);
-			outputs[NAN_P_OUT].setVoltage(NAN);
-			INFO("Racket Science: trig");
-		}
-		else {
-			outputs[MINF_P_OUT].setVoltage(0.f);
-			outputs[PINF_P_OUT].setVoltage(0.f);
-			outputs[NAN_P_OUT].setVoltage(0.f);
+		outputs[EVIL_OUT].setVoltage(666.666f);
+		switch(rand() % 5) {
+			case 0:		outputs[EVIL_OUT].setVoltage(-INFINITY); 	break;
+			case 1:		outputs[EVIL_OUT].setVoltage(INFINITY);		break;
+			case 2:		outputs[EVIL_OUT].setVoltage(-666.666f);	break;
+			case 3:		outputs[EVIL_OUT].setVoltage(666.666f);		break;
+			default:	outputs[EVIL_OUT].setVoltage(NAN); 			break;
 		}
 	}
 };
@@ -63,7 +51,16 @@ struct RSMFHWidget : ModuleWidget {
 		setModule(module);
 		this->module = module;
 
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/RSMFH.svg")));
+		box.size.x = mm2px(5.08 * 3);
+		int middle = box.size.x / 2;
+
+
+        addChild(new RSLabelCentered(middle, box.pos.y + 14, "MODULE", 15));
+        addChild(new RSLabelCentered(middle, box.pos.y + 26, "FROM", 15));
+        addChild(new RSLabelCentered(middle, box.pos.y + 38, "HELL", 15));
+
+        addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
+        addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
 
 		addChild(new RSLabel(5, 54, "CONSTANT"));
 
@@ -76,21 +73,23 @@ struct RSMFHWidget : ModuleWidget {
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 152), module, RSMFH::NAN_OUT));
 		addChild(new RSLabel(16, 174, "NAN"));
 
-		addChild(new RSLabel(10, 194, "PULSED"));
-
-		addInput(createInputCentered<RSJackMonoIn>(Vec(23, 212), module, RSMFH::TRIG_IN));;
-		addChild(new RSLabel(15, 234, "TRIG"));
-
-		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 252), module, RSMFH::MINF_P_OUT));
-		addChild(new RSLabel(16, 274, "-INF"));
-
-		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 292), module, RSMFH::PINF_P_OUT));
-		addChild(new RSLabel(16, 314, "+INF"));
-
-		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 332), module, RSMFH::NAN_P_OUT));
-		addChild(new RSLabel(16, 354, "NAN"));
+		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 252), module, RSMFH::EVIL_OUT));
+		addChild(new RSLabel(16, 274, "EVIL", COLOR_RED));
 
 	}
+
+    void draw(const DrawArgs& args) override {
+		nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
+		nvgFillColor(args.vg, COLOR_RS_BG);
+		nvgStrokeWidth(args.vg, 3);
+
+		nvgBeginPath(args.vg);
+		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 5);
+		//nvgStroke(args.vg);
+		nvgFill(args.vg);
+
+        ModuleWidget::draw(args);
+    }
 
 	void step() override {
 		if(!module) return;

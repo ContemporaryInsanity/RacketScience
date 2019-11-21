@@ -25,7 +25,6 @@ struct RSHeat : Module {
     dsp::ClockDivider fadeDivider;
 
     dsp::SchmittTrigger gateTrigger;
-
     dsp::BooleanTrigger resetTrigger;
 
     float heat[12] = {};
@@ -101,7 +100,7 @@ struct RSHeatWidget : ModuleWidget {
         box.size.x = mm2px(5.08 * 3);
         int middle = box.size.x / 2;
 
-        addChild(new RSLabelCentered(middle, box.pos.y + 16, "HEAT", 16));
+        addChild(new RSLabelCentered(middle, box.pos.y + 14, "HEAT", 15));
         //addChild(new RSLabelCentered(middle, box.pos.y + 30, "Module Subtitle", 14));
         //addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12)); // >= 4HP
         addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));

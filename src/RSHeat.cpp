@@ -21,15 +21,18 @@ struct RSHeat : Module {
 
     dsp::ClockDivider logDivider;
     dsp::ClockDivider lightDivider;
+    dsp::ClockDivider fadeDivider;
 
     dsp::SchmittTrigger gateTrigger;
 
     float heat[12] = {};
-    float heatInc = 0.01f;
+    float heatInc = 0.1f;
+    float heatDec = 0.01f;
 
     RSHeat() {
         logDivider.setDivision(16384);
         lightDivider.setDivision(1024);
+        fadeDivider.setDivision(8192);
 
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
     }
@@ -43,13 +46,13 @@ struct RSHeat : Module {
         int noteIdx = (note + 0.08f) * 12; // Bodge but will do for prototyping purposes
 
         if(gateTrigger.process(inputs[GATE_INPUT].getVoltage())) {
-            heat[noteIdx] += heatInc;
-        }
+            if(heat[noteIdx] < 1.f) heat[noteIdx] += heatInc;
+       }
 
-        // Have a divider to slowly decrease the heat levels, so if gates stop everything slowly dims
+        // Have a divider to slowly decrease the heat levels, so if gates stop everything slowly dims, call it dwell
 
         // Would be nice to have a colour scale from green through red to yellow to more easily see more frequent notes
-        
+
 
         if(logDivider.process()) {
             INFO("Racket Science: cvIn=%f octave=%f note=%f noteIdx=%i", cvIn, octave, note, noteIdx);
@@ -60,7 +63,12 @@ struct RSHeat : Module {
                 lights[11 - i].setBrightness(heat[i]);
             }
         }
-        
+
+        if(fadeDivider.process()) {
+            for(int i = 0; i < 12; i++) {
+                if(heat[i] > 0.f) heat[i] -= heatDec;
+            }
+        }
     }
 
     void onReset() override {
@@ -81,29 +89,28 @@ struct RSHeat : Module {
 struct RSHeatWidget : ModuleWidget {
     RSHeat* module;
 
-    //std::shared_ptr<Font> font;
-
     RSHeatWidget(RSHeat *module) {
         setModule(module);
         this->module = module;
 
-        box.size.x = 104;
+        box.size.x = mm2px(5.08 * 4);
+        int middle = box.size.x / 2;
 
-        addChild(new RSLabelCentered(box.size.x / 2, box.pos.y + 16, "HEAT", 16));
-        //addChild(new RSLabelCentered(box.size.x / 2, box.pos.y + 30, "Module Subtitle", 14));
-        addChild(new RSLabelCentered(box.size.x / 2, box.size.y - 6, "Racket Science", 12));
+        addChild(new RSLabelCentered(middle, box.pos.y + 16, "HEAT", 16));
+        //addChild(new RSLabelCentered(middle, box.pos.y + 30, "Module Subtitle", 14));
+        addChild(new RSLabelCentered(middle, box.size.y - 6, "Racket Science", 12));
 
-        addInput(createInputCentered<RSJackMonoIn>(Vec(52, 50), module, RSHeat::CV_INPUT));
-        addInput(createInputCentered<RSJackMonoIn>(Vec(52, 90), module, RSHeat::GATE_INPUT));
+        addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 50), module, RSHeat::CV_INPUT));
+        addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 90), module, RSHeat::GATE_INPUT));
 
         LightWidget *lightWidget;
         for(int i = 0 ; i < 12; i++) {
             int offset;
             switch(i) {
                 case 1: case 3: case 5: case 8: case 10: offset = 10; break;
-                default: offset = 0;
+                default: offset = -10;
             }
-            lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(57 - offset, 150 + (i * 17)), module, RSHeat::LIGHTS + i);
+            lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(middle - offset, 160 + (i * 17)), module, RSHeat::LIGHTS + i);
             lightWidget->bgColor = nvgRGBA(50, 50, 50, 128);
             addChild(lightWidget);
         }

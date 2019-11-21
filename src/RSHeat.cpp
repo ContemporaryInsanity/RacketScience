@@ -98,12 +98,15 @@ struct RSHeatWidget : ModuleWidget {
         setModule(module);
         this->module = module;
 
-        box.size.x = mm2px(5.08 * 4);
+        box.size.x = mm2px(5.08 * 3);
         int middle = box.size.x / 2;
 
         addChild(new RSLabelCentered(middle, box.pos.y + 16, "HEAT", 16));
         //addChild(new RSLabelCentered(middle, box.pos.y + 30, "Module Subtitle", 14));
-        addChild(new RSLabelCentered(middle, box.size.y - 6, "Racket Science", 12));
+        //addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12)); // >= 4HP
+        addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
+        addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
+
 
         addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 40), module, RSHeat::CV_INPUT));
         addChild(new RSLabelCentered(middle, 65, "V/OCT"));
@@ -118,8 +121,8 @@ struct RSHeatWidget : ModuleWidget {
         for(int i = 0 ; i < 12; i++) {
             int offset;
             switch(i) {
-                case 1: case 3: case 5: case 8: case 10: offset = 10; break;
-                default: offset = -10;
+                case 1: case 3: case 5: case 8: case 10: offset = 7; break;
+                default: offset = -7;
             }
             lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(middle - offset, 170 + (i * 16)), module, RSHeat::LIGHTS + i);
             lightWidget->bgColor = nvgRGBA(50, 50, 50, 128);
@@ -130,12 +133,12 @@ struct RSHeatWidget : ModuleWidget {
 
     void draw(const DrawArgs& args) override {
 		nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
-		nvgFillColor(args.vg, COLOR_BLACK);
-		nvgStrokeWidth(args.vg, 1.5);
+		nvgFillColor(args.vg, COLOR_RS_BG);
+		nvgStrokeWidth(args.vg, 3);
 
 		nvgBeginPath(args.vg);
 		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 5);
-		nvgStroke(args.vg);
+		//nvgStroke(args.vg);
 		nvgFill(args.vg);
 
         ModuleWidget::draw(args);

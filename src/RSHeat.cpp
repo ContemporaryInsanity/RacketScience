@@ -4,6 +4,7 @@
 
 struct RSHeat : Module {
     enum ParamIds {
+        RESET_BUTTON,
         NUM_PARAMS
     };
     enum InputIds {
@@ -25,6 +26,8 @@ struct RSHeat : Module {
 
     dsp::SchmittTrigger gateTrigger;
 
+    dsp::BooleanTrigger resetTrigger;
+
     float heat[12] = {};
     float heatInc = 0.1f;
     float heatDec = 0.01f;
@@ -38,7 +41,6 @@ struct RSHeat : Module {
     }
 
     void process(const ProcessArgs &args) override {
-
         float cvIn = inputs[CV_INPUT].getVoltage() + 10.f;
         float octave;
         float note = std::modf(cvIn, &octave); octave -= 10.f; cvIn -= 10.f;
@@ -47,8 +49,11 @@ struct RSHeat : Module {
 
         if(gateTrigger.process(inputs[GATE_INPUT].getVoltage())) {
             if(heat[noteIdx] < 1.f) heat[noteIdx] += heatInc;
-       }
+        }
 
+        if(resetTrigger.process(params[RESET_BUTTON].getValue())) {
+            for(int i = 0; i < 12; i++) heat[i] = 0.f;
+        }
         // Have a divider to slowly decrease the heat levels, so if gates stop everything slowly dims, call it dwell
 
         // Would be nice to have a colour scale from green through red to yellow to more easily see more frequent notes
@@ -100,8 +105,14 @@ struct RSHeatWidget : ModuleWidget {
         //addChild(new RSLabelCentered(middle, box.pos.y + 30, "Module Subtitle", 14));
         addChild(new RSLabelCentered(middle, box.size.y - 6, "Racket Science", 12));
 
-        addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 50), module, RSHeat::CV_INPUT));
-        addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 90), module, RSHeat::GATE_INPUT));
+        addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 40), module, RSHeat::CV_INPUT));
+        addChild(new RSLabelCentered(middle, 65, "V/OCT"));
+        
+        addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 85), module, RSHeat::GATE_INPUT));
+        addChild(new RSLabelCentered(middle, 110, "GATE"));
+
+        addParam(createParamCentered<RSButtonMomentary>(Vec(middle, 130), module, RSHeat::RESET_BUTTON));
+        addChild(new RSLabelCentered(middle, 155, "RESET"));
 
         LightWidget *lightWidget;
         for(int i = 0 ; i < 12; i++) {
@@ -110,7 +121,7 @@ struct RSHeatWidget : ModuleWidget {
                 case 1: case 3: case 5: case 8: case 10: offset = 10; break;
                 default: offset = -10;
             }
-            lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(middle - offset, 160 + (i * 17)), module, RSHeat::LIGHTS + i);
+            lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(middle - offset, 170 + (i * 16)), module, RSHeat::LIGHTS + i);
             lightWidget->bgColor = nvgRGBA(50, 50, 50, 128);
             addChild(lightWidget);
         }

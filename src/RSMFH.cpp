@@ -28,16 +28,24 @@ struct RSMFH : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		outputs[MINF_OUT].setVoltage(-INFINITY);
-		outputs[PINF_OUT].setVoltage(INFINITY);
-		outputs[NAN_OUT].setVoltage(NAN);
+		// TODO: polyphonic hell
+		outputs[MINF_OUT].setChannels(16);
+		outputs[PINF_OUT].setChannels(16);
+		outputs[NAN_OUT].setChannels(16);
+		outputs[EVIL_OUT].setChannels(16);
 
-		switch(rand() % 5) {
-			case 0:		outputs[EVIL_OUT].setVoltage(-INFINITY); 	break;
-			case 1:		outputs[EVIL_OUT].setVoltage(INFINITY);		break;
-			case 2:		outputs[EVIL_OUT].setVoltage(-666.666f);	break;
-			case 3:		outputs[EVIL_OUT].setVoltage(666.666f);		break;
-			default:	outputs[EVIL_OUT].setVoltage(NAN); 			break;
+		for(int c = 0; c < 16; c++) {
+			outputs[MINF_OUT].setVoltage(-INFINITY, c);
+			outputs[PINF_OUT].setVoltage(INFINITY, c);
+			outputs[NAN_OUT].setVoltage(NAN, c);
+
+			switch(rand() % 5) {
+				case 0:		outputs[EVIL_OUT].setVoltage(-INFINITY, c); break;
+				case 1:		outputs[EVIL_OUT].setVoltage(INFINITY, c);	break;
+				case 2:		outputs[EVIL_OUT].setVoltage(-666.666f, c);	break;
+				case 3:		outputs[EVIL_OUT].setVoltage(666.666f, c);	break;
+				default:	outputs[EVIL_OUT].setVoltage(NAN, c); 		break;
+			}
 		}
 	}
 };
@@ -64,16 +72,16 @@ struct RSMFHWidget : ModuleWidget {
         addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
         addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
 
-		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 72), module, RSMFH::MINF_OUT));
+		addOutput(createOutputCentered<RSJackPolyOut>(Vec(23, 72), module, RSMFH::MINF_OUT));
 		addChild(new RSLabelCentered(middle, 94, "-INF"));
 
-		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 112), module, RSMFH::PINF_OUT));
+		addOutput(createOutputCentered<RSJackPolyOut>(Vec(23, 112), module, RSMFH::PINF_OUT));
 		addChild(new RSLabelCentered(middle, 134, "+INF"));
 
-		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 152), module, RSMFH::NAN_OUT));
+		addOutput(createOutputCentered<RSJackPolyOut>(Vec(23, 152), module, RSMFH::NAN_OUT));
 		addChild(new RSLabelCentered(middle, 174, "NAN"));
 
-		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 252), module, RSMFH::EVIL_OUT));
+		addOutput(createOutputCentered<RSJackPolyOut>(Vec(23, 252), module, RSMFH::EVIL_OUT));
 		addChild(new RSLabelCentered(middle, 278, "!EVIL!", 16, COLOR_RED));
 
 	}

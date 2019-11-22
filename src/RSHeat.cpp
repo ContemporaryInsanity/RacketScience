@@ -41,6 +41,9 @@ struct RSHeat : Module {
     }
 
     void process(const ProcessArgs &args) override {
+
+        // This DOESN'T need to run at anywhere near audio rate
+
         float cvIn = inputs[CV_INPUT].getVoltage();
         int noteIdx = note(cvIn); //(int(round((cvIn + 10) * 12)) % 12);
 

@@ -28,7 +28,6 @@ struct RSMFH : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		// TODO: polyphonic hell
 		outputs[MINF_OUT].setChannels(16);
 		outputs[PINF_OUT].setChannels(16);
 		outputs[NAN_OUT].setChannels(16);
@@ -39,12 +38,13 @@ struct RSMFH : Module {
 			outputs[PINF_OUT].setVoltage(INFINITY, c);
 			outputs[NAN_OUT].setVoltage(NAN, c);
 
-			switch(rand() % 5) {
-				case 0:		outputs[EVIL_OUT].setVoltage(-INFINITY, c); break;
-				case 1:		outputs[EVIL_OUT].setVoltage(INFINITY, c);	break;
-				case 2:		outputs[EVIL_OUT].setVoltage(-666.666f, c);	break;
-				case 3:		outputs[EVIL_OUT].setVoltage(666.666f, c);	break;
-				default:	outputs[EVIL_OUT].setVoltage(NAN, c); 		break;
+			switch(rand() % 6) {
+				case 0:	outputs[EVIL_OUT].setVoltage(-INFINITY, c); break;
+				case 1:	outputs[EVIL_OUT].setVoltage(INFINITY, c);	break;
+				case 2:	outputs[EVIL_OUT].setVoltage(-666.666f, c);	break;
+				case 3:	outputs[EVIL_OUT].setVoltage(666.666f, c);	break;
+				case 4:	outputs[EVIL_OUT].setVoltage(NAN, c); 		break;
+				default: outputs[EVIL_OUT].setVoltage(rand(), c);
 			}
 		}
 	}

@@ -32,7 +32,6 @@ struct RSMFH : Module {
 		outputs[PINF_OUT].setVoltage(INFINITY);
 		outputs[NAN_OUT].setVoltage(NAN);
 
-		outputs[EVIL_OUT].setVoltage(666.666f);
 		switch(rand() % 5) {
 			case 0:		outputs[EVIL_OUT].setVoltage(-INFINITY); 	break;
 			case 1:		outputs[EVIL_OUT].setVoltage(INFINITY);		break;

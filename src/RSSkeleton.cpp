@@ -59,7 +59,7 @@ struct RSSkeletonWidget : ModuleWidget {
 
 		nvgBeginPath(args.vg);
 		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 5);
-		nvgStroke(args.vg);
+		//nvgStroke(args.vg);
 		nvgFill(args.vg);
 
         ModuleWidget::draw(args);

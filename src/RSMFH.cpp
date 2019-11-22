@@ -47,6 +47,8 @@ struct RSMFH : Module {
 struct RSMFHWidget : ModuleWidget {
 	RSMFH* module;
 
+	int theme;
+
 	RSMFHWidget(RSMFH *module) {
 		setModule(module);
 		this->module = module;
@@ -54,6 +56,7 @@ struct RSMFHWidget : ModuleWidget {
 		box.size.x = mm2px(5.08 * 3);
 		int middle = box.size.x / 2;
 
+        theme = loadDefaultTheme();
 
         addChild(new RSLabelCentered(middle, box.pos.y + 14, "MODULE", 15));
         addChild(new RSLabelCentered(middle, box.pos.y + 26, "FROM", 15));
@@ -62,25 +65,27 @@ struct RSMFHWidget : ModuleWidget {
         addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
         addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
 
-		addChild(new RSLabel(5, 54, "CONSTANT"));
-
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 72), module, RSMFH::MINF_OUT));
-		addChild(new RSLabel(16, 94, "-INF"));
+		addChild(new RSLabelCentered(middle, 94, "-INF"));
 
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 112), module, RSMFH::PINF_OUT));
-		addChild(new RSLabel(16, 134, "+INF"));
+		addChild(new RSLabelCentered(middle, 134, "+INF"));
 
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 152), module, RSMFH::NAN_OUT));
-		addChild(new RSLabel(16, 174, "NAN"));
+		addChild(new RSLabelCentered(middle, 174, "NAN"));
 
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(23, 252), module, RSMFH::EVIL_OUT));
-		addChild(new RSLabel(16, 274, "EVIL", COLOR_RED));
+		addChild(new RSLabelCentered(middle, 278, "!EVIL!", 16, COLOR_RED));
 
 	}
 
     void draw(const DrawArgs& args) override {
 		nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
-		nvgFillColor(args.vg, COLOR_RS_BG);
+		switch(theme) {
+            case 0: nvgFillColor(args.vg, COLOR_RS_BG); break;
+            case 1: nvgFillColor(args.vg, COLOR_YELLOW); break;
+			default: nvgFillColor(args.vg, COLOR_BLACK); break;
+        }
 		nvgStrokeWidth(args.vg, 3);
 
 		nvgBeginPath(args.vg);

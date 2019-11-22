@@ -1,4 +1,5 @@
 #include <random>
+#include <string>
 
 #include "plugin.hpp"
 
@@ -448,7 +449,7 @@ The value of plottableY is the y-coordinate that you would use to draw this poin
 			nvgStroke(args.vg);
 		}
 
-		{	// Auto scaled
+			// Auto scaled
 			float min = 0.f;
 			float max = 0.f;
 			float range = 0.f;
@@ -458,7 +459,7 @@ The value of plottableY is the y-coordinate that you would use to draw this poin
 			}
 
 			range = abs(max) > abs(min) ? abs(max) : abs(min);
-			//range = range < 1.f ? 1.f : range;
+			range = range < 1.f ? 1.f : range;
 
 			//float scaleFactor = box.size.y / range;
 			float scaleFactor = ceil(range * 2);
@@ -476,7 +477,7 @@ The value of plottableY is the y-coordinate that you would use to draw this poin
 				nvgLineTo(args.vg, box.pos.x + i, centerLine - val);
 			}
 			nvgStroke(args.vg);
-		}
+		
 
 		if(font->handle >= 0) {
 			bndSetFont(font->handle);
@@ -486,9 +487,17 @@ The value of plottableY is the y-coordinate that you would use to draw this poin
 			nvgTextLetterSpacing(args.vg, 0);
 			nvgTextAlign(args.vg, NVG_ALIGN_LEFT);
 
+			char str[6];
+			sprintf(str, "%2.2f", range);
+
 			nvgBeginPath(args.vg);
-			nvgFillColor(args.vg, COLOR_RS_BRONZE);
-			nvgText(args.vg, box.pos.x + 2, box.pos.y + 10, "Test", NULL);
+			nvgFillColor(args.vg, COLOR_GREEN);
+			nvgText(args.vg, box.pos.x + 2, box.pos.y + 10, str, NULL);
+			nvgStroke(args.vg);
+
+			nvgBeginPath(args.vg);
+			nvgFillColor(args.vg, COLOR_RED);
+			nvgText(args.vg, box.pos.x + 2, box.pos.y + box.size.y - 4, str, NULL);
 			nvgStroke(args.vg);
 
 			bndSetFont(APP->window->uiFont->handle);

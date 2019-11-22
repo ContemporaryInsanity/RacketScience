@@ -1,6 +1,7 @@
 #include "plugin.hpp"
 
 #include "components/RSComponents.hpp"
+#include "RSUtils.hpp"
 
 struct RSHeat : Module {
     enum ParamIds {
@@ -40,11 +41,11 @@ struct RSHeat : Module {
     }
 
     void process(const ProcessArgs &args) override {
-        float cvIn = inputs[CV_INPUT].getVoltage() + 10.f;
-        float octave;
-        float note = std::modf(cvIn, &octave); octave -= 10.f; cvIn -= 10.f;
+        float cvIn = inputs[CV_INPUT].getVoltage();
+        //float octave;
+        //float note = std::modf(cvIn, &octave); octave -= 10.f; cvIn -= 10.f;
 
-        int noteIdx = (note + 0.08f) * 12; // Bodge but will do for prototyping purposes
+        int noteIdx = (int(round((cvIn + 10.f) * 12)) % 12);
 
         if(gateTrigger.process(inputs[GATE_INPUT].getVoltage())) {
             if(heat[noteIdx] < 1.f) heat[noteIdx] += heatInc;
@@ -53,13 +54,9 @@ struct RSHeat : Module {
         if(resetTrigger.process(params[RESET_BUTTON].getValue())) {
             for(int i = 0; i < 12; i++) heat[i] = 0.f;
         }
-        // Have a divider to slowly decrease the heat levels, so if gates stop everything slowly dims, call it dwell
-
-        // Would be nice to have a colour scale from green through red to yellow to more easily see more frequent notes
-
 
         if(logDivider.process()) {
-            INFO("Racket Science: cvIn=%f octave=%f note=%f noteIdx=%i", cvIn, octave, note, noteIdx);
+            //INFO("Racket Science: note %i", noteIdx;
         }
 
         if(lightDivider.process()) {
@@ -93,12 +90,16 @@ struct RSHeat : Module {
 struct RSHeatWidget : ModuleWidget {
     RSHeat* module;
 
+    int theme = 0;
+
     RSHeatWidget(RSHeat *module) {
         setModule(module);
         this->module = module;
 
         box.size.x = mm2px(5.08 * 3);
         int middle = box.size.x / 2;
+
+        theme = loadDefaultTheme();
 
         addChild(new RSLabelCentered(middle, box.pos.y + 14, "HEAT", 15));
         //addChild(new RSLabelCentered(middle, box.pos.y + 30, "Module Subtitle", 14));
@@ -127,12 +128,15 @@ struct RSHeatWidget : ModuleWidget {
             lightWidget->bgColor = nvgRGBA(50, 50, 50, 128);
             addChild(lightWidget);
         }
-
     }
 
     void draw(const DrawArgs& args) override {
 		nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
-		nvgFillColor(args.vg, COLOR_RS_BG);
+		switch(theme) {
+            case 0: nvgFillColor(args.vg, COLOR_RS_BG); break;
+            case 1: nvgFillColor(args.vg, nvgRGB(0x60, 0x60, 0x00)); break;
+            default: nvgFillColor(args.vg, COLOR_BLACK); break;
+        }
 		nvgStrokeWidth(args.vg, 3);
 
 		nvgBeginPath(args.vg);

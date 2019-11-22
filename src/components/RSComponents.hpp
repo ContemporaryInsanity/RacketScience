@@ -33,23 +33,25 @@ struct RSLabel : Label {
 
 
 struct RSLabel : LedDisplay {
+	int fontSize;
 	std::shared_ptr<Font> font;
 	std::string text;
 	NVGcolor color;
 
-	RSLabel(int x, int y, const char* str = "", const NVGcolor& colour = COLOR_RS_GREY) {
+	RSLabel(int x, int y, const char* str = "", int fontSize = 10, const NVGcolor& colour = COLOR_RS_GREY) {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Ubuntu Condensed 400.ttf"));
 		box.pos = Vec(x, y);
 		box.size = Vec(120, 12);
 		text = str;
 		color = colour;
+		this->fontSize = fontSize;
 	}
 
 	void draw(const DrawArgs &args) override {
 		if(font->handle >= 0) {
 			bndSetFont(font->handle);
 
-			nvgFontSize(args.vg, 10);
+			nvgFontSize(args.vg, fontSize);
 			nvgFontFaceId(args.vg, font->handle);
 			nvgTextLetterSpacing(args.vg, 0);
 
@@ -65,8 +67,8 @@ struct RSLabel : LedDisplay {
 
 
 struct RSLabelCentered : LedDisplay {
-	std::shared_ptr<Font> font;
 	int fontSize;
+	std::shared_ptr<Font> font;
 	std::string text;
 	NVGcolor color;
 

@@ -92,13 +92,13 @@ struct RSBoogieBayWidget : ModuleWidget {
         addOutput(createOutputCentered<RSJackMonoOut>(mm2px(Vec(7, 110)), module, RSBoogieBay::OUTA_OUTPUT));
         addOutput(createOutputCentered<RSJackMonoOut>(mm2px(Vec(18, 110)), module, RSBoogieBay::OUTB_OUTPUT));
 
-        addChild(topScaleaLabel = new RSLabel(3,  58, "0", COLOR_GREEN));
-        addChild(midScaleaLabel = new RSLabel(3, 177, "0", COLOR_RS_GREY));
-        addChild(botScaleaLabel = new RSLabel(3, 296, "0", COLOR_RED));
+        addChild(topScaleaLabel = new RSLabel(3,  58, "0", 10, COLOR_GREEN));
+        addChild(midScaleaLabel = new RSLabel(3, 177, "0", 10, COLOR_RS_GREY));
+        addChild(botScaleaLabel = new RSLabel(3, 296, "0", 10, COLOR_RED));
 
-        addChild(topScalebLabel = new RSLabel(67,  58, "0", COLOR_GREEN));
-        addChild(midScalebLabel = new RSLabel(67, 177, "0", COLOR_RS_GREY));
-        addChild(botScalebLabel = new RSLabel(67, 296, "0", COLOR_RED));
+        addChild(topScalebLabel = new RSLabel(67,  58, "0", 10, COLOR_GREEN));
+        addChild(midScalebLabel = new RSLabel(67, 177, "0", 10, COLOR_RS_GREY));
+        addChild(botScalebLabel = new RSLabel(67, 296, "0", 10, COLOR_RED));
     }
 
     void step() override {

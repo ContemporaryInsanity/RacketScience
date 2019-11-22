@@ -17,9 +17,9 @@ static inline float clamp010V(float in) {
 
 // Thanks to Dieter Stubler for the following
 
-#define quantize(cvIn)  (round(cvIn * 12.f) / 12.f)
-#define octave(cvIn)    int(floor(quantize(cvIn)))
-#define note(cvIn)      (int(round((cvIn + 10) * 12)) % 12)
+#define quantize(v)  (round(v * 12.f) / 12.f)
+#define octave(v)    int(floor(quantize(v)))
+#define note(v)      (int(round((v + 10) * 12)) % 12)
 
 
 // Thanks to Adam Verspaget / Count Modula for the following

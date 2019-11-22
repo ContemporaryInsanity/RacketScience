@@ -42,10 +42,7 @@ struct RSHeat : Module {
 
     void process(const ProcessArgs &args) override {
         float cvIn = inputs[CV_INPUT].getVoltage();
-        //float octave;
-        //float note = std::modf(cvIn, &octave); octave -= 10.f; cvIn -= 10.f;
-
-        int noteIdx = (int(round((cvIn + 10.f) * 12)) % 12);
+        int noteIdx = note(cvIn); //(int(round((cvIn + 10) * 12)) % 12);
 
         if(gateTrigger.process(inputs[GATE_INPUT].getVoltage())) {
             if(heat[noteIdx] < 1.f) heat[noteIdx] += heatInc;
@@ -56,7 +53,7 @@ struct RSHeat : Module {
         }
 
         if(logDivider.process()) {
-            //INFO("Racket Science: note %i", noteIdx;
+            INFO("Racket Science: note %i", noteIdx);
         }
 
         if(lightDivider.process()) {

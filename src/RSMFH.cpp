@@ -61,13 +61,13 @@ struct RSMFHWidget : ModuleWidget {
 		this->module = module;
 
 		box.size.x = mm2px(5.08 * 3);
-		int middle = box.size.x / 2;
+		int middle = box.size.x / 2 + 1;
 
         theme = loadDefaultTheme();
 
-        addChild(new RSLabelCentered(middle, box.pos.y + 14, "MODULE", 15));
-        addChild(new RSLabelCentered(middle, box.pos.y + 26, "FROM", 15));
-        addChild(new RSLabelCentered(middle, box.pos.y + 38, "HELL", 15));
+        addChild(new RSLabelCentered(middle, box.pos.y + 13, "MODULE", 14));
+        addChild(new RSLabelCentered(middle, box.pos.y + 25, "FROM", 14));
+        addChild(new RSLabelCentered(middle, box.pos.y + 37, "HELL", 14));
 
         addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
         addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
@@ -86,22 +86,8 @@ struct RSMFHWidget : ModuleWidget {
 
 	}
 
-    void draw(const DrawArgs& args) override {
-		nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
-		switch(theme) {
-            case 0: nvgFillColor(args.vg, COLOR_RS_BG); break;
-            case 1: nvgFillColor(args.vg, COLOR_YELLOW); break;
-			default: nvgFillColor(args.vg, COLOR_BLACK); break;
-        }
-		nvgStrokeWidth(args.vg, 3);
-
-		nvgBeginPath(args.vg);
-		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 5);
-		//nvgStroke(args.vg);
-		nvgFill(args.vg);
-
-        ModuleWidget::draw(args);
-    }
+    void customDraw(const DrawArgs& args) {}
+	#include "RSModuleWidgetDraw.hpp"
 
 	void step() override {
 		if(!module) return;

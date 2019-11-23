@@ -66,8 +66,10 @@ struct RSBoogieBay : Module {
 
 
 struct RSBoogieBayWidget : ModuleWidget {
-    RSBoogieBay* _module;
+    RSBoogieBay* module;
 
+    int theme;
+    
     PortWidget *ina, *inb;
 
     RSLabel* topScaleaLabel;
@@ -80,17 +82,25 @@ struct RSBoogieBayWidget : ModuleWidget {
    
 	RSBoogieBayWidget(RSBoogieBay *module) {
 		setModule(module);
-        _module = module;
+        this->module = module;
 
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/RSBoogieBay.svg")));
+        box.size.x = mm2px(5.08 * 5);
+        int middle = box.size.x / 2 + 1;
 
-        ina = createInputCentered<RSJackMonoIn>(mm2px(Vec(7, 100)), module, RSBoogieBay::INA_INPUT);
+        theme = loadDefaultTheme();
+    
+        addChild(new RSLabelCentered(middle, box.pos.y + 13, "BOOGIE", 14));
+        addChild(new RSLabelCentered(middle, box.pos.y + 25, "BAY", 14));
+
+        addChild(new RSLabelCentered(box.size.x / 2, box.size.y - 6, "Racket Science", 12));
+
+        ina = createInputCentered<RSJackMonoIn>(Vec(22, 175), module, RSBoogieBay::INA_INPUT);
 		addInput(ina);
-        inb = createInputCentered<RSJackMonoIn>(mm2px(Vec(18, 100)), module, RSBoogieBay::INB_INPUT);
+        inb = createInputCentered<RSJackMonoIn>(Vec(52, 175), module, RSBoogieBay::INB_INPUT);
         addInput(inb);
 
-        addOutput(createOutputCentered<RSJackMonoOut>(mm2px(Vec(7, 110)), module, RSBoogieBay::OUTA_OUTPUT));
-        addOutput(createOutputCentered<RSJackMonoOut>(mm2px(Vec(18, 110)), module, RSBoogieBay::OUTB_OUTPUT));
+        addOutput(createOutputCentered<RSJackMonoOut>(Vec(22, 345), module, RSBoogieBay::OUTA_OUTPUT));
+        addOutput(createOutputCentered<RSJackMonoOut>(Vec(52, 345), module, RSBoogieBay::OUTB_OUTPUT));
 
         addChild(topScaleaLabel = new RSLabel(3,  58, "0", 10, COLOR_GREEN));
         addChild(midScaleaLabel = new RSLabel(3, 177, "0", 10, COLOR_RS_GREY));
@@ -101,11 +111,42 @@ struct RSBoogieBayWidget : ModuleWidget {
         addChild(botScalebLabel = new RSLabel(67, 296, "0", 10, COLOR_RED));
     }
 
-    void step() override {
-        if(!_module) return;
+    void customDraw(const DrawArgs& args) {
+        int top = 55, bottom = 295;
+        nvgLineCap(args.vg, NVG_ROUND);
 
-        if(_module->menuaChanged) {
-            switch(_module->vrangea) {
+        // Socket scale markers
+        nvgStrokeColor(args.vg, COLOR_RS_GREY);
+        nvgStrokeWidth(args.vg, 1);
+        for(int y = top; y <= bottom; y += (bottom - top) / 10) {
+            nvgBeginPath(args.vg);
+            nvgMoveTo(args.vg, 16, y);
+            nvgLineTo(args.vg, 58, y);
+            nvgStroke(args.vg);
+        }
+
+        nvgStrokeColor(args.vg, COLOR_BLACK);
+        nvgStrokeWidth(args.vg, 5);
+
+        // Left socket slot
+        nvgBeginPath(args.vg);
+        nvgMoveTo(args.vg, 22, top);
+        nvgLineTo(args.vg, 22, bottom);
+        nvgStroke(args.vg);
+
+        // Right socket slot
+        nvgBeginPath(args.vg);
+        nvgMoveTo(args.vg, 52, top);
+        nvgLineTo(args.vg, 52, bottom);
+        nvgStroke(args.vg);
+    }
+   	#include "RSModuleWidgetDraw.hpp"
+
+    void step() override {
+        if(!module) return;
+
+        if(module->menuaChanged) {
+            switch(module->vrangea) {
                 case 0: // 0 - 1
                     topScaleaLabel->text = "1";   topScaleaLabel->box.pos.x = 3; topScaleaLabel->color = COLOR_GREEN;
                     midScaleaLabel->text = ".5";  midScaleaLabel->box.pos.x = 3; midScaleaLabel->color = COLOR_GREEN;
@@ -137,11 +178,11 @@ struct RSBoogieBayWidget : ModuleWidget {
                     botScaleaLabel->text = "10";  botScaleaLabel->box.pos.x = 3; botScaleaLabel->color = COLOR_RED;
                     break;
             }
-            _module->menuaChanged = false;
+            module->menuaChanged = false;
         }
 
-        if(_module->menubChanged) {
-            switch(_module->vrangeb) {
+        if(module->menubChanged) {
+            switch(module->vrangeb) {
                 case 0: // 0 - 1
                     topScalebLabel->text = "1";   topScalebLabel->box.pos.x = 67; topScalebLabel->color = COLOR_GREEN;
                     midScalebLabel->text = ".5";  midScalebLabel->box.pos.x = 65; midScalebLabel->color = COLOR_GREEN;
@@ -173,14 +214,14 @@ struct RSBoogieBayWidget : ModuleWidget {
                     botScalebLabel->text = "10";  botScalebLabel->box.pos.x = 64; botScalebLabel->color = COLOR_RED;
                     break;
             }
-            _module->menubChanged = false;
+            module->menubChanged = false;
         }
 
         float inav = clamp10V(module->inputs[RSBoogieBay::INA_INPUT].getVoltage());
         float inbv = clamp10V(module->inputs[RSBoogieBay::INB_INPUT].getVoltage());
         int yposa = 0, yposb = 0;
 
-        switch(_module->vrangea) {
+        switch(module->vrangea) {
             case 0: // 0 - 1
                 inav = clamp(inav, 0.f, 1.f);
                 yposa = mm2px(95 - inav * 80);
@@ -212,7 +253,7 @@ struct RSBoogieBayWidget : ModuleWidget {
                 break;
         };
 
-        switch(_module->vrangeb) {
+        switch(module->vrangeb) {
             case 0: // 0 - 1
                 inbv = clamp(inbv, 0.f, 1.f);
                 yposb = mm2px(95 - inbv * 80);

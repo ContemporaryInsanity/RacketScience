@@ -97,7 +97,7 @@ struct RSHeatWidget : ModuleWidget {
         this->module = module;
 
         box.size.x = mm2px(5.08 * 3);
-        int middle = box.size.x / 2;
+        int middle = box.size.x / 2 + 1;
 
         theme = loadDefaultTheme();
 
@@ -130,22 +130,8 @@ struct RSHeatWidget : ModuleWidget {
         }
     }
 
-    void draw(const DrawArgs& args) override {
-		nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
-		switch(theme) {
-            case 0: nvgFillColor(args.vg, COLOR_RS_BG); break;
-            case 1: nvgFillColor(args.vg, nvgRGB(0x60, 0x60, 0x00)); break;
-            default: nvgFillColor(args.vg, COLOR_BLACK); break;
-        }
-		nvgStrokeWidth(args.vg, 3);
-
-		nvgBeginPath(args.vg);
-		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 5);
-		//nvgStroke(args.vg);
-		nvgFill(args.vg);
-
-        ModuleWidget::draw(args);
-    }
+    void customDraw(const DrawArgs& args) {}
+	#include "RSModuleWidgetDraw.hpp"
 };
 
 Model *modelRSHeat = createModel<RSHeat, RSHeatWidget>("RSHeat");

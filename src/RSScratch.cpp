@@ -408,24 +408,6 @@ struct RSBufferDisplay : TransparentWidget {
 
 
 		/*
-
-One hacky method that may work is to use a Viewbox control. This control will scale the rendering of its content to fit the size available. However, this might lead to your lines and labels looking too thick or thin.
-
-The more sensible method that you're probably after, though, is how to work out at what scale to draw your graph at in the first place. To do that, work out the range of values on a given axis (for example, your Y-axis value might range from 0 to 100). Work out the available drawing space on that axis (for example, your canvas might have 400 pixels of height). Your Y-axis "scale factor" when drawing the graph would be <available space> / <data range> - or, in this case, 4.
-
-Your canvas' coordinates start from zero in the top-left so, to calculate the Y-position for a given data point, you would calculate like this:
-
-double availableSpace = 400.0; // the size of your canvas
-double dataRange = 100.0;      // the range of your values
-double scaleFactor = availableSpace / dataRange;
-
-double currentValue = 42.0;    // the value we're trying to plot
-double plottableY = availableSpace - (currentValue * scaleFactor);  // the position on screen to draw at
-The value of plottableY is the y-coordinate that you would use to draw this point on the canvas.
-
-		*/
-
-		/*
 			availableSpace = 100;
 			dataRange = 10; // Will vary according to max
 			scaleFactor = 100 / 10; // == 10
@@ -433,21 +415,9 @@ The value of plottableY is the y-coordinate that you would use to draw this poin
 		*/
 
 		// Buffer
-		nvgStrokeColor(args.vg, COLOR_GREEN);
-		nvgStrokeWidth(args.vg, 2);
-		nvgBeginPath(args.vg);
 
 		int centerLine = box.pos.y + box.size.y / 2;
 
-		{	// Full scale
-			nvgMoveTo(args.vg, box.pos.x, centerLine - (buffer[0] / 20 * box.size.y));
-			for(int i = 0; i < box.size.x; i++) {
-				unsigned int idx = SAMPLES / box.size.x * i;
-				int val = buffer[idx] / 20 * box.size.y;
-				nvgLineTo(args.vg, box.pos.x + i, centerLine - val);
-			}
-			nvgStroke(args.vg);
-		}
 
 			// Auto scaled
 			float min = 0.f;
@@ -468,6 +438,7 @@ The value of plottableY is the y-coordinate that you would use to draw this poin
 			//INFO("Racket Science:  scaleFactor=%f min=%+2.4f max=%+2.4f range=%2.4f", scaleFactor, min, max, range);
 
 			nvgStrokeColor(args.vg, COLOR_RED);
+			nvgStrokeWidth(args.vg, 1);
 			nvgBeginPath(args.vg);
 
 			nvgMoveTo(args.vg, box.pos.x, centerLine - (buffer[0] / scaleFactor * box.size.y));
@@ -478,6 +449,18 @@ The value of plottableY is the y-coordinate that you would use to draw this poin
 			}
 			nvgStroke(args.vg);
 		
+		{	// Full scale
+			nvgStrokeColor(args.vg, COLOR_GREEN);
+			nvgBeginPath(args.vg);
+			nvgMoveTo(args.vg, box.pos.x, centerLine - (buffer[0] / 20 * box.size.y));
+			for(int i = 0; i < box.size.x; i++) {
+				unsigned int idx = SAMPLES / box.size.x * i;
+				int val = buffer[idx] / 20 * box.size.y;
+				nvgLineTo(args.vg, box.pos.x + i, centerLine - val);
+			}
+			nvgStroke(args.vg);
+		}
+
 
 		if(font->handle >= 0) {
 			bndSetFont(font->handle);
@@ -542,6 +525,8 @@ The value of plottableY is the y-coordinate that you would use to draw this poin
 struct RSScratchWidget : ModuleWidget {
 	RSScratch* module;
 
+	int theme;
+
 	RSScribbleStrip* ss[3];
 	RSBufferDisplay* disp;
 
@@ -549,7 +534,14 @@ struct RSScratchWidget : ModuleWidget {
 		setModule(module);
 		this->module = module;
 
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/RSScratch.svg")));
+		//setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/RSScratch.svg")));
+		box.size.x = mm2px(5.08 * 100);
+		int middle = box.size.x / 2 + 1;
+
+		theme = loadDefaultTheme();
+
+        addChild(new RSLabelCentered(middle, box.pos.y + 13, "VECTOR VICTOR WITH KNOBS ON", 14));
+        addChild(new RSLabelCentered(box.size.x / 2, box.size.y - 6, "Racket Science", 12));
 
 		int x, y;
 
@@ -701,6 +693,9 @@ struct RSScratchWidget : ModuleWidget {
 		addChild(new RSLabelCentered(700, 250, "Racket Science Custom Label", 24));
 		*/
 	}
+
+    void customDraw(const DrawArgs& args) {}
+	#include "RSModuleWidgetDraw.hpp"
 
 	void step() override {
 		if(!module) return;

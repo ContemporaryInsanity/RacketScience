@@ -17,7 +17,8 @@ struct RSHeat : Module {
         NUM_OUTPUTS
     };
     enum LightIds {
-        ENUMS(LIGHTS, 12),
+        ENUMS(SEMITONE_LIGHTS, 12),
+        ENUMS(OCTAVE_LIGHTS, 10),
         NUM_LIGHTS
     };
 
@@ -28,12 +29,13 @@ struct RSHeat : Module {
     dsp::SchmittTrigger gateTrigger;
     dsp::BooleanTrigger resetTrigger;
 
-    float heat[12] = {};
+    float semiHeat[12] = {};
+    float octHeat[10] = {};
     float heatInc = 0.1f;
     float heatDec = 0.01f;
 
     RSHeat() {
-        logDivider.setDivision(16384);
+        logDivider.setDivision(4096);
         lightDivider.setDivision(1024);
         fadeDivider.setDivision(8192);
 
@@ -46,34 +48,44 @@ struct RSHeat : Module {
 
         float cvIn = inputs[CV_INPUT].getVoltage();
         int noteIdx = note(cvIn); //(int(round((cvIn + 10) * 12)) % 12);
+        int octIdx = octave(cvIn) + 5;
 
         if(gateTrigger.process(inputs[GATE_INPUT].getVoltage())) {
-            if(heat[noteIdx] < 1.f) heat[noteIdx] += heatInc;
+            if(semiHeat[noteIdx] < 1.f) semiHeat[noteIdx] += heatInc;
+            if(octHeat[octIdx] < 1.f) octHeat[octIdx] += heatInc;
         }
 
         if(resetTrigger.process(params[RESET_BUTTON].getValue())) {
-            for(int i = 0; i < 12; i++) heat[i] = 0.f;
+            for(int i = 0; i < 12; i++) semiHeat[i] = 0.f;
+            for(int i = 0; i < 10; i++) octHeat[i] = 0.f;
         }
 
         if(logDivider.process()) {
-            INFO("Racket Science: note %i", noteIdx);
+            INFO("Racket Science: note %i octave %i", noteIdx, octIdx);
         }
 
         if(lightDivider.process()) {
             for(int i = 0; i < 12; i++) {
-                lights[11 - i].setBrightness(heat[i]);
+                lights[11 - i].setBrightness(semiHeat[i]);
+            }
+            for(int i = 0; i < 10; i++) {
+                lights[21 - i].setBrightness(octHeat[i]);
             }
         }
 
         if(fadeDivider.process()) {
             for(int i = 0; i < 12; i++) {
-                if(heat[i] > 0.f) heat[i] -= heatDec;
+                if(semiHeat[i] > 0.f) semiHeat[i] -= heatDec;
+            }
+            for(int i = 0; i < 10; i++) {
+                if(octHeat[i] > 0.f) octHeat[i] -= heatDec;
             }
         }
     }
 
     void onReset() override {
-        std::memset(heat, 0, sizeof(heat));
+        std::memset(semiHeat, 0, sizeof(semiHeat));
+        std::memset(octHeat, 0, sizeof(octHeat));
     }
 
     json_t* dataToJson() override {
@@ -96,8 +108,9 @@ struct RSHeatWidget : ModuleWidget {
         setModule(module);
         this->module = module;
 
-        box.size.x = mm2px(5.08 * 3);
+        box.size.x = mm2px(5.08 * 5);
         int middle = box.size.x / 2 + 1;
+        int third = box.size.x / 3 + 1;
 
         theme = loadDefaultTheme();
 
@@ -118,14 +131,23 @@ struct RSHeatWidget : ModuleWidget {
         addChild(new RSLabelCentered(middle, 155, "RESET"));
 
         LightWidget *lightWidget;
+
+        // Semitone lights
         for(int i = 0 ; i < 12; i++) {
             int offset;
             switch(i) {
                 case 1: case 3: case 5: case 8: case 10: offset = 7; break;
                 default: offset = -7;
             }
-            lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(middle - offset, 170 + (i * 16)), module, RSHeat::LIGHTS + i);
-            lightWidget->bgColor = nvgRGBA(50, 50, 50, 128);
+            lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(third - offset, 170 + (i * 16)), module, RSHeat::SEMITONE_LIGHTS + i);
+            lightWidget->bgColor = nvgRGBA(10, 10, 10, 128);
+            addChild(lightWidget);
+        }
+
+        // Octave lights
+        for(int i = 0; i < 10; i++) {
+            lightWidget = createLightCentered<LargeLight<GreenLight>>(Vec(third * 2 + 7, 172 + (i * 19)), module, RSHeat::OCTAVE_LIGHTS + i);
+            lightWidget->bgColor = nvgRGBA(10, 10, 10, 128);
             addChild(lightWidget);
         }
     }

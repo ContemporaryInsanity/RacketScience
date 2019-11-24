@@ -31,13 +31,11 @@ struct RSHeat : Module {
 
     float semiHeat[12] = {};
     float octHeat[10] = {};
-    float heatInc = 0.1f;
-    float heatDec = 0.01f;
+    float heatInc = 0.2f;
+    float heatDec = 0.005f;
 
     RSHeat() {
         logDivider.setDivision(4096);
-        lightDivider.setDivision(1024);
-        fadeDivider.setDivision(8192);
 
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
     }
@@ -48,7 +46,7 @@ struct RSHeat : Module {
 
         float cvIn = inputs[CV_INPUT].getVoltage();
         int noteIdx = note(cvIn); //(int(round((cvIn + 10) * 12)) % 12);
-        int octIdx = octave(cvIn) + 5;
+        int octIdx = octave(cvIn) + 4;
 
         if(gateTrigger.process(inputs[GATE_INPUT].getVoltage())) {
             if(semiHeat[noteIdx] < 1.f) semiHeat[noteIdx] += heatInc;
@@ -62,24 +60,6 @@ struct RSHeat : Module {
 
         if(logDivider.process()) {
             INFO("Racket Science: note %i octave %i", noteIdx, octIdx);
-        }
-
-        if(lightDivider.process()) {
-            for(int i = 0; i < 12; i++) {
-                lights[11 - i].setBrightness(semiHeat[i]);
-            }
-            for(int i = 0; i < 10; i++) {
-                lights[21 - i].setBrightness(octHeat[i]);
-            }
-        }
-
-        if(fadeDivider.process()) {
-            for(int i = 0; i < 12; i++) {
-                if(semiHeat[i] > 0.f) semiHeat[i] -= heatDec;
-            }
-            for(int i = 0; i < 10; i++) {
-                if(octHeat[i] > 0.f) octHeat[i] -= heatDec;
-            }
         }
     }
 
@@ -150,6 +130,26 @@ struct RSHeatWidget : ModuleWidget {
             lightWidget->bgColor = nvgRGBA(10, 10, 10, 128);
             addChild(lightWidget);
         }
+    }
+
+    void step() override {
+        if(module) {
+            for(int i = 0; i < 12; i++) {
+                module->lights[11 - i].setBrightness(module->semiHeat[i]);
+            }
+            for(int i = 0; i < 10; i++) {
+                module->lights[21 - i].setBrightness(module->octHeat[i]);
+            }
+
+            for(int i = 0; i < 12; i++) {
+                if(module->semiHeat[i] > 0.f) module->semiHeat[i] -= module->heatDec;
+            }
+            for(int i = 0; i < 10; i++) {
+                if(module->octHeat[i] > 0.f) module->octHeat[i] -= module->heatDec;
+            }
+        }
+
+        ModuleWidget::step();
     }
 
     void customDraw(const DrawArgs& args) {}

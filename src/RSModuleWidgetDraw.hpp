@@ -1,4 +1,3 @@
-
 // Draws panel background instead of using SVG file
 // Calls customDraw() should we need to draw anything else
 void draw(const DrawArgs& args) override {

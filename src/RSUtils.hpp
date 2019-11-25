@@ -1,5 +1,3 @@
-// Inf & NaN proof clamps, thanks to Marc Boulé
-
 static inline float clamp20V(float in) {
     if(in >= -20.f && in <= 20.f) return in;
     return in > 20.f ? 20.f: -20.f;
@@ -15,14 +13,9 @@ static inline float clamp010V(float in) {
     return in > 10.f ? 10.f : 0.f;
 }
 
-// Thanks to Dieter Stubler for the following
-
 #define quantize(v)  (round(v * 12.f) / 12.f)
 #define octave(v)    int(floor(quantize(v)))
 #define note(v)      (int(round((v + 10) * 12)) % 12)
-
-
-// Thanks to Adam Verspaget / Count Modula for the following
 
 static void saveSettings(json_t *rootJ) {
     std::string settingsFile = asset::user("RacketScience.json");

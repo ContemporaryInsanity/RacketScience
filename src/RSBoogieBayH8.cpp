@@ -6,6 +6,7 @@
 
 struct RSBoogieBayH8 : Module {
 	enum ParamIds {
+		THEME_BUTTON,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -42,11 +43,21 @@ struct RSBoogieBayH8 : Module {
 		NUM_LIGHTS
 	};
 
+	dsp::BooleanTrigger themeTrigger;
+
 	RSBoogieBayH8() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+
+        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 	}
 
 	void process(const ProcessArgs &args) override {
+
+		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
+			RSTheme++;
+			if(RSTheme > RSThemes) RSTheme = 0;
+			saveDefaultTheme(RSTheme);
+		}
 
 		outputs[OUTL1_OUTPUT].setVoltage(inputs[IN1_INPUT].getVoltage()); outputs[OUTR1_OUTPUT].setVoltage(inputs[IN1_INPUT].getVoltage());
 		outputs[OUTL2_OUTPUT].setVoltage(inputs[IN2_INPUT].getVoltage()); outputs[OUTR2_OUTPUT].setVoltage(inputs[IN2_INPUT].getVoltage());
@@ -62,11 +73,24 @@ struct RSBoogieBayH8 : Module {
 
 
 struct RSBoogieBayH8Widget : ModuleWidget {
+	RSBoogieBayH8* module;
+
+	PortWidget *in1, *in2, *in3, *in4, *in5, *in6, *in7, *in8;
+
 	RSBoogieBayH8Widget(RSBoogieBayH8 *module) {
 		setModule(module);
-		_module = module;
+		this->module = module;
 
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/RSBoogieBayH8.svg")));
+		box.size.x = mm2px(5.09 * 25);
+		int middle = box.size.x / 2 + 1;
+
+		RSTheme = loadDefaultTheme();
+
+		addChild(new RSLabelCentered(middle, box.pos.y + 13, "BOOGIE BAY H8", 14));
+
+		addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12));
+
+		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSBoogieBayH8::THEME_BUTTON));
 
 		in1 = createInputCentered<RSJackMonoIn>(mm2px(Vec(63.5, 12.608)), module, RSBoogieBayH8::IN1_INPUT);
 		in2 = createInputCentered<RSJackMonoIn>(mm2px(Vec(63.5, 27.848)), module, RSBoogieBayH8::IN2_INPUT);
@@ -104,19 +128,11 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 		addOutput(createOutputCentered<RSJackMonoOut>(mm2px(Vec(117.052, 119.288)), module, RSBoogieBayH8::OUTR8_OUTPUT));
 	}
 
-	RSBoogieBayH8* _module;
-
-	bool init = true;
-
-	PortWidget *in1, *in2, *in3, *in4, *in5, *in6, *in7, *in8;
+    void customDraw(const DrawArgs& args) {}
+	#include "RSModuleWidgetDraw.hpp"
 
 	void step() override {
-		if(!_module) return;
-
-		if(init) {
-
-			init = false;
-		}
+		if(!module) return;
 
 		float in1v = clamp10V(module->inputs[RSBoogieBayH8::IN1_INPUT].getVoltage());
 		float in2v = clamp10V(module->inputs[RSBoogieBayH8::IN2_INPUT].getVoltage());

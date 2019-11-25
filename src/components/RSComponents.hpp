@@ -187,7 +187,7 @@ struct RSKnobDetentLrgBlk : RSKnobDetent { RSKnobDetentLrgBlk() { setSvg(APP->wi
 
 // Buttons
 
-struct RSButton : SVGSwitch { // The Count uses SvgSwitch?
+struct RSButton : SVGSwitch {
 	RSButton() {
 		shadow->opacity = 0.0f; // Hide shadows
 	}
@@ -202,17 +202,42 @@ struct RSButton : SVGSwitch { // The Count uses SvgSwitch?
 
 struct RSButtonToggle : RSButton {
 	RSButtonToggle() {
-		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSButton_0.svg")));
-		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSButton_1.svg")));
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButton.svg")));
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButtonBronze.svg")));
 	}
 };
 
-struct RSButtonMomentary: RSButtonToggle { // The Count inherits from button and explicitly adds the frames again, surely this will work ok?
+struct RSButtonToggleRed : RSButton {
+	RSButtonToggleRed() {
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButton.svg")));
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButtonRed.svg")));
+	}
+};
+
+struct RSButtonToggleInvisible : RSButton {
+	RSButtonToggleInvisible() {
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSButtonInvisibleIsh.svg")));
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSButtonInvisible.svg")));
+	}
+};
+
+struct RSButtonMomentary : RSButtonToggle {
 	RSButtonMomentary() {
 		momentary = true;
 	}
 };
 
+struct RSButtonMomentaryRed : RSButtonToggleRed {
+	RSButtonMomentaryRed() {
+		momentary = true;
+	}
+};
+
+struct RSButtonMomentaryInvisible : RSButtonToggleInvisible {
+	RSButtonMomentaryInvisible() {
+		momentary = true;
+	}
+};
 
 // Switches
 

@@ -1,6 +1,8 @@
 #pragma once
 #include <rack.hpp>
 
+extern int RSTheme;
+extern int RSThemes;
 
 using namespace rack;
 

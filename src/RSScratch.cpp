@@ -6,12 +6,12 @@
 #include "RSUtils.hpp"
 #include "components/RSComponents.hpp"
 
-
 struct RSScratch : Module {
-	enum ParamIds {
+	enum ParamIds {		
 		IN_A_PARAM, WRITE_A_PARAM, SCRUB_A_PARAM, CLEAR_A_PARAM, RAND_A_PARAM,
 		IN_B_PARAM, WRITE_B_PARAM, SCRUB_B_PARAM, CLEAR_B_PARAM, RAND_B_PARAM,
 		IN_C_PARAM, WRITE_C_PARAM, SCRUB_C_PARAM, CLEAR_C_PARAM, RAND_C_PARAM,
+		THEME_BUTTON,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -30,11 +30,8 @@ struct RSScratch : Module {
 		NUM_LIGHTS
 	};
 
-	dsp::ClockDivider logDivider;
 
 	RSScratch() {
-		logDivider.setDivision(16384);
-
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(IN_A_PARAM, -10.f, 10.f, 0.f, "IN");
 		configParam(WRITE_A_PARAM, 0.f, 1.f, 0.f, "WRITE");
@@ -53,9 +50,13 @@ struct RSScratch : Module {
 		configParam(SCRUB_C_PARAM, -INFINITY, INFINITY, 0.f, "SCRUB");
 		configParam(CLEAR_C_PARAM, 0.f, 1.f, 0.f, "CLEAR");
 		configParam(RAND_C_PARAM, 0.f, 1.f, 0.f, "RAND");
+
+        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 	}
 
 	RSScribbleStrip* ss[3];
+
+	dsp::BooleanTrigger themeTrigger;
 
 	dsp::BooleanTrigger clearTriggerA;
 	dsp::BooleanTrigger clearTriggerB;
@@ -75,6 +76,13 @@ struct RSScratch : Module {
 		float inA, inB, inC;
 		float phaseA, phaseB, phaseC;
 
+        if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
+            RSTheme++;
+            if(RSTheme > RSThemes) RSTheme = 0;
+            saveDefaultTheme(RSTheme);
+			INFO("Racket Science: scratch theme trigger");
+        }
+
 		if(clearTriggerA.process(params[CLEAR_A_PARAM].getValue() > 0.f)) resetA();
 		if(clearTriggerB.process(params[CLEAR_B_PARAM].getValue() > 0.f)) resetB();
 		if(clearTriggerC.process(params[CLEAR_C_PARAM].getValue() > 0.f)) resetC();
@@ -93,6 +101,8 @@ struct RSScratch : Module {
 
 		configParam<MyParamQuantity>(...);
 		*/
+
+		// Fudge factor 4.15 version 2.41 (tm) (all rights reserved) (use at own risk)
 
         if(inputs[PHASE_A_INPUT].isConnected()) {
 			phaseA = clamp010V(inputs[PHASE_A_INPUT].getVoltage());
@@ -199,9 +209,6 @@ struct RSScratch : Module {
         outputs[OUT_B_OUTPUT].setVoltage(bufferB[idxB]);
         outputs[OUT_C_OUTPUT].setVoltage(bufferC[idxC]);
 
-		if(logDivider.process()) {
-			//INFO("Racket Science: %i", writeA);
-		}
 		// Have a phase out driven from scrub knob
 		// Have a eight playhead version with individal scrub / phase & outs, mono & poly out
 		// Step input & step length control & direction for stepping through array
@@ -212,10 +219,6 @@ struct RSScratch : Module {
 		//   Keep it up, keep practicing, you might get back to where you were eventually.
 
 		// record head white when not recording, red when recording
-	}
-
-	void step() override {
-
 	}
 
 	void onReset() override {
@@ -486,29 +489,6 @@ struct RSBufferDisplay : TransparentWidget {
 			bndSetFont(APP->window->uiFont->handle);
 		}
 
-
-
-/*
-		bool autoScale = true;
-		int scaleFactor;
-
-		int scale = (int)abs(max) > (int)abs(min) ? int(abs(max)) : int(abs(min));
-
-		if(autoScale) {
-			switch(scale) {
-				case 0:
-				case 1: scaleFactor = 2; break;
-				case 2: scaleFactor = 5; break;
-				case 3: scaleFactor = 10; break;
-				case 4: 
-				case 5:
-				default: scaleFactor = 20; break;
-			}
-		}
-		else scaleFactor = 20; // 1 = +/- .5, 2 = +/-1, 5 = +/- 2.5, 10 = +/-5, 20 = +/-10
-		INFO("Racket Science: scale=%2i scaleFactor=%2i min=%+2.4f max=%+2.4f range=%2.4f", scale, scaleFactor, min, max, range);
-*/
-
 		// Index
 		nvgStrokeColor(args.vg, *write == true ? COLOR_RED : COLOR_RS_GREY);
 		nvgStrokeWidth(args.vg, 2);
@@ -525,8 +505,6 @@ struct RSBufferDisplay : TransparentWidget {
 struct RSScratchWidget : ModuleWidget {
 	RSScratch* module;
 
-	int theme;
-
 	RSScribbleStrip* ss[3];
 	RSBufferDisplay* disp;
 
@@ -538,10 +516,12 @@ struct RSScratchWidget : ModuleWidget {
 		box.size.x = mm2px(5.08 * 100);
 		int middle = box.size.x / 2 + 1;
 
-		theme = loadDefaultTheme();
+		RSTheme = loadDefaultTheme();
 
         addChild(new RSLabelCentered(middle, box.pos.y + 13, "VECTOR VICTOR WITH KNOBS ON", 14));
-        addChild(new RSLabelCentered(box.size.x / 2, box.size.y - 6, "Racket Science", 12));
+        addChild(new RSLabelCentered(middle, box.size.y - 6, "Racket Science", 12));
+
+		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSScratch::THEME_BUTTON));
 
 		int x, y;
 
@@ -556,7 +536,7 @@ struct RSScratchWidget : ModuleWidget {
 
 		// WRITE
 		x += 73; y -= 15;
-		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::WRITE_A_PARAM));
+		addParam(createParamCentered<RSButtonMomentaryRed>(Vec(x, y), module, RSScratch::WRITE_A_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::WRITE_A_INPUT));
 		addChild(new RSLabelCentered(x, y + 52, "WRITE"));
 
@@ -601,7 +581,7 @@ struct RSScratchWidget : ModuleWidget {
 
 		// WRITE
 		x += 73; y -= 15;
-		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::WRITE_B_PARAM));
+		addParam(createParamCentered<RSButtonMomentaryRed>(Vec(x, y), module, RSScratch::WRITE_B_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::WRITE_B_INPUT));
 		addChild(new RSLabelCentered(x, y + 52, "WRITE"));
 
@@ -646,7 +626,7 @@ struct RSScratchWidget : ModuleWidget {
 
 		// WRITE
 		x += 73; y -= 15;
-		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::WRITE_C_PARAM));
+		addParam(createParamCentered<RSButtonMomentaryRed>(Vec(x, y), module, RSScratch::WRITE_C_PARAM));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::WRITE_C_INPUT));
 		addChild(new RSLabelCentered(x, y + 52, "WRITE"));
 

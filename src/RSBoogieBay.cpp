@@ -3,9 +3,9 @@
 #include "components/RSComponents.hpp"
 #include "RSUtils.hpp"
 
-
 struct RSBoogieBay : Module {
 	enum ParamIds {
+        THEME_BUTTON,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -24,8 +24,12 @@ struct RSBoogieBay : Module {
 
 	RSBoogieBay() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+
+        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 	}
 
+    dsp::BooleanTrigger themeTrigger;
+    
     int vrangea = 4;
     int vrangeb = 2;
 
@@ -34,14 +38,16 @@ struct RSBoogieBay : Module {
 
 	void process(const ProcessArgs &args) override {
 
+		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
+			RSTheme++;
+			if(RSTheme > RSThemes) RSTheme = 0;
+			saveDefaultTheme(RSTheme);
+		}
+
         outputs[OUTA_OUTPUT].setVoltage(inputs[INA_INPUT].getVoltage());
         outputs[OUTB_OUTPUT].setVoltage(inputs[INB_INPUT].getVoltage());
 
 	}
-
-    void step() override {
-        
-    }
 
     void onReset() override {
     }
@@ -68,8 +74,6 @@ struct RSBoogieBay : Module {
 struct RSBoogieBayWidget : ModuleWidget {
     RSBoogieBay* module;
 
-    int theme;
-    
     PortWidget *ina, *inb;
 
     RSLabel* topScaleaLabel;
@@ -87,12 +91,14 @@ struct RSBoogieBayWidget : ModuleWidget {
         box.size.x = mm2px(5.08 * 5);
         int middle = box.size.x / 2 + 1;
 
-        theme = loadDefaultTheme();
+        RSTheme = loadDefaultTheme();
     
         addChild(new RSLabelCentered(middle, box.pos.y + 13, "BOOGIE", 14));
         addChild(new RSLabelCentered(middle, box.pos.y + 25, "BAY", 14));
 
         addChild(new RSLabelCentered(box.size.x / 2, box.size.y - 6, "Racket Science", 12));
+
+		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSBoogieBay::THEME_BUTTON));
 
         ina = createInputCentered<RSJackMonoIn>(Vec(22, 175), module, RSBoogieBay::INA_INPUT);
 		addInput(ina);
@@ -118,10 +124,18 @@ struct RSBoogieBayWidget : ModuleWidget {
         // Socket scale markers
         nvgStrokeColor(args.vg, COLOR_RS_GREY);
         nvgStrokeWidth(args.vg, 1);
-        for(int y = top; y <= bottom; y += (bottom - top) / 10) {
+        for(int y = top, cnt = 0; y <= bottom; y += (bottom - top) / 10, cnt++) {
             nvgBeginPath(args.vg);
-            nvgMoveTo(args.vg, 16, y);
-            nvgLineTo(args.vg, 58, y);
+            switch(cnt) {
+                case 0: case 5: case 10:
+                    nvgMoveTo(args.vg, 16, y);
+                    nvgLineTo(args.vg, 58, y);
+                    break;
+                default:
+                    nvgMoveTo(args.vg, 30, y);
+                    nvgLineTo(args.vg, 44, y);
+                    break;
+            }
             nvgStroke(args.vg);
         }
 

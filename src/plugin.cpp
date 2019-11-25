@@ -1,8 +1,9 @@
 #include "plugin.hpp"
 
+int RSTheme = 0;
+int RSThemes = 5;
 
 Plugin *pluginInstance;
-
 
 void init(Plugin *p) {
 	pluginInstance = p;

@@ -3,9 +3,9 @@
 #include "components/RSComponents.hpp"
 #include "RSUtils.hpp"
 
-
 struct RSMFH : Module {
 	enum ParamIds {
+		THEME_BUTTON,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -23,11 +23,22 @@ struct RSMFH : Module {
 		NUM_LIGHTS
 	};
 
+	dsp::BooleanTrigger themeTrigger;
+
 	RSMFH() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+
+        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 	}
 
 	void process(const ProcessArgs &args) override {
+
+		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
+			RSTheme++;
+			if(RSTheme > RSThemes) RSTheme = 0;
+			saveDefaultTheme(RSTheme);
+		}
+
 		outputs[MINF_OUT].setChannels(16);
 		outputs[PINF_OUT].setChannels(16);
 		outputs[NAN_OUT].setChannels(16);
@@ -54,8 +65,6 @@ struct RSMFH : Module {
 struct RSMFHWidget : ModuleWidget {
 	RSMFH* module;
 
-	int theme;
-
 	RSMFHWidget(RSMFH *module) {
 		setModule(module);
 		this->module = module;
@@ -63,14 +72,16 @@ struct RSMFHWidget : ModuleWidget {
 		box.size.x = mm2px(5.08 * 3);
 		int middle = box.size.x / 2 + 1;
 
-        theme = loadDefaultTheme();
+		RSTheme = loadDefaultTheme();
 
-        addChild(new RSLabelCentered(middle, box.pos.y + 13, "MODULE", 14));
-        addChild(new RSLabelCentered(middle, box.pos.y + 25, "FROM", 14));
-        addChild(new RSLabelCentered(middle, box.pos.y + 37, "HELL", 14));
+		addChild(new RSLabelCentered(middle, box.pos.y + 13, "MODULE", 14));
+		addChild(new RSLabelCentered(middle, box.pos.y + 25, "FROM", 14));
+		addChild(new RSLabelCentered(middle, box.pos.y + 37, "HELL", 14));
 
-        addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
-        addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
+		addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
+		addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
+
+		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSMFH::THEME_BUTTON));
 
 		addOutput(createOutputCentered<RSJackPolyOut>(Vec(23, 72), module, RSMFH::MINF_OUT));
 		addChild(new RSLabelCentered(middle, 94, "-INF"));

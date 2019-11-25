@@ -2,9 +2,12 @@
 // Calls customDraw() should we need to draw anything else
 void draw(const DrawArgs& args) override {
     nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
-    switch(theme) {
+    switch(RSTheme) {
         case 0: nvgFillColor(args.vg, COLOR_RS_BG); break;
         case 1: nvgFillColor(args.vg, nvgRGB(0x60, 0x60, 0x00)); break;
+        case 2: nvgFillColor(args.vg, nvgRGB(0x60, 0x00, 0x00)); break;
+        case 3: nvgFillColor(args.vg, nvgRGB(0x00, 0x60, 0x00)); break;
+        case 4: nvgFillColor(args.vg, nvgRGB(0x00, 0x00, 0x60)); break;
         default: nvgFillColor(args.vg, COLOR_BLACK);
     }
 

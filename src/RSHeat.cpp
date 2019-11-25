@@ -5,6 +5,7 @@
 
 struct RSHeat : Module {
     enum ParamIds {
+        THEME_BUTTON,
         RESET_BUTTON,
         NUM_PARAMS
     };
@@ -26,6 +27,7 @@ struct RSHeat : Module {
     dsp::ClockDivider lightDivider;
     dsp::ClockDivider fadeDivider;
 
+    dsp::BooleanTrigger themeTrigger;
     dsp::SchmittTrigger gateTrigger;
     dsp::BooleanTrigger resetTrigger;
 
@@ -38,15 +40,20 @@ struct RSHeat : Module {
         logDivider.setDivision(4096);
 
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+
+        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
     }
 
     void process(const ProcessArgs &args) override {
-
-        // This DOESN'T need to run at anywhere near audio rate
-
         float cvIn = inputs[CV_INPUT].getVoltage();
-        int noteIdx = note(cvIn); //(int(round((cvIn + 10) * 12)) % 12);
+        int noteIdx = note(cvIn);
         int octIdx = octave(cvIn) + 4;
+
+        if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
+            RSTheme++;
+            if(RSTheme > RSThemes) RSTheme = 0;
+            saveDefaultTheme(RSTheme);
+        }
 
         if(gateTrigger.process(inputs[GATE_INPUT].getVoltage())) {
             if(semiHeat[noteIdx] < 1.f) semiHeat[noteIdx] += heatInc;
@@ -59,7 +66,7 @@ struct RSHeat : Module {
         }
 
         if(logDivider.process()) {
-            INFO("Racket Science: note %i octave %i", noteIdx, octIdx);
+            //INFO("Racket Science: note %i octave %i", noteIdx, octIdx);
         }
     }
 
@@ -82,8 +89,6 @@ struct RSHeat : Module {
 struct RSHeatWidget : ModuleWidget {
     RSHeat* module;
 
-    int theme = 0;
-
     RSHeatWidget(RSHeat *module) {
         setModule(module);
         this->module = module;
@@ -92,7 +97,7 @@ struct RSHeatWidget : ModuleWidget {
         int middle = box.size.x / 2 + 1;
         int third = box.size.x / 3 + 1;
 
-        theme = loadDefaultTheme();
+        RSTheme = loadDefaultTheme();
 
         addChild(new RSLabelCentered(middle, box.pos.y + 14, "HEAT", 15));
         //addChild(new RSLabelCentered(middle, box.pos.y + 30, "Module Subtitle", 14));
@@ -100,6 +105,7 @@ struct RSHeatWidget : ModuleWidget {
         addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
         addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
 
+		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSHeat::THEME_BUTTON));
 
         addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 40), module, RSHeat::CV_INPUT));
         addChild(new RSLabelCentered(middle, 65, "V/OCT"));
@@ -133,20 +139,20 @@ struct RSHeatWidget : ModuleWidget {
     }
 
     void step() override {
-        if(module) {
-            for(int i = 0; i < 12; i++) {
-                module->lights[11 - i].setBrightness(module->semiHeat[i]);
-            }
-            for(int i = 0; i < 10; i++) {
-                module->lights[21 - i].setBrightness(module->octHeat[i]);
-            }
+        if(!module) return;
+        
+        for(int i = 0; i < 12; i++) {
+            module->lights[11 - i].setBrightness(module->semiHeat[i]);
+        }
+        for(int i = 0; i < 10; i++) {
+            module->lights[21 - i].setBrightness(module->octHeat[i]);
+        }
 
-            for(int i = 0; i < 12; i++) {
-                if(module->semiHeat[i] > 0.f) module->semiHeat[i] -= module->heatDec;
-            }
-            for(int i = 0; i < 10; i++) {
-                if(module->octHeat[i] > 0.f) module->octHeat[i] -= module->heatDec;
-            }
+        for(int i = 0; i < 12; i++) {
+            if(module->semiHeat[i] > 0.f) module->semiHeat[i] -= module->heatDec;
+        }
+        for(int i = 0; i < 10; i++) {
+            if(module->octHeat[i] > 0.f) module->octHeat[i] -= module->heatDec;
         }
 
         ModuleWidget::step();

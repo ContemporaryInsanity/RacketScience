@@ -10,13 +10,12 @@ using namespace rack;
 extern Plugin *pluginInstance;
 
 // Declare each Model, defined in each module source file
-// extern Model *modelMyModule;
 extern Model *modelRSVectorVictor;
 extern Model *modelRSBoogieBay;
 extern Model *modelRSBoogieBayH8;
 extern Model *modelRSMFH;
 extern Model *modelRSHeat;
 
-extern Model *modelRSScratch;
+//extern Model *modelRSScratch;
 
-extern Model *modelRSSkeleton;
+//extern Model *modelRSSkeleton;

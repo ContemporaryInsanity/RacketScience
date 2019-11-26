@@ -393,10 +393,32 @@ struct RSBufferDisplay : TransparentWidget {
 		if(!module) { // Stand out in the module browser
 			nvgFontSize(args.vg, 60);
 			nvgFillColor(args.vg, COLOR_RS_BRONZE);
+			nvgTextAlign(args.vg, NVG_ALIGN_CENTER);
 			//if(box.pos.y == 10) nvgText(args.vg, box.pos.x + 350, box.pos.y + 70, "Vector Victor", NULL);
-			if(box.pos.y == 70) nvgText(args.vg, box.pos.x + 350, box.pos.y + 70, "Racket Science", NULL);
-			//if(box.pos.y == 130) nvgText(args.vg, box.pos.x + 350, box.pos.y + 70, "With Knobs On!!!", NULL);
+
+			if(box.pos.y == 10) { //} && now->tm_mday == 26 && now->tm_mon + 1 == 11) {
+				char msg[20];
+				std::time_t t = std::time(0);
+				std::tm* now = std::localtime(&t);
+				switch(now->tm_wday) {
+					case 1: strcpy(msg, "Happy Monday"); break; 
+					case 2: strcpy(msg, "Happy Tuesday"); break; 
+					case 3: strcpy(msg, "Happy Wednesday"); break; 
+					case 4: strcpy(msg, "Happy Thursday"); break; 
+					case 5: strcpy(msg, "Happy Friday"); break; 
+					case 6: strcpy(msg, "Happy Saturday"); break; 
+					case 7: strcpy(msg, "Happy Sunday"); break; 
+				}
+				if(now->tm_mday == 25 && now->tm_mon + 1 == 12) strcpy(msg, "MERRY XMAS!");
+				nvgText(args.vg, box.pos.x + box.size.x / 2, box.pos.y + 70, msg, NULL);				
+			}
+
+			if(box.pos.y == 70) nvgText(args.vg, box.pos.x + box.size.x / 2, box.pos.y + 70, "Racket Science", NULL);
+		
+			nvgFontSize(args.vg, 30);
+			if(box.pos.y == 130) nvgText(args.vg, box.pos.x + box.size.x / 2, box.pos.y + 70, "Please consider donating : )", NULL);
 			nvgStroke(args.vg);
+			
 			return; // Down here so the module browser thumbnailer gets to see above
 		}
 

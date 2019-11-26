@@ -40,7 +40,6 @@ struct RSHeat : Module {
         logDivider.setDivision(4096);
 
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-
         configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
     }
 
@@ -107,14 +106,14 @@ struct RSHeatWidget : ModuleWidget {
 
 		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSHeat::THEME_BUTTON));
 
-        addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 40), module, RSHeat::CV_INPUT));
-        addChild(new RSLabelCentered(middle, 65, "V/OCT"));
+        addInput(createInputCentered<RSJackMonoIn>(Vec(middle / 2, 40), module, RSHeat::CV_INPUT));
+        addChild(new RSLabelCentered(middle / 2, 65, "V/OCT"));
         
-        addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 85), module, RSHeat::GATE_INPUT));
-        addChild(new RSLabelCentered(middle, 110, "GATE"));
+        addInput(createInputCentered<RSJackMonoIn>(Vec(middle + middle / 2, 40), module, RSHeat::GATE_INPUT));
+        addChild(new RSLabelCentered(middle + middle / 2, 65, "GATE"));
 
-        addParam(createParamCentered<RSButtonMomentary>(Vec(middle, 130), module, RSHeat::RESET_BUTTON));
-        addChild(new RSLabelCentered(middle, 155, "RESET"));
+        addParam(createParamCentered<RSButtonMomentary>(Vec(middle, 80), module, RSHeat::RESET_BUTTON));
+        addChild(new RSLabelCentered(middle, 105, "RESET"));
 
         LightWidget *lightWidget;
 
@@ -125,14 +124,14 @@ struct RSHeatWidget : ModuleWidget {
                 case 1: case 3: case 5: case 8: case 10: offset = 7; break;
                 default: offset = -7;
             }
-            lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(third - offset, 170 + (i * 16)), module, RSHeat::SEMITONE_LIGHTS + i);
+            lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(third - offset, 120 + (i * 20)), module, RSHeat::SEMITONE_LIGHTS + i);
             lightWidget->bgColor = nvgRGBA(10, 10, 10, 128);
             addChild(lightWidget);
         }
 
         // Octave lights
         for(int i = 0; i < 10; i++) {
-            lightWidget = createLightCentered<LargeLight<GreenLight>>(Vec(third * 2 + 7, 172 + (i * 19)), module, RSHeat::OCTAVE_LIGHTS + i);
+            lightWidget = createLightCentered<LargeLight<GreenLight>>(Vec(third * 2 + 7, 120 + (i * 24.5)), module, RSHeat::OCTAVE_LIGHTS + i);
             lightWidget->bgColor = nvgRGBA(10, 10, 10, 128);
             addChild(lightWidget);
         }

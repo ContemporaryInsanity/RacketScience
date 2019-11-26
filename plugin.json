@@ -1,7 +1,7 @@
 {
   "slug": "RacketScience",
   "name": "Racket Science",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "GPL-3.0",
   "brand": "Racket Science",
   "author": "ContemporaryInsanity",
@@ -17,6 +17,7 @@
       "name": "Vector Victor",
       "description": "Phase driven CV loop recorder",
       "tags": [
+        "Visual",
         "Recording",
         "Sequencer",
         "Utility"
@@ -34,8 +35,9 @@
     {
       "slug": "RSBoogieBayH8",
       "name": "RSBoogieBayH8",
-      "description": "",
+      "description": "Cable wobbler / poly merger",
       "tags": [
+        "Poly",
         "Visual",
         "Utility"
       ]
@@ -44,25 +46,20 @@
       "slug": "RSMFH",
       "name": "RSMFH",
       "description": "Module From Hell",
-      "tags": []
-    },
-    {
-      "slug": "RSScratch",
-      "name": "RSScratch",
-      "description": "",
-      "tags": []
-    },
-    {
-      "slug": "RSSkeleton",
-      "name": "RSSkeleton",
-      "description": "",
-      "tags": []
+      "tags": [
+        "Poly",
+        "Function generator",
+        "Utility"
+      ]
     },
     {
       "slug": "RSHeat",
       "name": "RSHeat",
-      "description": "",
-      "tags": []
+      "description": "Note / Octave Heat Map",
+      "tags": [
+        "Visual",
+        "Utility"
+      ]
     }
   ]
 }

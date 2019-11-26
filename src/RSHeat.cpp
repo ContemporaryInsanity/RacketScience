@@ -44,9 +44,9 @@ struct RSHeat : Module {
     }
 
     void process(const ProcessArgs &args) override {
-        float cvIn = inputs[CV_INPUT].getVoltage();
+        float cvIn = clamp10V(inputs[CV_INPUT].getVoltage());
         int noteIdx = note(cvIn);
-        int octIdx = octave(cvIn) + 4;
+        int octIdx = clamp(octave(cvIn) + 4, 0, 9);
 
         if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
             RSTheme++;
@@ -63,6 +63,9 @@ struct RSHeat : Module {
             for(int i = 0; i < 12; i++) semiHeat[i] = 0.f;
             for(int i = 0; i < 10; i++) octHeat[i] = 0.f;
         }
+
+        if(octIdx <= 1) INFO("Racket Science: %i", octIdx);
+        if(octIdx > 9) INFO("Racket Science: %i", octIdx);
 
         if(logDivider.process()) {
             //INFO("Racket Science: note %i octave %i", noteIdx, octIdx);

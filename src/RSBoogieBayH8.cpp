@@ -24,6 +24,9 @@ struct RSBoogieBayH8 : Module {
 
 	dsp::BooleanTrigger themeTrigger;
 
+	RSScribbleStrip *ss[8];
+
+
 	RSBoogieBayH8() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
@@ -43,6 +46,29 @@ struct RSBoogieBayH8 : Module {
 			outputs[RIGHT_OUTPUTS + i].setVoltage(inputs[INPUTS + i].getVoltage());
 		}
 	}
+
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		char ssn[4];
+
+		for(int i = 0; i < 8; i++) {
+			json_t* ssj = json_string(ss[i]->text.c_str());
+			sprintf(ssn, "SS%i", i);
+			json_object_set_new(rootJ, ssn, ssj);
+		}
+
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		char ssn[4];
+
+		for(int i = 0; i < 8; i++) {
+			sprintf(ssn, "SS%i", i);
+			json_t* ssj = json_object_get(rootJ, ssn);
+			if(ssj) ss[i]->text = json_string_value(ssj);
+		}
+	}
 };
 
 
@@ -50,7 +76,6 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 	RSBoogieBayH8* module;
 
 	PortWidget *in[8];
-	RSScribbleStrip *ss[8];
 	int middle, left, right;
 
 	RSBoogieBayH8Widget(RSBoogieBayH8 *module) {
@@ -73,12 +98,12 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 			in[i] = createInputCentered<RSJackMonoIn>(Vec(middle, 40 + (i * 40)), module, RSBoogieBayH8::INPUTS + i); addInput(in[i]);
 			addOutput(createOutputCentered<RSJackMonoOut>(Vec(left, 40 + (i * 40)), module, RSBoogieBayH8::LEFT_OUTPUTS + i));
 			addOutput(createOutputCentered<RSJackMonoOut>(Vec(right, 40 + (i * 40)), module, RSBoogieBayH8::RIGHT_OUTPUTS + i));
-			addChild(ss[i] = new RSScribbleStrip(left + 25, 25 + (i * 40)));
+			if(module) addChild(module->ss[i] = new RSScribbleStrip(left + 25, 25 + (i * 40)));
 		}
 	}
 
     void customDraw(const DrawArgs& args) {
-		// Socket slots draw here
+		// Socket slots
 		nvgLineCap(args.vg, NVG_ROUND);
 		nvgStrokeColor(args.vg, COLOR_BLACK);
 		nvgStrokeWidth(args.vg, 5);

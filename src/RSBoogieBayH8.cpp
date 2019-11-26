@@ -50,14 +50,17 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 	RSBoogieBayH8* module;
 
 	PortWidget *in[8];
-	int middle;
+	RSScribbleStrip *ss[8];
+	int middle, left, right;
 
 	RSBoogieBayH8Widget(RSBoogieBayH8 *module) {
 		setModule(module);
 		this->module = module;
 
-		box.size.x = mm2px(5.09 * 25);
+		box.size.x = mm2px(5.08 * 25);
 		middle = box.size.x / 2 + 1;
+		left = 40;
+		right = box.size.y - 40;
 
 		RSTheme = loadDefaultTheme();
 
@@ -66,27 +69,36 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 
 		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSBoogieBayH8::THEME_BUTTON));
 
-		int left = 40;
-		int right = box.size.y - 40;
-
 		for(int i = 0; i < 8; i++) {
 			in[i] = createInputCentered<RSJackMonoIn>(Vec(middle, 40 + (i * 40)), module, RSBoogieBayH8::INPUTS + i); addInput(in[i]);
 			addOutput(createOutputCentered<RSJackMonoOut>(Vec(left, 40 + (i * 40)), module, RSBoogieBayH8::LEFT_OUTPUTS + i));
 			addOutput(createOutputCentered<RSJackMonoOut>(Vec(right, 40 + (i * 40)), module, RSBoogieBayH8::RIGHT_OUTPUTS + i));
-			// Add a scribble strip here
+			addChild(ss[i] = new RSScribbleStrip(left + 25, 25 + (i * 40)));
 		}
 	}
 
     void customDraw(const DrawArgs& args) {
 		// Socket slots draw here
+		nvgLineCap(args.vg, NVG_ROUND);
+		nvgStrokeColor(args.vg, COLOR_BLACK);
+		nvgStrokeWidth(args.vg, 5);
+
+		for(int i = 0; i < 8; i++) {
+			nvgBeginPath(args.vg);
+			nvgMoveTo(args.vg, left + 30, 40 + (i * 40));
+			nvgLineTo(args.vg, right - 30, 40 + (i * 40));
+			nvgStroke(args.vg);
+		}
+
 	}
 	#include "RSModuleWidgetDraw.hpp"
 
 	void step() override {
 		if(!module) return;
 
-		for(int i = 0; i < 8; i++)  // This isn't centering properly.
-			in[i]->box.pos.x = (middle + (clamp10V(module->inputs[RSBoogieBayH8::INPUTS + i].getVoltage())) * 11);
+		for(int i = 0; i < 8; i++) {
+			in[i]->box.pos.x = (middle - 10 + (clamp10V(module->inputs[RSBoogieBayH8::INPUTS + i].getVoltage()) * 12));
+		}
 
 		ModuleWidget::step();
 	}

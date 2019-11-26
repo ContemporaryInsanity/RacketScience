@@ -54,7 +54,7 @@ struct RSScratch : Module {
         configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 	}
 
-	RSScribbleStrip* ss[3];
+	RSScribbleStrip *ss[3];
 
 	dsp::BooleanTrigger themeTrigger;
 
@@ -512,7 +512,6 @@ struct RSScratchWidget : ModuleWidget {
 		setModule(module);
 		this->module = module;
 
-		//setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/RSScratch.svg")));
 		box.size.x = mm2px(5.08 * 100);
 		int middle = box.size.x / 2 + 1;
 

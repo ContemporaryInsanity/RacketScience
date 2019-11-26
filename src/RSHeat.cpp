@@ -64,9 +64,6 @@ struct RSHeat : Module {
             for(int i = 0; i < 10; i++) octHeat[i] = 0.f;
         }
 
-        if(octIdx <= 1) INFO("Racket Science: %i", octIdx);
-        if(octIdx > 9) INFO("Racket Science: %i", octIdx);
-
         if(logDivider.process()) {
             //INFO("Racket Science: note %i octave %i", noteIdx, octIdx);
         }

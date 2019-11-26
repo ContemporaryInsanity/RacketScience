@@ -16,6 +16,8 @@ struct RSBoogieBayH8 : Module {
 	enum OutputIds {
 		ENUMS(LEFT_OUTPUTS, 8),
 		ENUMS(RIGHT_OUTPUTS, 8),
+		POLY_LEFT_OUTPUT,
+		POLY_RIGHT_OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -34,6 +36,8 @@ struct RSBoogieBayH8 : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
+		outputs[POLY_LEFT_OUTPUT].setChannels(8);
+		outputs[POLY_RIGHT_OUTPUT].setChannels(8);
 
 		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
 			RSTheme++;
@@ -42,8 +46,11 @@ struct RSBoogieBayH8 : Module {
 		}
 
 		for(int i = 0; i < 8; i++) {
-			outputs[LEFT_OUTPUTS + i].setVoltage(inputs[INPUTS + i].getVoltage());
-			outputs[RIGHT_OUTPUTS + i].setVoltage(inputs[INPUTS + i].getVoltage());
+			float inv = inputs[INPUTS + i].getVoltage();
+			outputs[LEFT_OUTPUTS + i].setVoltage(inv);
+			outputs[RIGHT_OUTPUTS + i].setVoltage(inv);
+			outputs[POLY_LEFT_OUTPUT].setVoltage(inv, i);
+			outputs[POLY_RIGHT_OUTPUT].setVoltage(inv, i);
 		}
 	}
 
@@ -100,6 +107,9 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 			addOutput(createOutputCentered<RSJackMonoOut>(Vec(right, 40 + (i * 40)), module, RSBoogieBayH8::RIGHT_OUTPUTS + i));
 			if(module) addChild(module->ss[i] = new RSScribbleStrip(left + 25, 25 + (i * 40)));
 		}
+
+		addOutput(createOutputCentered<RSJackPolyOut>(Vec(left, 360), module, RSBoogieBayH8::POLY_LEFT_OUTPUT));
+		addOutput(createOutputCentered<RSJackPolyOut>(Vec(right, 360), module, RSBoogieBayH8::POLY_RIGHT_OUTPUT));
 	}
 
     void customDraw(const DrawArgs& args) {

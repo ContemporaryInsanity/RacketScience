@@ -154,6 +154,7 @@ struct RSScribbleStrip : LedDisplayTextField {
 // Ports
 
 struct RSJackMonoOut : SVGPort { RSJackMonoOut() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoOut.svg"))); } };
+struct RSJackSmallMonoOut : SVGPort { RSJackSmallMonoOut() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackSmallMonoOut.svg"))); } };
 struct RSJackPolyOut : SVGPort { RSJackPolyOut() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyOut.svg"))); } };
 struct RSJackMonoIn  : SVGPort { RSJackMonoIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoIn.svg"))); } };
 struct RSJackPolyIn  : SVGPort { RSJackPolyIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyIn.svg"))); } };

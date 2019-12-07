@@ -37,7 +37,6 @@ struct RSBoogieBay : Module {
     bool menubChanged = true;
 
 	void process(const ProcessArgs &args) override {
-
 		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
 			RSTheme++;
 			if(RSTheme > RSThemes) RSTheme = 0;
@@ -46,7 +45,6 @@ struct RSBoogieBay : Module {
 
         outputs[OUTA_OUTPUT].setVoltage(inputs[INA_INPUT].getVoltage());
         outputs[OUTB_OUTPUT].setVoltage(inputs[INB_INPUT].getVoltage());
-
 	}
 
     void onReset() override {
@@ -231,8 +229,8 @@ struct RSBoogieBayWidget : ModuleWidget {
             module->menubChanged = false;
         }
 
-        float inav = clamp10V(module->inputs[RSBoogieBay::INA_INPUT].getVoltage());
-        float inbv = clamp10V(module->inputs[RSBoogieBay::INB_INPUT].getVoltage());
+        float inav = RSclamp(module->inputs[RSBoogieBay::INA_INPUT].getVoltage(), -10.f, 10.f);
+        float inbv = RSclamp(module->inputs[RSBoogieBay::INB_INPUT].getVoltage(), -10.f, 10.f);
         int yposa = 0, yposb = 0;
 
         switch(module->vrangea) {

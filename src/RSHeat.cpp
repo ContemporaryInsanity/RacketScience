@@ -7,6 +7,8 @@ struct RSHeat : Module {
     enum ParamIds {
         THEME_BUTTON,
         RESET_BUTTON,
+        GAIN_KNOB,
+        LOSS_KNOB,
         NUM_PARAMS
     };
     enum InputIds {
@@ -33,30 +35,37 @@ struct RSHeat : Module {
 
     float semiHeat[12] = {};
     float octHeat[10] = {};
-    float heatInc = 0.2f;
-    float heatDec = 0.005f;
+    float heatGain = 0.1f;
+    float heatLoss = 0.1f;
 
     RSHeat() {
         logDivider.setDivision(4096);
 
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
         configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
+        configParam(GAIN_KNOB, 0.01f, 5.0f, 0.05f, "GAIN");
+        configParam(LOSS_KNOB, 0.01f, 0.5f, 0.05f, "LOSS");
     }
 
     void process(const ProcessArgs &args) override {
-        float cvIn = clamp10V(inputs[CV_INPUT].getVoltage());
-        int noteIdx = note(cvIn);
-        int octIdx = clamp(octave(cvIn) + 4, 0, 9);
-
         if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
             RSTheme++;
             if(RSTheme > RSThemes) RSTheme = 0;
             saveDefaultTheme(RSTheme);
         }
 
+        float vOctIn = RSclamp(inputs[CV_INPUT].getVoltage(), -10.f, 10.f);
+        int noteIdx = note(vOctIn);
+        int octIdx = clamp(octave(vOctIn) + 4, 0, 9);
+
+        heatGain = params[GAIN_KNOB].getValue();
+        heatLoss = params[LOSS_KNOB].getValue();
+
         if(gateTrigger.process(inputs[GATE_INPUT].getVoltage())) {
-            if(semiHeat[noteIdx] < 1.f) semiHeat[noteIdx] += heatInc;
-            if(octHeat[octIdx] < 1.f) octHeat[octIdx] += heatInc;
+            if(semiHeat[noteIdx] < 10.f) semiHeat[noteIdx] += heatGain;
+            if(semiHeat[noteIdx] > 10.f) semiHeat[noteIdx] = 10.f;
+            if(octHeat[octIdx] + heatGain < 10.f) octHeat[octIdx] += heatGain;
+            if(octHeat[octIdx] > 10.f) octHeat[octIdx] = 10.f;
         }
 
         if(resetTrigger.process(params[RESET_BUTTON].getValue())) {
@@ -87,33 +96,43 @@ struct RSHeat : Module {
 
 struct RSHeatWidget : ModuleWidget {
     RSHeat* module;
+    Widget* panelBorder;
 
     RSHeatWidget(RSHeat *module) {
         setModule(module);
         this->module = module;
 
+        panelBorder = new PanelBorder;
+        addChild(panelBorder);
+
         box.size.x = mm2px(5.08 * 5);
-        int middle = box.size.x / 2 + 1;
-        int third = box.size.x / 3 + 1;
+        int middle = box.size.x / 2;
+        int third = box.size.x / 3;
 
         RSTheme = loadDefaultTheme();
 
         addChild(new RSLabelCentered(middle, box.pos.y + 14, "HEAT", 15));
         //addChild(new RSLabelCentered(middle, box.pos.y + 30, "Module Subtitle", 14));
-        //addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12)); // >= 4HP
-        addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
-        addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
+        addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12)); // >= 4HP
+        //addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
+        //addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
 
 		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSHeat::THEME_BUTTON));
 
-        addInput(createInputCentered<RSJackMonoIn>(Vec(middle / 2, 40), module, RSHeat::CV_INPUT));
-        addChild(new RSLabelCentered(middle / 2, 65, "V/OCT"));
+        addInput(createInputCentered<RSJackMonoIn>(Vec(middle / 2, 30), module, RSHeat::CV_INPUT));
+        addChild(new RSLabelCentered(middle / 2, 52, "V/OCT"));
         
-        addInput(createInputCentered<RSJackMonoIn>(Vec(middle + middle / 2, 40), module, RSHeat::GATE_INPUT));
-        addChild(new RSLabelCentered(middle + middle / 2, 65, "GATE"));
+        addInput(createInputCentered<RSJackMonoIn>(Vec(middle + middle / 2, 30), module, RSHeat::GATE_INPUT));
+        addChild(new RSLabelCentered(middle + middle / 2, 52, "GATE"));
 
-        addParam(createParamCentered<RSButtonMomentary>(Vec(middle, 80), module, RSHeat::RESET_BUTTON));
-        addChild(new RSLabelCentered(middle, 105, "RESET"));
+        addParam(createParamCentered<RSButtonMomentary>(Vec(middle, 68), module, RSHeat::RESET_BUTTON));
+        addChild(new RSLabelCentered(middle, 90, "RESET"));
+
+        addParam(createParamCentered<RSKnobSmlBlk>(Vec(middle / 2, 108), module, RSHeat::GAIN_KNOB));
+        addChild(new RSLabelCentered(middle / 2, 132, "GAIN"));
+
+        addParam(createParamCentered<RSKnobSmlBlk>(Vec(middle + middle / 2, 108), module, RSHeat::LOSS_KNOB));
+        addChild(new RSLabelCentered(middle + middle / 2, 132, "LOSS"));
 
         LightWidget *lightWidget;
 
@@ -124,14 +143,14 @@ struct RSHeatWidget : ModuleWidget {
                 case 1: case 3: case 5: case 8: case 10: offset = 7; break;
                 default: offset = -7;
             }
-            lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(third - offset, 120 + (i * 20)), module, RSHeat::SEMITONE_LIGHTS + i);
+            lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(third - offset, 144 + (i * 19)), module, RSHeat::SEMITONE_LIGHTS + i);
             lightWidget->bgColor = nvgRGBA(10, 10, 10, 128);
             addChild(lightWidget);
         }
 
         // Octave lights
         for(int i = 0; i < 10; i++) {
-            lightWidget = createLightCentered<LargeLight<GreenLight>>(Vec(third * 2 + 7, 120 + (i * 24.5)), module, RSHeat::OCTAVE_LIGHTS + i);
+            lightWidget = createLightCentered<LargeLight<GreenLight>>(Vec(third * 2 + 7, 144 + (i * 23.25)), module, RSHeat::OCTAVE_LIGHTS + i);
             lightWidget->bgColor = nvgRGBA(10, 10, 10, 128);
             addChild(lightWidget);
         }
@@ -141,17 +160,19 @@ struct RSHeatWidget : ModuleWidget {
         if(!module) return;
         
         for(int i = 0; i < 12; i++) {
-            module->lights[11 - i].setBrightness(module->semiHeat[i]);
+            module->lights[11 - i].setBrightness(module->semiHeat[i] / 10);
         }
         for(int i = 0; i < 10; i++) {
-            module->lights[21 - i].setBrightness(module->octHeat[i]);
+            module->lights[21 - i].setBrightness(module->octHeat[i] / 10);
         }
 
         for(int i = 0; i < 12; i++) {
-            if(module->semiHeat[i] > 0.f) module->semiHeat[i] -= module->heatDec;
+            if(module->semiHeat[i] > 0.f) module->semiHeat[i] -= module->heatLoss;
+            if(module->semiHeat[i] < 0.f) module->semiHeat[i] = 0.f;
         }
         for(int i = 0; i < 10; i++) {
-            if(module->octHeat[i] > 0.f) module->octHeat[i] -= module->heatDec;
+            if(module->octHeat[i] > 0.f) module->octHeat[i] -= module->heatLoss;
+            if(module->octHeat[i] < 0.f) module->octHeat[i] = 0.f;
         }
 
         ModuleWidget::step();

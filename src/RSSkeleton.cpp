@@ -1,69 +1,83 @@
 #include "plugin.hpp"
 
 #include "components/RSComponents.hpp"
+#include "RSUtils.hpp"
 
 struct RSSkeleton : Module {
-    enum ParamIds {
-        NUM_PARAMS
-    };
-    enum InputIds {
-        NUM_INPUTS
-    };
-    enum OutputIds {
-        NUM_OUTPUTS
-    };
-    enum LightIds {
-        NUM_LIGHTS
-    };
+	enum ParamIds {
+		THEME_BUTTON,
+		NUM_PARAMS
+	};
+	enum InputIds {
+		NUM_INPUTS
+	};
+	enum OutputIds {
+		NUM_OUTPUTS
+	};
+	enum LightIds {
+		NUM_LIGHTS
+	};
 
-    RSSkeleton() {
+	dsp::BooleanTrigger themeTrigger;
+
+	RSSkeleton() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-    }
 
-    void process(const ProcessArgs &args) override {
+        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
+	}
 
-    }
+	void process(const ProcessArgs &args) override {
+		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
+			RSTheme++;
+			if(RSTheme > RSThemes) RSTheme = 0;
+			saveDefaultTheme(RSTheme);
+		}
 
-    json_t* dataToJson() override {
-        json_t* rootJ = json_object();
+	}
 
-        return rootJ;
-    }
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
 
-    void dataFromJson(json_t* rootJ) override {
+		return rootJ;
+	}
 
-    }
+	void dataFromJson(json_t* rootJ) override {
+
+	}
 };
 
+
 struct RSSkeletonWidget : ModuleWidget {
-    RSSkeleton* module;
+	RSSkeleton* module;
 
-    //std::shared_ptr<Font> font;
+	RSSkeletonWidget(RSSkeleton *module) {
+		setModule(module);
+		this->module = module;
 
-    RSSkeletonWidget(RSSkeleton *module) {
-        setModule(module);
-        this->module = module;
+		box.size.x = mm2px(5.08 * 3);
+		int middle = box.size.x / 2 + 1;
 
-        box.size.x = 104;
+		RSTheme = loadDefaultTheme();
 
-        addChild(new RSLabelCentered(box.size.x / 2, box.pos.y + 16, "MODULE TITLE", 16));
-        addChild(new RSLabelCentered(box.size.x / 2, box.pos.y + 30, "Module Subtitle", 14));
-        addChild(new RSLabelCentered(box.size.x / 2, box.size.y - 6, "Racket Science", 12));
+		addChild(new RSLabelCentered(middle, box.pos.y + 13, "TITLE1", 14));
+		addChild(new RSLabelCentered(middle, box.pos.y + 25, "TITLE2", 14));
+		addChild(new RSLabelCentered(middle, box.pos.y + 37, "TITLE3", 14));
 
-    }
+		addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
+		addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
 
-    void draw(const DrawArgs& args) override {
-		nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
-		nvgFillColor(args.vg, COLOR_BLACK);
-		nvgStrokeWidth(args.vg, 1.5);
+		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSSkeleton::THEME_BUTTON));
 
-		nvgBeginPath(args.vg);
-		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 5);
-		//nvgStroke(args.vg);
-		nvgFill(args.vg);
+	}
 
-        ModuleWidget::draw(args);
-    }
+    void customDraw(const DrawArgs& args) {}
+	#include "RSModuleWidgetDraw.hpp"
+
+	void step() override {
+		if(!module) return;
+
+		ModuleWidget::step();
+	}
 };
 
 Model *modelRSSkeleton = createModel<RSSkeleton, RSSkeletonWidget>("RSSkeleton");

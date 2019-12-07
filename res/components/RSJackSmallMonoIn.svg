@@ -36,7 +36,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="27.394056"
-     inkscape:cx="5.5237199"
+     inkscape:cx="11.911967"
      inkscape:cy="12.088489"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -100,12 +100,12 @@
          rx="2.3"
          ry="2.3690634" />
     </g>
-    <ellipse
-       style="opacity:1;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#858739;stroke-width:0.27365109;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="path822"
-       cx="4.0999999"
-       cy="292.8992"
-       rx="1.1860911"
-       ry="1.1860912" />
+    <rect
+       style="opacity:1;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#858739;stroke-width:0.20642477;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect841"
+       width="2.293575"
+       height="2.2935753"
+       x="2.9532123"
+       y="291.75241" />
   </g>
 </svg>

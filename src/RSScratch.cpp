@@ -105,7 +105,7 @@ struct RSScratch : Module {
 		// Fudge factor 4.15 version 2.41 (tm) (all rights reserved) (use at own risk)
 
         if(inputs[PHASE_A_INPUT].isConnected()) {
-			phaseA = clamp010V(inputs[PHASE_A_INPUT].getVoltage());
+			phaseA = RSclamp(inputs[PHASE_A_INPUT].getVoltage(), 0.f, 10.f);
 			idxA = phaseA * SAMPLES / 10;
 			params[SCRUB_A_PARAM].setValue(phaseA / 4.15);
 		}
@@ -116,7 +116,7 @@ struct RSScratch : Module {
 		}
 
         if(inputs[PHASE_B_INPUT].isConnected()) {
-			phaseB = clamp010V(inputs[PHASE_B_INPUT].getVoltage());
+			phaseB = RSclamp(inputs[PHASE_B_INPUT].getVoltage(), 0.f, 10.f);
 			idxB = phaseB * SAMPLES / 10;
 			params[SCRUB_B_PARAM].setValue(phaseB / 4.15);
 		}
@@ -127,7 +127,7 @@ struct RSScratch : Module {
 		}
 
         if(inputs[PHASE_C_INPUT].isConnected()) {
-			phaseC = clamp010V(inputs[PHASE_C_INPUT].getVoltage());
+			phaseC = RSclamp(inputs[PHASE_C_INPUT].getVoltage(), 0.f, 10.f);
 			idxC = phaseC * SAMPLES / 10;
 			params[SCRUB_C_PARAM].setValue(phaseC / 4.15);
 		}
@@ -142,25 +142,25 @@ struct RSScratch : Module {
 		if(idxC >= SAMPLES) idxC = SAMPLES - 1;
 
         if(inputs[IN_A_INPUT].isConnected()) {
-			inA = clamp10V(inputs[IN_A_INPUT].getVoltage());
+			inA = RSclamp(inputs[IN_A_INPUT].getVoltage(), -10.f, 10.f);
 			params[IN_A_PARAM].setValue(inA);
 		}
 		else inA = params[IN_A_PARAM].getValue();
 
         if(inputs[IN_B_INPUT].isConnected()) {
-			inB = clamp10V(inputs[IN_B_INPUT].getVoltage());
+			inB = RSclamp(inputs[IN_B_INPUT].getVoltage(), -10.f, 10.f);
 			params[IN_B_PARAM].setValue(inB);
 		}
 		else inB = params[IN_B_PARAM].getValue();
 
         if(inputs[IN_C_INPUT].isConnected()) {
-			inC = clamp10V(inputs[IN_C_INPUT].getVoltage());
+			inC = RSclamp(inputs[IN_C_INPUT].getVoltage(), -10.f, 10.f);
 			params[IN_C_PARAM].setValue(inC);
 		}
 		else inC = params[IN_C_PARAM].getValue();
 
 		if(inputs[WRITE_A_INPUT].isConnected()) {
-			if(clamp10V(inputs[WRITE_A_INPUT].getVoltage()) > 0.f) { // 0.f will be threshold from slider
+			if(RSclamp(inputs[WRITE_A_INPUT].getVoltage() > 0.f, -10.f, 10.f)) { // 0.f will be threshold from slider
 				bufferA[idxA] = inA;
 				writeA = true;
 			}
@@ -175,7 +175,7 @@ struct RSScratch : Module {
 			else writeA = false;
 
 		if(inputs[WRITE_B_INPUT].isConnected()) {
-			if(clamp10V(inputs[WRITE_B_INPUT].getVoltage() > 0.f)) {
+			if(RSclamp(inputs[WRITE_B_INPUT].getVoltage() > 0.f, -10.f, 10.f)) {
 				bufferB[idxB] = inB;
 				writeB = true;
 			}
@@ -190,7 +190,7 @@ struct RSScratch : Module {
 			else writeB = false;
 
 		if(inputs[WRITE_C_INPUT].isConnected()) {
-			if(clamp10V(inputs[WRITE_C_INPUT].getVoltage() > 0.f)) {
+			if(RSclamp(inputs[WRITE_C_INPUT].getVoltage() > 0.f, -10.f, 10.f)) {
 				bufferC[idxC] = inC;
 				writeC = true;
 			}
@@ -376,6 +376,8 @@ struct RSBufferDisplay : TransparentWidget {
 	};
 
 	void draw(const DrawArgs& args) override {
+		auto startTime = std::chrono::system_clock::now();
+
 		nvgFontSize(args.vg, 10);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, 0);
@@ -413,7 +415,7 @@ struct RSBufferDisplay : TransparentWidget {
 				nvgText(args.vg, box.pos.x + box.size.x / 2, box.pos.y + 70, msg, NULL);				
 			}
 
-			if(box.pos.y == 70) nvgText(args.vg, box.pos.x + box.size.x / 2, box.pos.y + 70, "Racket Science", NULL);
+			if(box.pos.y == 70) nvgText(args.vg, box.pos.x + box.size.x / 2, box.pos.y + 70, "R a c k e t   S c i e n c e", NULL);
 		
 			nvgFontSize(args.vg, 30);
 			if(box.pos.y == 130) nvgText(args.vg, box.pos.x + box.size.x / 2, box.pos.y + 70, "Please consider donating : )", NULL);
@@ -442,6 +444,8 @@ struct RSBufferDisplay : TransparentWidget {
 		// Buffer
 
 		int centerLine = box.pos.y + box.size.y / 2;
+
+		// Scale using RSscale.
 
 
 			// Auto scaled
@@ -520,6 +524,10 @@ struct RSBufferDisplay : TransparentWidget {
 		nvgLineTo(args.vg, box.pos.x + (box.size.x / SAMPLES * *idx), box.pos.y + box.size.y);
 
 		nvgStroke(args.vg);
+
+		auto endTime = std::chrono::system_clock::now();
+		std::chrono::duration<double> elapsedTime = endTime - startTime;
+		//INFO("Racket Science: RSScratch buffer draw elapsed time: %f", elapsedTime.count());
 	};
 };
 

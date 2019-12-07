@@ -3,6 +3,8 @@
 int RSTheme = 0;
 int RSThemes = 5;
 
+rsglobal RSGlobal;
+
 Plugin *pluginInstance;
 
 void init(Plugin *p) {
@@ -14,10 +16,12 @@ void init(Plugin *p) {
 	p->addModel(modelRSBoogieBayH8);
 	p->addModel(modelRSMFH);
 	p->addModel(modelRSHeat);
+	p->addModel(modelRSReheat);
+	p->addModel(modelRSCVHeat);
 
-	//p->addModel(modelRSScratch);
+	p->addModel(modelRSScratch);
 
-	//p->addModel(modelRSSkeleton);
+	p->addModel(modelRSSkeleton);
 
 	// Any other plugin initialization may go here.
 	// As an alternative, consider lazy-loading assets and lookup tables when your module is created to reduce startup times of Rack.

@@ -35,7 +35,7 @@
     {
       "slug": "RSBoogieBayH8",
       "name": "RSBoogieBayH8",
-      "description": "Cable wobbler / poly merger",
+      "description": "Cable wobbler / mono splitter / poly merger",
       "tags": [
         "Poly",
         "Visual",
@@ -60,6 +60,36 @@
         "Visual",
         "Utility"
       ]
+    },
+    {
+      "slug": "RSReheat",
+      "name": "RSReheat",
+      "description": "Note / Octave Heat Map",
+      "tags": [
+        "Visual",
+        "Utility"
+      ]
+    },
+    {
+      "slug": "RSCVHeat",
+      "name": "RSCVHeat",
+      "description": "CV Heat Map",
+      "tags": [
+        "Visual",
+        "Utility"
+      ]
+    },
+    {
+      "slug": "RSScratch",
+      "name": "RSScratch",
+      "description": "",
+      "tags": []
+    },
+    {
+      "slug": "RSSkeleton",
+      "name": "RSSkeleton",
+      "description": "",
+      "tags": []
     }
   ]
 }

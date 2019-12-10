@@ -41,18 +41,14 @@ struct RSHeat : Module {
     RSHeat() {
         logDivider.setDivision(4096);
 
-		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+        config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
         configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
         configParam(GAIN_KNOB, 0.01f, 5.0f, 0.05f, "GAIN");
         configParam(LOSS_KNOB, 0.01f, 0.5f, 0.05f, "LOSS");
     }
 
     void process(const ProcessArgs &args) override {
-        if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
-            RSTheme++;
-            if(RSTheme > RSThemes) RSTheme = 0;
-            saveDefaultTheme(RSTheme);
-        }
+        #include "RSModuleTheme.hpp"
 
         float vOctIn = RSclamp(inputs[CV_INPUT].getVoltage(), -10.f, 10.f);
         int noteIdx = note(vOctIn);
@@ -106,10 +102,8 @@ struct RSHeatWidget : ModuleWidget {
         addChild(panelBorder);
 
         box.size.x = mm2px(5.08 * 5);
-        int middle = box.size.x / 2;
+        int middle = box.size.x / 2 + 1;
         int third = box.size.x / 3;
-
-        RSTheme = loadDefaultTheme();
 
         addChild(new RSLabelCentered(middle, box.pos.y + 14, "HEAT", 15));
         //addChild(new RSLabelCentered(middle, box.pos.y + 30, "Module Subtitle", 14));
@@ -117,11 +111,11 @@ struct RSHeatWidget : ModuleWidget {
         //addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
         //addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
 
-		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSHeat::THEME_BUTTON));
+        addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSHeat::THEME_BUTTON));
 
         addInput(createInputCentered<RSJackMonoIn>(Vec(middle / 2, 30), module, RSHeat::CV_INPUT));
         addChild(new RSLabelCentered(middle / 2, 52, "V/OCT"));
-        
+
         addInput(createInputCentered<RSJackMonoIn>(Vec(middle + middle / 2, 30), module, RSHeat::GATE_INPUT));
         addChild(new RSLabelCentered(middle + middle / 2, 52, "GATE"));
 
@@ -143,7 +137,7 @@ struct RSHeatWidget : ModuleWidget {
                 case 1: case 3: case 5: case 8: case 10: offset = 7; break;
                 default: offset = -7;
             }
-            lightWidget = createLightCentered<LargeLight<RedLight>>(Vec(third - offset, 144 + (i * 19)), module, RSHeat::SEMITONE_LIGHTS + i);
+            lightWidget = createLightCentered<LargeLight<BlueLight>>(Vec(third - offset, 144 + (i * 19)), module, RSHeat::SEMITONE_LIGHTS + i);
             lightWidget->bgColor = nvgRGBA(10, 10, 10, 128);
             addChild(lightWidget);
         }
@@ -158,7 +152,7 @@ struct RSHeatWidget : ModuleWidget {
 
     void step() override {
         if(!module) return;
-        
+
         for(int i = 0; i < 12; i++) {
             module->lights[11 - i].setBrightness(module->semiHeat[i] / 10);
         }
@@ -179,7 +173,7 @@ struct RSHeatWidget : ModuleWidget {
     }
 
     void customDraw(const DrawArgs& args) {}
-	#include "RSModuleWidgetDraw.hpp"
+    #include "RSModuleWidgetDraw.hpp"
 };
 
 Model *modelRSHeat = createModel<RSHeat, RSHeatWidget>("RSHeat");

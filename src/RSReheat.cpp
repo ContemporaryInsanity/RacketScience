@@ -21,6 +21,7 @@ struct RSReheat : Module {
         WARMEST_SEMI_OUTPUT,
         COOLEST_OCT_OUTPUT,
         WARMEST_OCT_OUTPUT,
+        VALID_OUTPUT,           // High when semi & oct outs are valid (ie we have at least one note with heat)
         QUANTUM_NOTE_OUTPUT,    // These will set ML Quantum to current scale
         QUANTUM_TOGGLE_OUTPUT,
         QUANTUM_RESET_OUTPUT,
@@ -31,6 +32,7 @@ struct RSReheat : Module {
     enum LightIds {
         ENUMS(SEMITONE_LIGHTS, 12),
         ENUMS(OCTAVE_LIGHTS, 10),
+        VALID_LIGHT,
         NUM_LIGHTS
     };
 
@@ -50,6 +52,10 @@ struct RSReheat : Module {
     float coolestOct = 0.f;
     float heatGain = 0.1f;
     float heatLoss = 0.1f;
+    bool valid = false;
+
+    dsp::PulseGenerator noteTogglePulse;
+    dsp::PulseGenerator resetPulse;
 
     RSReheat() {
         logDivider.setDivision(4096);
@@ -61,10 +67,14 @@ struct RSReheat : Module {
     }
 
     void process(const ProcessArgs &args) override {
-        if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
-            RSTheme++;
-            if(RSTheme > RSThemes) RSTheme = 0;
-            saveDefaultTheme(RSTheme);
+        #include "RSModuleTheme.hpp"
+
+        static bool firstTime = true;
+        static float priorHeat[12];
+
+        if(firstTime) {
+            INFO("Racket Science: sizeof priorHeat[] = %i", sizeof(priorHeat));
+            firstTime = false;
         }
 
         float cvIn = RSclamp(inputs[CV_INPUT].getVoltage(), -10.f, 10.f);
@@ -84,29 +94,81 @@ struct RSReheat : Module {
         if(resetTrigger.process(params[RESET_BUTTON].getValue())) {
             for(int i = 0; i < 12; i++) semiHeat[i] = 0.f;
             for(int i = 0; i < 10; i++) octHeat[i] = 0.f;
+            resetPulse.trigger(1e-3f);
         }
 
-        float warmestSemitone = 0.f, coolestSemitone = 0.f;
-        float warmestOctave = 0.f, coolestOctave = 0.f;
+        float coolestSemi = 10.f;
+        float warmestSemi = 0.f;
+        int coolestSemiIdx = 0;
+        int warmestSemiIdx = 0;
+        bool coolestSemiValid = false;
+        bool warmestSemiValid = false;
+        valid = false;
 
         // Grab coolest & hottest semitone here
         for(int i = 0; i < 12; i++) {
             outputs[SEMITONE_OUTPUTS + 11 - i].setVoltage(semiHeat[i]);
+            if(semiHeat[i] > 0.f) {
+                if(semiHeat[i] > warmestSemi) {
+                    warmestSemi = semiHeat[i];
+                    warmestSemiIdx = i;
+                    warmestSemiValid = true;
+                    valid = true;
+                }
+                if(semiHeat[i] < coolestSemi) {
+                    coolestSemi = semiHeat[i];
+                    coolestSemiIdx = i;
+                    coolestSemiValid = true;
+                    valid = true;
+                }
+            }
         }
+
+        float coolestOct = warmestOct = 0.f;
 
         // Grab coolest & hottest octave here
         for(int i = 0; i < 10; i++) {
             outputs[OCTAVE_OUTPUTS + 9 - i].setVoltage(octHeat[i]);
+            if(octHeat[i] > 0.f) {
+
+            }
         }
 
         if(logDivider.process()) {
             //INFO("Racket Science: note %i octave %i", noteIdx, octIdx);
         }
 
-        outputs[WARMEST_SEMI_OUTPUT].setVoltage(0);
-        outputs[COOLEST_SEMI_OUTPUT].setVoltage(0);
-        outputs[WARMEST_OCT_OUTPUT].setVoltage(0);
-        outputs[COOLEST_OCT_OUTPUT].setVoltage(0);
+        if(coolestSemiValid) this->coolestSemi = noteVoltage[coolestSemiIdx];
+        if(warmestSemiValid) this->warmestSemi = noteVoltage[warmestSemiIdx];
+
+        outputs[WARMEST_SEMI_OUTPUT].setVoltage(this->warmestSemi);
+        outputs[COOLEST_SEMI_OUTPUT].setVoltage(this->coolestSemi);
+        outputs[WARMEST_OCT_OUTPUT].setVoltage(this->warmestOct);
+        outputs[COOLEST_OCT_OUTPUT].setVoltage(this->coolestOct);
+        outputs[VALID_OUTPUT].setVoltage(valid ? 10.f : 0.f);
+
+        bool quantumNoteToggle = noteTogglePulse.process(args.sampleTime);
+        outputs[QUANTUM_TOGGLE_OUTPUT].setVoltage(quantumNoteToggle ? 10.f: 0.f);
+
+        bool quantumReset = resetPulse.process(args.sampleTime);
+        outputs[QUANTUM_RESET_OUTPUT].setVoltage(quantumReset ? 10.f : 0.f);
+
+        if(!firstTime) {
+            for(int i = 0; i < 12; i++) {
+                if(priorHeat[i] && !semiHeat[i]) { // Had heat last call, doesn't now
+                    INFO("Racket Science: %i Lost heat", i);
+                    noteTogglePulse.trigger(1e-3f);
+                    outputs[QUANTUM_NOTE_OUTPUT].setVoltage(noteVoltage[i]);
+                }
+                if(!priorHeat[i] && semiHeat[i]) { // Didn't have heat last call, does now
+                    INFO("Racket Science: %i Gained heat", i);
+                    noteTogglePulse.trigger(1e-3f);
+                    outputs[QUANTUM_NOTE_OUTPUT].setVoltage(noteVoltage[i]);
+                }
+            }
+        }
+
+        std::memcpy(priorHeat, semiHeat, sizeof(semiHeat));
     }
 
     void onReset() override {
@@ -137,11 +199,11 @@ struct RSReheatWidget : ModuleWidget {
         panelBorder = new PanelBorder;
         addChild(panelBorder);
 
-        box.size.x = mm2px(5.08 * 10);
+        box.size.x = mm2px(5.08 * 12);
         int middle = box.size.x / 2;
-        int sixth = box.size.x / 6;
+        int sixth = box.size.x / 8; // Cludge, panels needs redesign
 
-        RSTheme = loadDefaultTheme();
+        LightWidget *lightWidget;
 
         addChild(new RSLabelCentered(middle, box.pos.y + 14, "REHEAT beta", 15));
         //addChild(new RSLabelCentered(middle, box.pos.y + 30, "Module Subtitle", 14));
@@ -166,8 +228,11 @@ struct RSReheatWidget : ModuleWidget {
         addParam(createParamCentered<RSKnobSmlBlk>(Vec(sixth * 5, 33), module, RSReheat::LOSS_KNOB));
         addChild(new RSLabelCentered(sixth * 5, 57, "LOSS"));
 
+        // Need a switch to select gate count or cv duration mode
+
         addChild(new RSLabelCentered(sixth * 4, 76, "HOT"));
         addChild(new RSLabelCentered(sixth * 5, 76, "COLD"));
+        addChild(new RSLabelCentered(sixth * 6, 76, "VALID"));
 
         addChild(new RSLabel(sixth * 2, 92, "SEMITONES"));
         addChild(new RSLabel(sixth * 2.35, 112, "OCTAVES"));
@@ -177,9 +242,21 @@ struct RSReheatWidget : ModuleWidget {
         
         addOutput(createOutputCentered<RSJackSmallMonoOut>(Vec(sixth * 4, 108), module, RSReheat::WARMEST_OCT_OUTPUT));
         addOutput(createOutputCentered<RSJackSmallMonoOut>(Vec(sixth * 5, 108), module, RSReheat::COOLEST_OCT_OUTPUT));
-        
 
-        LightWidget *lightWidget;
+        lightWidget = createLightCentered<LargeLight<GreenLight>>(Vec(sixth * 6, 88), module, RSReheat::VALID_LIGHT);
+        lightWidget->bgColor = nvgRGBA(10, 10, 10, 128);
+        addChild(lightWidget);
+
+        addOutput(createOutputCentered<RSJackSmallMonoOut>(Vec(sixth * 6, 108), module, RSReheat::VALID_OUTPUT));        
+
+        // Outputs to drive ML Quantum
+        addChild(new RSLabelCentered(sixth * 7, 138, "QUANTUM"));
+        addOutput(createOutputCentered<RSJackMonoOut>(Vec(sixth * 7, 154), module, RSReheat::QUANTUM_NOTE_OUTPUT));
+        addChild(new RSLabelCentered(sixth * 7, 178, "NOTE"));
+        addOutput(createOutputCentered<RSJackMonoOut>(Vec(sixth * 7, 194), module, RSReheat::QUANTUM_TOGGLE_OUTPUT));
+        addChild(new RSLabelCentered(sixth * 7, 218, "TOGGLE"));
+        addOutput(createOutputCentered<RSJackMonoOut>(Vec(sixth * 7, 234), module, RSReheat::QUANTUM_RESET_OUTPUT));
+        addChild(new RSLabelCentered(sixth * 7, 258, "RESET"));
 
         // Semitone lights & outputs
         for(int i = 0 ; i < 12; i++) {
@@ -225,6 +302,8 @@ struct RSReheatWidget : ModuleWidget {
             if(module->octHeat[i] > 0.f) module->octHeat[i] -= module->heatLoss;
             if(module->octHeat[i] < 0.f) module->octHeat[i] = 0.f;
         }
+
+        module->lights[RSReheat::VALID_LIGHT].setBrightness(module->valid ? 1.f : 0.f);
 
         ModuleWidget::step();
     }

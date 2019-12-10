@@ -5,7 +5,8 @@ Modules for the VCV Rack virtual modular synthesizer.
 
 ## Boogie Bay
 
-You've seen flying faders, with Boogie Bay you have sliding sockets for all of your wire wobbling needs.  Also doubles up as a voltage indicator, right click for range menu, though BB H8 is currently full scale -10 to +10 volts only.
+You've seen flying faders, with Boogie Bay you have sliding sockets for all of your wire wobbling needs.
+These modules also double up as voltage indicators, right click on the vertical 2 channel BB for range menu, BBH8 range can be selected for each channel by clicking on the individual voltage labels, also BBH8 has invisible scribble strips, click on an underscore to enter text to describe each channel.
 
 ## Vector Victor
 
@@ -31,4 +32,4 @@ All **source code** is copyright © 2019 Ewen Bates and is licensed under the [G
 
 All **graphics** in the `res` directory are copyright © 2019 Ewen Bates and licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 
-Many thanks to the VCV developer community, particularly Andrew Belt of VCV and Adam Verspaget of Count Modular whose modules I've studied and learned from.
+Many thanks to the VCV developer community.

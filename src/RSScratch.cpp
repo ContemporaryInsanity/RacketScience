@@ -73,15 +73,10 @@ struct RSScratch : Module {
 	float bufferC[SAMPLES] = {}; unsigned int idxC = 0; bool writeC = false;
 
 	void process(const ProcessArgs &args) override {
+        #include "RSModuleTheme.hpp"
+
 		float inA, inB, inC;
 		float phaseA, phaseB, phaseC;
-
-        if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
-            RSTheme++;
-            if(RSTheme > RSThemes) RSTheme = 0;
-            saveDefaultTheme(RSTheme);
-			INFO("Racket Science: scratch theme trigger");
-        }
 
 		if(clearTriggerA.process(params[CLEAR_A_PARAM].getValue() > 0.f)) resetA();
 		if(clearTriggerB.process(params[CLEAR_B_PARAM].getValue() > 0.f)) resetB();
@@ -544,8 +539,6 @@ struct RSScratchWidget : ModuleWidget {
 
 		box.size.x = mm2px(5.08 * 100);
 		int middle = box.size.x / 2 + 1;
-
-		RSTheme = loadDefaultTheme();
 
         addChild(new RSLabelCentered(middle, box.pos.y + 13, "VECTOR VICTOR WITH KNOBS ON", 14));
         addChild(new RSLabelCentered(middle, box.size.y - 6, "Racket Science", 12));

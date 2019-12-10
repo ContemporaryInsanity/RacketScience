@@ -37,11 +37,7 @@ struct RSBoogieBay : Module {
     bool menubChanged = true;
 
 	void process(const ProcessArgs &args) override {
-		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
-			RSTheme++;
-			if(RSTheme > RSThemes) RSTheme = 0;
-			saveDefaultTheme(RSTheme);
-		}
+        #include "RSModuleTheme.hpp"
 
         outputs[OUTA_OUTPUT].setVoltage(inputs[INA_INPUT].getVoltage());
         outputs[OUTB_OUTPUT].setVoltage(inputs[INB_INPUT].getVoltage());
@@ -89,8 +85,6 @@ struct RSBoogieBayWidget : ModuleWidget {
         box.size.x = mm2px(5.08 * 5);
         int middle = box.size.x / 2 + 1;
 
-        RSTheme = loadDefaultTheme();
-    
         addChild(new RSLabelCentered(middle, box.pos.y + 13, "BOOGIE", 14));
         addChild(new RSLabelCentered(middle, box.pos.y + 25, "BAY", 14));
 

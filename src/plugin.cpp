@@ -1,7 +1,5 @@
 #include "plugin.hpp"
-
-int RSTheme = 0;
-int RSThemes = 5;
+#include "RSUtils.hpp"
 
 rsglobal RSGlobal;
 
@@ -25,4 +23,7 @@ void init(Plugin *p) {
 
 	// Any other plugin initialization may go here.
 	// As an alternative, consider lazy-loading assets and lookup tables when your module is created to reduce startup times of Rack.
+
+	RSGlobal.theme = loadDefaultTheme();
+	RSGlobal.themeCount = 5;
 }

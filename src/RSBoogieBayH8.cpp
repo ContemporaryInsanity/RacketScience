@@ -55,11 +55,7 @@ struct RSBoogieBayH8 : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
-			RSTheme++;
-			if(RSTheme > RSThemes) RSTheme = 0;
-			saveDefaultTheme(RSTheme);
-		}
+        #include "RSModuleTheme.hpp"
 
 		outputs[POLY_LEFT_OUTPUT].setChannels(8);
 		outputs[POLY_RIGHT_OUTPUT].setChannels(8);
@@ -176,8 +172,6 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 		middle = box.size.x / 2;
 		left = 40;
 		right = box.size.y - 40;
-
-		RSTheme = loadDefaultTheme();
 
 		addChild(new RSLabelCentered(middle, box.pos.y + 13, "BOOGIE BAY H8", 14));
 		addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12));

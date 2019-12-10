@@ -1,11 +1,9 @@
 #pragma once
 #include <rack.hpp>
 
-extern int RSTheme;
-extern int RSThemes;
-
 struct rsglobal {
-	int x;
+	int theme;
+    int themeCount;
 };
 
 extern rsglobal RSGlobal;

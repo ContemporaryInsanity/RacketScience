@@ -27,11 +27,7 @@ struct RSSkeleton : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
-			RSTheme++;
-			if(RSTheme > RSThemes) RSTheme = 0;
-			saveDefaultTheme(RSTheme);
-		}
+        #include "RSModuleTheme.hpp"
 
 	}
 
@@ -56,8 +52,6 @@ struct RSSkeletonWidget : ModuleWidget {
 
 		box.size.x = mm2px(5.08 * 3);
 		int middle = box.size.x / 2 + 1;
-
-		RSTheme = loadDefaultTheme();
 
 		addChild(new RSLabelCentered(middle, box.pos.y + 13, "TITLE1", 14));
 		addChild(new RSLabelCentered(middle, box.pos.y + 25, "TITLE2", 14));

@@ -41,11 +41,7 @@ struct RSCVHeat : Module {
 	float heatLoss;
 
 	void process(const ProcessArgs &args) override {
-		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
-			RSTheme++;
-			if(RSTheme > RSThemes) RSTheme = 0;
-			saveDefaultTheme(RSTheme);
-		}
+        #include "RSModuleTheme.hpp"
 
 		float cvIn = RSclamp(inputs[CV_INPUT].getVoltage(), -10.f, 10.f);
 
@@ -131,8 +127,6 @@ struct RSCVHeatWidget : ModuleWidget {
 
 		box.size.x = mm2px(5.08 * 3);
 		int middle = box.size.x / 2 + 1;
-
-		RSTheme = loadDefaultTheme();
 
 		addChild(new RSLabelCentered(middle, box.pos.y + 13, "CVHEAT", 14));
 

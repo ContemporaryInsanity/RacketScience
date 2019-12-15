@@ -28,25 +28,9 @@ static inline float RSscale(float in, float inMin, float inMax, float outMin, fl
 	return((outMax - outMin) * (in - inMin) / (inMax - inMin)) + outMin;
 }
 
-// May as well git rid of the following and replace with above?  I expect these are quicker tho
-/*
-static inline float clamp20V(float in) {
-    if(in >= -20.f && in <= 20.f) return in;
-    return in > 20.f ? 20.f: -20.f;
-}
 
-static inline float clamp10V(float in) {
-    if(in >= -10.f && in <= 10.f) return in;
-    return in > 10.f ? 10.f : -10.f;
-}
-
-static inline float clamp010V(float in) {
-    if(in >= 0.f && in <= 10.f) return in;
-    return in > 10.f ? 10.f : 0.f;
-}
-*/
 static void saveSettings(json_t *rootJ) {
-    std::string settingsFile = asset::user("RacketScience.json");
+    std::string settingsFile = asset::user("RacketScience/RacketScience.json");
     FILE *file = fopen(settingsFile.c_str(), "w");
 
     if(file) {
@@ -56,7 +40,7 @@ static void saveSettings(json_t *rootJ) {
 }
 
 static json_t *loadSettings() {
-    std::string settingsFile = asset::user("RacketScience.json");
+    std::string settingsFile = asset::user("RacketScience/RacketScience.json");
     FILE *file = fopen(settingsFile.c_str(), "r");
     
     if(!file) {
@@ -93,3 +77,63 @@ static int loadDefaultTheme() {
 
     return theme;
 }
+
+static void updateRSTheme() {
+    RSGlobal.bgColor = nvgHSL(RSGlobal.themes[RSGlobal.themeIdx].bgColor.hue,
+                              RSGlobal.themes[RSGlobal.themeIdx].bgColor.sat,
+                              RSGlobal.themes[RSGlobal.themeIdx].bgColor.lum);
+
+    RSGlobal.lbColor = nvgHSL(RSGlobal.themes[RSGlobal.themeIdx].lbColor.hue,
+                              RSGlobal.themes[RSGlobal.themeIdx].lbColor.sat,
+                              RSGlobal.themes[RSGlobal.themeIdx].lbColor.lum);
+
+    RSGlobal.ssColor = nvgHSL(RSGlobal.themes[RSGlobal.themeIdx].ssColor.hue,
+                              RSGlobal.themes[RSGlobal.themeIdx].ssColor.sat,
+                                RSGlobal.themes[RSGlobal.themeIdx].ssColor.lum);
+}
+
+static void saveRSGlobal() {
+    std::string settingsFile = asset::user("RacketScience/RSGlobal.dat");
+    FILE *file = fopen(settingsFile.c_str(), "w");
+    if(file) {
+        fwrite(&RSGlobal, sizeof(struct rsglobal), 1, file);
+        fclose(file);
+    }
+}
+
+static void loadRSGlobal() {
+    std::string RSGDir = rack::asset::user("RacketScience/");
+    if(!rack::system::isDirectory(RSGDir)) {
+        rack::system::createDirectory(RSGDir);
+
+        // First time so create defaults
+        RSGlobal.themes[0].bgColor = {0.0f, 0.0f, 0.1f};
+        RSGlobal.themes[0].lbColor = {0.0f, 0.0f, 0.6f};
+        RSGlobal.themes[0].ssColor = {0.0f, 0.0f, 0.6f};
+
+        RSGlobal.themes[1].bgColor = {0.0f, 0.0f, 0.0f};
+        RSGlobal.themes[1].lbColor = {0.17f, 0.4f, 0.37f};
+        RSGlobal.themes[1].ssColor = {0.17f, 0.4f, 0.37f};
+
+        RSGlobal.themes[2].bgColor = {0.2f, 0.5f, 0.2f};
+        RSGlobal.themes[2].lbColor = {0.0f, 0.0f, 0.6f};
+        RSGlobal.themes[2].ssColor = {0.0f, 0.0f, 0.6f};
+
+        RSGlobal.themes[3].bgColor = {0.4f, 0.5f, 0.2f};
+        RSGlobal.themes[3].lbColor = {0.0f, 0.0f, 0.6f};
+        RSGlobal.themes[3].ssColor = {0.0f, 0.0f, 0.6f};
+
+        RSGlobal.themeIdx = 0;
+        updateRSTheme();
+        saveRSGlobal();
+    }
+    else {
+        std::string settingsFile = asset::user("RacketScience/RSGlobal.dat");
+        FILE *file = fopen(settingsFile.c_str(), "r");
+        if(file) {
+            fread(&RSGlobal, sizeof(struct rsglobal), 1, file);
+            fclose(file);
+        }
+    }
+}
+

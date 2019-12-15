@@ -5,7 +5,6 @@
 
 struct RSCVHeat : Module {
 	enum ParamIds {
-		THEME_BUTTON,
 		GAIN_KNOB,
 		LOSS_KNOB,
 		RESET_BUTTON,
@@ -25,8 +24,6 @@ struct RSCVHeat : Module {
 	RSCVHeat() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
-
         configParam(GAIN_KNOB, 0.00001f, 0.001f, 0.0005f, "GAIN");
         configParam(LOSS_KNOB, 0.00001f, 0.001f, 0.0005f, "LOSS");
 		configParam(RESET_BUTTON, 0.f, 1.f, 0.f, "RESET");
@@ -41,8 +38,6 @@ struct RSCVHeat : Module {
 	float heatLoss;
 
 	void process(const ProcessArgs &args) override {
-        #include "RSModuleTheme.hpp"
-
 		float cvIn = RSclamp(inputs[CV_INPUT].getVoltage(), -10.f, 10.f);
 
 		heatGain = params[GAIN_KNOB].getValue();
@@ -133,16 +128,14 @@ struct RSCVHeatWidget : ModuleWidget {
 		addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
 		addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
 
-		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSCVHeat::THEME_BUTTON));
-
-		addParam(createParamCentered<RSKnobSmlBlk>(Vec(middle, 36), module, RSCVHeat::GAIN_KNOB));
+		addParam(createParamCentered<RSKnobSml>(Vec(middle, 36), module, RSCVHeat::GAIN_KNOB));
 		addChild(new RSLabelCentered(middle, 60, "GAIN"));
 
-		addParam(createParamCentered<RSKnobSmlBlk>(Vec(middle, 78), module, RSCVHeat::LOSS_KNOB));
+		addParam(createParamCentered<RSKnobSml>(Vec(middle, 78), module, RSCVHeat::LOSS_KNOB));
 		addChild(new RSLabelCentered(middle, 102, "LOSS"));
 
 		addParam(createParamCentered<RSButtonMomentary>(Vec(middle, 118), module, RSCVHeat::RESET_BUTTON));
-		addChild(new RSLabelCentered(middle, 140, "RESET"));
+		addChild(new RSLabelCentered(middle, 121, "RESET"));
 
 		// Top label & invisibutton for top scale
 

@@ -6,7 +6,6 @@
 
 struct RSBoogieBayH8 : Module {
 	enum ParamIds {
-		THEME_BUTTON,
 		ENUMS(LEFT_SCALE_BUTTONS, 8),
 		ENUMS(RIGHT_SCALE_BUTTONS, 8),
 		NUM_PARAMS
@@ -34,9 +33,9 @@ struct RSBoogieBayH8 : Module {
 	RSScribbleStrip *ss[8];
 
 	bool scaleChanged = true;
-	RSLabelCentered *leftScaleLabels[8]; // Move to widget
+	RSLabel *leftScaleLabels[8]; // Move to widget
 	int leftScale[8] = {};
-	RSLabelCentered *rightScaleLabels[8]; // Move to widget
+	RSLabel *rightScaleLabels[8]; // Move to widget
 	int rightScale[8] = {};
 
 
@@ -44,8 +43,6 @@ struct RSBoogieBayH8 : Module {
 		scaleDivider.setDivision(4096);
 
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-
-        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 
 		for(int i = 0; i < 8; i++) {
 			configParam(LEFT_SCALE_BUTTONS + i, 0.f, 1.f, 0.f, "SCALE");
@@ -55,8 +52,6 @@ struct RSBoogieBayH8 : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-        #include "RSModuleTheme.hpp"
-
 		outputs[POLY_LEFT_OUTPUT].setChannels(8);
 		outputs[POLY_RIGHT_OUTPUT].setChannels(8);
 
@@ -176,8 +171,6 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 		addChild(new RSLabelCentered(middle, box.pos.y + 13, "BOOGIE BAY H8", 14));
 		addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12));
 
-		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSBoogieBayH8::THEME_BUTTON));
-
 		for(int i = 0; i < 8; i++) {
 			in[i] = createInputCentered<RSJackMonoIn>(Vec(middle, 40 + (i * 40)), module, RSBoogieBayH8::INPUTS + i); addInput(in[i]);
 			addOutput(createOutputCentered<RSJackMonoOut>(Vec(left, 40 + (i * 40)), module, RSBoogieBayH8::LEFT_OUTPUTS + i));
@@ -186,8 +179,8 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 			addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(right - 20, 40 + (i * 40)), module, RSBoogieBayH8::RIGHT_SCALE_BUTTONS + i));
 			if(module) {
 				addChild(module->ss[i] = new RSScribbleStrip(left + 25, 25 + (i * 40)));
-				addChild(module->leftScaleLabels[i] = new RSLabelCentered(left + 20, 43 + (i * 40), "10", 10, COLOR_RED));
-				addChild(module->rightScaleLabels[i] = new RSLabelCentered(right - 20, 43 + (i * 40), "10", 10, COLOR_GREEN));
+				addChild(module->leftScaleLabels[i] = new RSLabel(left + 16, 43 + (i * 40), "10", 10, COLOR_RED));
+				addChild(module->rightScaleLabels[i] = new RSLabel(right - 24, 43 + (i * 40), "10", 10, COLOR_GREEN));
 			}
 		}
 

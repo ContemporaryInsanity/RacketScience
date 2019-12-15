@@ -5,7 +5,6 @@
 
 struct RSSkeleton : Module {
 	enum ParamIds {
-		THEME_BUTTON,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -22,13 +21,9 @@ struct RSSkeleton : Module {
 
 	RSSkeleton() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-
-        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 	}
 
 	void process(const ProcessArgs &args) override {
-        #include "RSModuleTheme.hpp"
-
 	}
 
 	json_t* dataToJson() override {
@@ -59,8 +54,6 @@ struct RSSkeletonWidget : ModuleWidget {
 
 		addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
 		addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
-
-		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSSkeleton::THEME_BUTTON));
 
 	}
 

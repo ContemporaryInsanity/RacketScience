@@ -9,13 +9,13 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="120"
-   height="120"
-   viewBox="0 0 31.749998 31.749998"
+   width="8mm"
+   height="8mm"
+   viewBox="0 0 7.9999996 7.9999996"
    version="1.1"
    id="svg826"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
-   sodipodi:docname="RSKnobLrgBlk.svg">
+   sodipodi:docname="RSKnobSmlBlk.svg">
   <defs
      id="defs820" />
   <sodipodi:namedview
@@ -25,10 +25,10 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="7.075"
-     inkscape:cx="9.2579507"
-     inkscape:cy="60"
-     inkscape:document-units="mm"
+     inkscape:zoom="24.959028"
+     inkscape:cx="9.996383"
+     inkscape:cy="21.575359"
+     inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:snap-tangential="true"
@@ -36,13 +36,13 @@
      gridtolerance="10"
      inkscape:snap-others="false"
      inkscape:snap-intersection-paths="true"
-     inkscape:window-width="1839"
+     inkscape:window-width="1920"
      inkscape:window-height="1080"
-     inkscape:window-x="3112"
-     inkscape:window-y="569"
+     inkscape:window-x="1978"
+     inkscape:window-y="209"
      inkscape:window-maximized="0"
      borderlayer="true"
-     units="px"
+     units="mm"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
@@ -54,8 +54,8 @@
        spacingx="0.19999999"
        spacingy="0.19999999"
        snapvisiblegridlinesonly="false"
-       originx="0.00019429623"
-       originy="0.00018100837" />
+       originx="0.023516946"
+       originy="0.011770035" />
   </sodipodi:namedview>
   <metadata
      id="metadata823">
@@ -73,19 +73,18 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(1.9429624e-4,-265.25018)">
-    <ellipse
-       style="opacity:1;fill:#2a2a2a;fill-opacity:1;stroke:#858739;stroke-width:0.39681923;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"
-       id="path5084"
-       cx="15.872575"
-       cy="281.12741"
-       rx="15.676591"
-       ry="15.67659" />
+     transform="translate(0.02351674,-289.01178)">
     <circle
-       style="opacity:1;fill:#151515;fill-opacity:1;fill-rule:nonzero;stroke:#858739;stroke-width:0.39687499;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="opacity:1;fill:#2a2a2a;fill-opacity:0.49753699;stroke:#858739;stroke-width:0.31642503;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"
+       id="path5084"
+       cx="3.9764831"
+       cy="293.01178"
+       r="3.8417873" />
+    <circle
+       style="opacity:1;fill:#151515;fill-opacity:0.50246304;fill-rule:nonzero;stroke:#858739;stroke-width:0.31918097;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="path819"
-       cx="15.874805"
-       cy="269.83902"
-       r="3.781214" />
+       cx="3.9764829"
+       cy="291.03174"
+       r="1.4279095" />
   </g>
 </svg>

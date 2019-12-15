@@ -1,9 +1,25 @@
 #pragma once
 #include <rack.hpp>
 
+struct rshsl {
+    float hue;
+    float sat;
+    float lum;
+};
+
+struct rstheme {
+    struct rshsl bgColor;
+    struct rshsl lbColor;
+    struct rshsl ssColor;
+};
+
 struct rsglobal {
-	int theme;
-    int themeCount;
+    NVGcolor bgColor; // Background
+    NVGcolor lbColor; // Labels
+    NVGcolor ssColor; // Scribble strips
+    static const int themeCount = 4;
+    int themeIdx;
+    rstheme themes[themeCount];
 };
 
 extern rsglobal RSGlobal;
@@ -21,6 +37,7 @@ extern Model *modelRSMFH;
 extern Model *modelRSHeat;
 extern Model *modelRSReheat;
 extern Model *modelRSCVHeat;
+extern Model *modelRSGroundControl;
 
 extern Model *modelRSScratch;
 

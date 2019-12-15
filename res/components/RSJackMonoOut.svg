@@ -10,9 +10,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="8.1999998mm"
-   height="8.1999998mm"
-   viewBox="0 0 8.1999998 8.1999998"
+   width="7.9996729mm"
+   height="7.9768105mm"
+   viewBox="0 0 7.999673 7.9768105"
    version="1.1"
    id="svg826"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
@@ -35,9 +35,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="38.590448"
-     inkscape:cx="5.9341107"
-     inkscape:cy="15.496063"
+     inkscape:zoom="24.893123"
+     inkscape:cx="10.174835"
+     inkscape:cy="17.053711"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -48,16 +48,23 @@
      inkscape:snap-intersection-paths="true"
      inkscape:window-width="1920"
      inkscape:window-height="1080"
-     inkscape:window-x="3216"
-     inkscape:window-y="629"
-     inkscape:window-maximized="0">
+     inkscape:window-x="2295"
+     inkscape:window-y="831"
+     inkscape:window-maximized="0"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:showpageshadow="false">
     <inkscape:grid
        type="xygrid"
        id="grid5078"
        units="mm"
        spacingx="0.19999999"
        spacingy="0.19999999"
-       snapvisiblegridlinesonly="false" />
+       snapvisiblegridlinesonly="false"
+       originx="0.076644899"
+       originy="0.090005609" />
   </sodipodi:namedview>
   <metadata
      id="metadata823">
@@ -75,16 +82,16 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-288.8)">
+     transform="translate(0.0766449,-289.1132)">
     <g
        id="g1408"
-       transform="translate(-1.9000001,1.8999999)">
+       transform="matrix(0.95621238,0,0,0.95347962,-1.8140828,15.639037)">
       <circle
-         r="4"
          cy="291"
          cx="6"
          id="path5084"
-         style="opacity:1;fill:#141414;fill-opacity:1;stroke:#858739;stroke-width:0.366;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke" />
+         style="opacity:1;fill:#141414;fill-opacity:1;stroke:#858739;stroke-width:0.366;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"
+         r="4" />
       <ellipse
          cy="290.99921"
          cx="6"

@@ -20,18 +20,8 @@
 
 // Labels
 
-/*
-struct RSLabel : Label {
-	RSLabel(int x, int y, const char* str = "", const NVGcolor& colour = COLOR_RS_GREY) {
-		box.pos = Vec(x, y);
-		text = str;
-		color = colour;
-		fontSize = 10;
-	};
-};
-*/
 
-
+// Uses own colour, intended for use with scale labels, green for pos, red for neg
 struct RSLabel : LedDisplay {
 	int fontSize;
 	std::shared_ptr<Font> font;
@@ -66,18 +56,17 @@ struct RSLabel : LedDisplay {
 };
 
 
+// Uses RSGlobal color, intended for general labels
 struct RSLabelCentered : LedDisplay {
 	int fontSize;
 	std::shared_ptr<Font> font;
 	std::string text;
-	NVGcolor color;
 
-	RSLabelCentered(int x, int y, const char* str = "", int fontSize = 10, const NVGcolor& colour = COLOR_RS_GREY) {
+	RSLabelCentered(int x, int y, const char* str = "", int fontSize = 10) {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Ubuntu Condensed 400.ttf"));
 		this->fontSize = fontSize;
 		box.pos = Vec(x, y);
 		text = str;
-		color = colour;
 	}
 
 	void draw(const DrawArgs &args) override {
@@ -90,7 +79,7 @@ struct RSLabelCentered : LedDisplay {
 			nvgTextAlign(args.vg, NVG_ALIGN_CENTER);
 
 			nvgBeginPath(args.vg);
-			nvgFillColor(args.vg, color);
+			nvgFillColor(args.vg, RSGlobal.lbColor);
 			nvgText(args.vg, 0, 0, text.c_str(), NULL);
 			nvgStroke(args.vg);
 
@@ -106,14 +95,13 @@ struct RSScribbleStrip : LedDisplayTextField {
 	int textSize = 12;
 	int numChars = 40;
 
-	RSScribbleStrip(int x, int y, int size = 150, const char* str = "_", const NVGcolor& colour = COLOR_RS_BRONZE) {
+	RSScribbleStrip(int x, int y, int size = 150, const char* str = "_") {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Ubuntu Condensed 400.ttf"));
 		box.pos = Vec(x, y);
 		box.size = Vec(size, 14); // Derive size from pos & panel width?  have numChars as parameter instead
 		textOffset = Vec(0, -3);
 		multiline = false; // Doesn't appear to have the desired effect
 		text = str;
-		color = colour;
 	}
 
 	// We want scribbles without background
@@ -134,6 +122,7 @@ struct RSScribbleStrip : LedDisplayTextField {
 
 			// If we subtract textWidth / 2 from parameter 2 textOffset.x we get dynamically centered strips
 			//   however the mouse doesn't position the cursor accordingly
+			NVGcolor color = RSGlobal.ssColor;
 			NVGcolor highlightColor = color;
 			highlightColor.a = 0.5;
 			int begin = std::min(cursor, selection);
@@ -153,12 +142,12 @@ struct RSScribbleStrip : LedDisplayTextField {
 
 // Ports
 
-struct RSJackMonoOut : SVGPort { RSJackMonoOut() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoOut.svg"))); } };
+struct RSJackMonoOut      : SVGPort { RSJackMonoOut() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoOut.svg"))); } };
 struct RSJackSmallMonoOut : SVGPort { RSJackSmallMonoOut() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackSmallMonoOut.svg"))); } };
-struct RSJackPolyOut : SVGPort { RSJackPolyOut() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyOut.svg"))); } };
-struct RSJackMonoIn  : SVGPort { RSJackMonoIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoIn.svg"))); } };
-struct RSJackSmallMonoIn : SVGPort { RSJackSmallMonoIn() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackSmallMonoIn.svg"))); } };
-struct RSJackPolyIn  : SVGPort { RSJackPolyIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyIn.svg"))); } };
+struct RSJackPolyOut      : SVGPort { RSJackPolyOut() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyOut.svg"))); } };
+struct RSJackMonoIn       : SVGPort { RSJackMonoIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoIn.svg"))); } };
+struct RSJackSmallMonoIn  : SVGPort { RSJackSmallMonoIn() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackSmallMonoIn.svg"))); } };
+struct RSJackPolyIn       : SVGPort { RSJackPolyIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyIn.svg"))); } };
 
 
 // Knobs
@@ -178,13 +167,13 @@ struct RSKnobDetent : RSKnob {
 	}
 };
 
-struct RSKnobSmlBlk : RSKnob { RSKnobSmlBlk() {	setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobSmlBlk.svg")));	} };
-struct RSKnobMedBlk : RSKnob { RSKnobMedBlk() {	setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobMedBlk.svg")));	} };
-struct RSKnobLrgBlk : RSKnob { RSKnobLrgBlk() {	setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobLrgBlk.svg")));	} };
+struct RSKnobSml : RSKnob { RSKnobSml() {setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobSml.svg"))); } };
+struct RSKnobMed : RSKnob { RSKnobMed() {setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobMed.svg"))); } };
+struct RSKnobLrg : RSKnob { RSKnobLrg() {setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobLrg.svg"))); } };
 
-struct RSKnobDetentSmlBlk : RSKnobDetent { RSKnobDetentSmlBlk() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobSmlBlk.svg"))); } };
-struct RSKnobDetentMedBlk : RSKnobDetent { RSKnobDetentMedBlk() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobMedBlk.svg"))); } };
-struct RSKnobDetentLrgBlk : RSKnobDetent { RSKnobDetentLrgBlk() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobLrgBlk.svg"))); } };
+struct RSKnobDetentSml : RSKnobDetent { RSKnobDetentSml() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobSml.svg"))); } };
+struct RSKnobDetentMed : RSKnobDetent { RSKnobDetentMed() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobMed.svg"))); } };
+struct RSKnobDetentLrg : RSKnobDetent { RSKnobDetentLrg() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSKnobLrg.svg"))); } };
 
 
 // Buttons
@@ -205,17 +194,18 @@ struct RSButton : SVGSwitch {
 struct RSButtonToggle : RSButton {
 	RSButtonToggle() {
 		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButton.svg")));
-		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButtonBronze.svg")));
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButtonPress.svg")));
 	}
 };
 
+/*
 struct RSButtonToggleRed : RSButton {
 	RSButtonToggleRed() {
 		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButton.svg")));
 		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButtonRed.svg")));
 	}
 };
-
+*/
 struct RSButtonToggleInvisible : RSButton {
 	RSButtonToggleInvisible() {
 		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSButtonInvisibleIsh.svg")));
@@ -229,12 +219,13 @@ struct RSButtonMomentary : RSButtonToggle {
 	}
 };
 
+/*
 struct RSButtonMomentaryRed : RSButtonToggleRed {
 	RSButtonMomentaryRed() {
 		momentary = true;
 	}
 };
-
+*/
 struct RSButtonMomentaryInvisible : RSButtonToggleInvisible {
 	RSButtonMomentaryInvisible() {
 		momentary = true;

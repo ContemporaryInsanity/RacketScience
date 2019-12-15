@@ -10,9 +10,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="8.1999998mm"
-   height="8.1999998mm"
-   viewBox="0 0 8.1999998 8.1999998"
+   width="7.9984908mm"
+   height="8.0236206mm"
+   viewBox="0 0 7.9984907 8.0236211"
    version="1.1"
    id="svg826"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
@@ -35,9 +35,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="27.394056"
-     inkscape:cx="15.459558"
-     inkscape:cy="15.496062"
+     inkscape:zoom="37.281623"
+     inkscape:cx="11.316355"
+     inkscape:cy="11.400913"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -48,16 +48,24 @@
      inkscape:snap-intersection-paths="true"
      inkscape:window-width="1920"
      inkscape:window-height="1080"
-     inkscape:window-x="3377"
+     inkscape:window-x="3379"
      inkscape:window-y="305"
-     inkscape:window-maximized="0">
+     inkscape:window-maximized="0"
+     units="mm"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:showpageshadow="false">
     <inkscape:grid
        type="xygrid"
        id="grid5078"
        units="mm"
        spacingx="0.19999999"
        spacingy="0.19999999"
-       snapvisiblegridlinesonly="false" />
+       snapvisiblegridlinesonly="false"
+       originx="0.07457938"
+       originy="0.091466191" />
   </sodipodi:namedview>
   <metadata
      id="metadata823">
@@ -75,10 +83,10 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-288.8)">
+     transform="translate(0.07457937,-289.06785)">
     <g
        id="g1408"
-       transform="translate(-1.9000001,1.8999999)">
+       transform="matrix(0.95607112,0,0,0.95907489,-1.8117606,13.988863)">
       <circle
          r="4"
          cy="291"
@@ -94,11 +102,11 @@
          ry="3.0992062" />
     </g>
     <rect
-       style="opacity:0.49800002;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#f9ff4b;stroke-width:0.33832628;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+       style="opacity:0.49800002;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#f9ff4b;stroke-width:0.34411055;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
        id="rect6327"
-       width="3.3999999"
-       height="3.7999909"
-       x="2.3999999"
-       y="291" />
+       width="3.6558895"
+       height="3.6558895"
+       x="2.0967214"
+       y="291.25171" />
   </g>
 </svg>

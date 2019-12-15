@@ -5,7 +5,6 @@
 
 struct RSMFH : Module {
 	enum ParamIds {
-		THEME_BUTTON,
 		VOLTAGE_KNOB,
 		NUM_PARAMS
 	};
@@ -25,18 +24,13 @@ struct RSMFH : Module {
 		NUM_LIGHTS
 	};
 
-	dsp::BooleanTrigger themeTrigger;
-
 	RSMFH() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 		configParam(VOLTAGE_KNOB, -20.f, +20.f, 0.f, "VOTLAGE");
 	}
 
 	void process(const ProcessArgs &args) override {
-        #include "RSModuleTheme.hpp"
-
 		outputs[MINF_OUT].setChannels(16);
 		outputs[PINF_OUT].setChannels(16);
 		outputs[NAN_OUT].setChannels(16);
@@ -79,8 +73,6 @@ struct RSMFHWidget : ModuleWidget {
 		addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
 		addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
 
-		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSMFH::THEME_BUTTON));
-
 		addOutput(createOutputCentered<RSJackPolyOut>(Vec(23, 72), module, RSMFH::MINF_OUT));
 		addChild(new RSLabelCentered(middle, 94, "-INF"));
 
@@ -91,12 +83,12 @@ struct RSMFHWidget : ModuleWidget {
 		addChild(new RSLabelCentered(middle, 174, "NAN"));
 
 		addOutput(createOutputCentered<RSJackPolyOut>(Vec(23, 218), module, RSMFH::VOLTAGE_OUT));
-		addParam(createParamCentered<RSKnobDetentSmlBlk>(Vec(23, 248), module, RSMFH::VOLTAGE_KNOB));
+		addParam(createParamCentered<RSKnobDetentSml>(Vec(23, 248), module, RSMFH::VOLTAGE_KNOB));
 		addChild(new RSLabelCentered(middle, 270, "-20       +20"));
 
-		addChild(new RSLabelCentered(middle, 306, "!EVIL!", 16, COLOR_RED));
+		addChild(new RSLabel(middle - 15, 306, "!EVIL!", 16, COLOR_RED));
 		addOutput(createOutputCentered<RSJackPolyOut>(Vec(23, 322), module, RSMFH::EVIL_OUT));
-		addChild(new RSLabelCentered(middle, 348, "!EVIL!", 16, COLOR_RED));
+		addChild(new RSLabel(middle - 15, 348, "!EVIL!", 16, COLOR_RED));
 	}
 
     void customDraw(const DrawArgs& args) {}

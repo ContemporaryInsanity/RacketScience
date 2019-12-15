@@ -5,7 +5,6 @@
 
 struct RSHeat : Module {
     enum ParamIds {
-        THEME_BUTTON,
         RESET_BUTTON,
         GAIN_KNOB,
         LOSS_KNOB,
@@ -29,7 +28,6 @@ struct RSHeat : Module {
     dsp::ClockDivider lightDivider;
     dsp::ClockDivider fadeDivider;
 
-    dsp::BooleanTrigger themeTrigger;
     dsp::SchmittTrigger gateTrigger;
     dsp::BooleanTrigger resetTrigger;
 
@@ -42,14 +40,11 @@ struct RSHeat : Module {
         logDivider.setDivision(4096);
 
         config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
         configParam(GAIN_KNOB, 0.01f, 5.0f, 0.05f, "GAIN");
         configParam(LOSS_KNOB, 0.01f, 0.5f, 0.05f, "LOSS");
     }
 
     void process(const ProcessArgs &args) override {
-        #include "RSModuleTheme.hpp"
-
         float vOctIn = RSclamp(inputs[CV_INPUT].getVoltage(), -10.f, 10.f);
         int noteIdx = note(vOctIn);
         int octIdx = clamp(octave(vOctIn) + 4, 0, 9);
@@ -111,8 +106,6 @@ struct RSHeatWidget : ModuleWidget {
         //addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
         //addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
 
-        addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSHeat::THEME_BUTTON));
-
         addInput(createInputCentered<RSJackMonoIn>(Vec(middle / 2, 30), module, RSHeat::CV_INPUT));
         addChild(new RSLabelCentered(middle / 2, 52, "V/OCT"));
 
@@ -120,12 +113,12 @@ struct RSHeatWidget : ModuleWidget {
         addChild(new RSLabelCentered(middle + middle / 2, 52, "GATE"));
 
         addParam(createParamCentered<RSButtonMomentary>(Vec(middle, 68), module, RSHeat::RESET_BUTTON));
-        addChild(new RSLabelCentered(middle, 90, "RESET"));
+        addChild(new RSLabelCentered(middle, 71, "RESET"));
 
-        addParam(createParamCentered<RSKnobSmlBlk>(Vec(middle / 2, 108), module, RSHeat::GAIN_KNOB));
+        addParam(createParamCentered<RSKnobSml>(Vec(middle / 2, 108), module, RSHeat::GAIN_KNOB));
         addChild(new RSLabelCentered(middle / 2, 132, "GAIN"));
 
-        addParam(createParamCentered<RSKnobSmlBlk>(Vec(middle + middle / 2, 108), module, RSHeat::LOSS_KNOB));
+        addParam(createParamCentered<RSKnobSml>(Vec(middle + middle / 2, 108), module, RSHeat::LOSS_KNOB));
         addChild(new RSLabelCentered(middle + middle / 2, 132, "LOSS"));
 
         LightWidget *lightWidget;

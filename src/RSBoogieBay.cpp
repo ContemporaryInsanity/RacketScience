@@ -5,7 +5,6 @@
 
 struct RSBoogieBay : Module {
 	enum ParamIds {
-        THEME_BUTTON,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -24,12 +23,8 @@ struct RSBoogieBay : Module {
 
 	RSBoogieBay() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-
-        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 	}
 
-    dsp::BooleanTrigger themeTrigger;
-    
     int vrangea = 4;
     int vrangeb = 2;
 
@@ -37,8 +32,6 @@ struct RSBoogieBay : Module {
     bool menubChanged = true;
 
 	void process(const ProcessArgs &args) override {
-        #include "RSModuleTheme.hpp"
-
         outputs[OUTA_OUTPUT].setVoltage(inputs[INA_INPUT].getVoltage());
         outputs[OUTB_OUTPUT].setVoltage(inputs[INB_INPUT].getVoltage());
 	}
@@ -89,8 +82,6 @@ struct RSBoogieBayWidget : ModuleWidget {
         addChild(new RSLabelCentered(middle, box.pos.y + 25, "BAY", 14));
 
         addChild(new RSLabelCentered(box.size.x / 2, box.size.y - 6, "Racket Science", 12));
-
-		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSBoogieBay::THEME_BUTTON));
 
         ina = createInputCentered<RSJackMonoIn>(Vec(22, 175), module, RSBoogieBay::INA_INPUT);
 		addInput(ina);

@@ -9,13 +9,13 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="32"
-   height="32"
-   viewBox="0 0 8.4666662 8.4666662"
+   width="28mm"
+   height="28mm"
+   viewBox="0 0 28 28"
    version="1.1"
    id="svg826"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
-   sodipodi:docname="RSKnobSmlBlk.svg">
+   sodipodi:docname="RSKnobLrgBlk.svg">
   <defs
      id="defs820" />
   <sodipodi:namedview
@@ -25,9 +25,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="22.463125"
-     inkscape:cx="11.418562"
-     inkscape:cy="18.942106"
+     inkscape:zoom="8.3196759"
+     inkscape:cx="50.422637"
+     inkscape:cy="51.023607"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -38,15 +38,15 @@
      inkscape:snap-intersection-paths="true"
      inkscape:window-width="1920"
      inkscape:window-height="1080"
-     inkscape:window-x="1979"
-     inkscape:window-y="210"
+     inkscape:window-x="2971"
+     inkscape:window-y="232"
      inkscape:window-maximized="0"
      borderlayer="true"
-     units="px"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
-     fit-margin-bottom="0">
+     fit-margin-bottom="0"
+     units="mm">
     <inkscape:grid
        type="xygrid"
        id="grid5078"
@@ -54,8 +54,8 @@
        spacingx="0.19999999"
        spacingy="0.19999999"
        snapvisiblegridlinesonly="false"
-       originx="0.023517055"
-       originy="0.011766001" />
+       originx="-0.014775312"
+       originy="0.020963814" />
   </sodipodi:namedview>
   <metadata
      id="metadata823">
@@ -73,18 +73,18 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0.02351686,-288.54511)">
+     transform="translate(-0.01477532,-269.021)">
     <circle
-       style="opacity:1;fill:#2a2a2a;fill-opacity:1;stroke:#858739;stroke-width:0.33488315;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"
+       style="opacity:1;fill:#2a2a2a;fill-opacity:0.49753699;stroke:#858739;stroke-width:0.47029486;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers fill stroke"
        id="path5084"
-       cx="4.2098165"
-       cy="292.77844"
-       r="4.0658917" />
+       cx="14.014775"
+       cy="283.021"
+       r="13.764853" />
     <circle
-       style="opacity:1;fill:#151515;fill-opacity:1;fill-rule:nonzero;stroke:#858739;stroke-width:0.31918097;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="opacity:1;fill:#151515;fill-opacity:0.50246304;fill-rule:nonzero;stroke:#858739;stroke-width:0.39687499;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="path819"
-       cx="4.2098165"
-       cy="290.66064"
-       r="1.4279095" />
+       cx="14.014775"
+       cy="273.20636"
+       r="3.0651691" />
   </g>
 </svg>

@@ -392,16 +392,16 @@ struct RSBufferDisplay : TransparentWidget {
 				std::time_t t = std::time(0);
 				std::tm* now = std::localtime(&t);
 				switch(now->tm_wday) {
+					case 0: strcpy(msg, "Happy Sunday"); break; 
 					case 1: strcpy(msg, "Happy Monday"); break; 
 					case 2: strcpy(msg, "Happy Tuesday"); break; 
 					case 3: strcpy(msg, "Happy Wednesday"); break; 
 					case 4: strcpy(msg, "Happy Thursday"); break; 
 					case 5: strcpy(msg, "Happy Friday"); break; 
 					case 6: strcpy(msg, "Happy Saturday"); break; 
-					case 7: strcpy(msg, "Happy Sunday"); break; 
 				}
 				if(now->tm_mday == 25 && now->tm_mon + 1 == 12) strcpy(msg, "MERRY XMAS!");
-				nvgText(args.vg, box.pos.x + box.size.x / 2, box.pos.y + 70, msg, NULL);				
+				nvgText(args.vg, box.pos.x + box.size.x / 2, box.pos.y + 70, msg, NULL);
 			}
 
 			if(box.pos.y == 70) nvgText(args.vg, box.pos.x + box.size.x / 2, box.pos.y + 70, "R a c k e t   S c i e n c e", NULL);

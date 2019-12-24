@@ -1,6 +1,6 @@
 #include "plugin.hpp"
 
-#include "components/RSComponents.hpp"
+#include "RS.hpp"
 
 
 struct RSVectorVictor : Module {

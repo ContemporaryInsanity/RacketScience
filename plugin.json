@@ -14,43 +14,18 @@
   "modules": [
     {
       "slug": "RSVectorVictor",
-      "name": "Vector Victor",
-      "description": "Phase driven CV loop recorder",
+      "name": "RSVectorVictor",
+      "description": "Phase Driven CV Looper",
       "tags": [
-        "Visual",
-        "Recording",
-        "Sequencer",
-        "Utility"
+        "Recorder",
+        "Sequencer"
       ]
     },
     {
-      "slug": "RSBoogieBay",
-      "name": "RSBoogieBay",
-      "description": "Volt meter / cable wobbler",
-      "tags": [
-        "Visual",
-        "Utility"
-      ]
-    },
-    {
-      "slug": "RSBoogieBayH8",
-      "name": "RSBoogieBayH8",
-      "description": "Cable wobbler / mono splitter / poly merger",
-      "tags": [
-        "Poly",
-        "Visual",
-        "Utility"
-      ]
-    },
-    {
-      "slug": "RSMFH",
-      "name": "RSMFH",
-      "description": "Module From Hell",
-      "tags": [
-        "Poly",
-        "Function generator",
-        "Utility"
-      ]
+      "slug": "RSGroundControl",
+      "name": "RSGroundControl",
+      "description": "",
+      "tags": []
     },
     {
       "slug": "RSHeat",
@@ -80,16 +55,46 @@
       ]
     },
     {
-      "slug": "RSScratch",
-      "name": "RSScratch",
+      "slug": "RSSkeleton",
+      "name": "RSSkeleton",
       "description": "",
       "tags": []
     },
     {
-      "slug": "RSGroundControl",
-      "name": "RSGroundControl",
-      "description": "",
-      "tags": []
+      "slug": "RSBoogieBay",
+      "name": "RSBoogieBay",
+      "description": "Animated patchbay / voltage indicator",
+      "tags": [
+        "Visual",
+        "Utility"
+      ]
+    },
+    {
+      "slug": "RSBoogieBayH8",
+      "name": "RSBoogieBayH8",
+      "description": "Animated patchbay / voltage indicator",
+      "tags": [
+        "Visual",
+        "Utility"
+      ]
+    },
+    {
+      "slug": "RSMFH",
+      "name": "RSMFH",
+      "description": "Utility",
+      "tags": [
+        "Utility"
+      ]
+    },
+    {
+      "slug": "RSScratch",
+      "name": "RSScratch",
+      "description": "Phase Driven CV Looper",
+      "tags": [
+        "Recorder",
+        "Sequencer"
+      ]
     }
+
   ]
 }

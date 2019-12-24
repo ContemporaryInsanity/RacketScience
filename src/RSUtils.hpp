@@ -55,41 +55,61 @@ static json_t *loadSettings() {
     return rootJ;
 }
 
-static void saveDefaultTheme(int theme) {
+static void saveTheme(int theme) {
     json_t *rootJ = loadSettings();
 
-    json_object_set_new(rootJ, "DefaultTheme", json_integer(theme));
+    json_object_set_new(rootJ, "Theme", json_integer(theme));
 
     saveSettings(rootJ);
 
     json_decref(rootJ);
 }
 
-static int loadDefaultTheme() {
+static int loadTheme() {
     int theme = 0;
 
     json_t *rootJ = loadSettings();
 
-    json_t *jsonTheme = json_object_get(rootJ, "DefaultTheme");
-    if(jsonTheme) theme = json_integer_value(jsonTheme);
-    
+    json_t *jsonTheme = json_object_get(rootJ, "Theme");
+    if(jsonTheme)
+        theme = json_integer_value(jsonTheme);
+
+    if(theme == 0) { // If unset or zero use global
+        theme = RSGlobal.themeIdx;
+    }
+
     json_decref(rootJ);
 
     return theme;
 }
 
-static void updateRSTheme() {
-    RSGlobal.bgColor = nvgHSL(RSGlobal.themes[RSGlobal.themeIdx].bgColor.hue,
-                              RSGlobal.themes[RSGlobal.themeIdx].bgColor.sat,
-                              RSGlobal.themes[RSGlobal.themeIdx].bgColor.lum);
+static void updateRSTheme(int themeIdx) {
+    RSGlobal.bgColor = nvgHSL(RSGlobal.themes[themeIdx].bgColor.hue,
+                              RSGlobal.themes[themeIdx].bgColor.sat,
+                              RSGlobal.themes[themeIdx].bgColor.lum);
+    RSGlobal.lbColor = nvgHSL(RSGlobal.themes[themeIdx].lbColor.hue,
+                              RSGlobal.themes[themeIdx].lbColor.sat,
+                              RSGlobal.themes[themeIdx].lbColor.lum);
+    RSGlobal.ssColor = nvgHSL(RSGlobal.themes[themeIdx].ssColor.hue,
+                              RSGlobal.themes[themeIdx].ssColor.sat,
+                              RSGlobal.themes[themeIdx].ssColor.lum);
+    RSGlobal.ledAColor = RSGlobal.themes[themeIdx].ledAColor;
+    RSGlobal.ledBColor = RSGlobal.themes[themeIdx].ledBColor;
 
-    RSGlobal.lbColor = nvgHSL(RSGlobal.themes[RSGlobal.themeIdx].lbColor.hue,
-                              RSGlobal.themes[RSGlobal.themeIdx].lbColor.sat,
-                              RSGlobal.themes[RSGlobal.themeIdx].lbColor.lum);
-
-    RSGlobal.ssColor = nvgHSL(RSGlobal.themes[RSGlobal.themeIdx].ssColor.hue,
-                              RSGlobal.themes[RSGlobal.themeIdx].ssColor.sat,
-                                RSGlobal.themes[RSGlobal.themeIdx].ssColor.lum);
+    // For when we update RSGlobal with new rstheme2
+    // RSGlobal.themes[themeIdx].bgColor = nvgHSL(RSGlobal.themes[themeIdx].bghsl.hue,
+    //                                            RSGlobal.themes[themeIdx].bghsl.sat,
+    //                                            RSGlobal.themes[themeIdx].bghsl.lum);
+    // RSGlobal.themes[themeIdx].lbColor = nvgHSL(RSGlobal.themes[themeIdx].bghsl.hue,
+    //                                            RSGlobal.themes[themeIdx].bghsl.sat,
+    //                                            RSGlobal.themes[themeIdx].bghsl.lum);
+    // RSGlobal.themes[themeIdx].ssColor = nvgHSL(RSGlobal.themes[themeIdx].bghsl.hue,
+    //                                            RSGlobal.themes[themeIdx].bghsl.sat,
+    //                                            RSGlobal.themes[themeIdx].bghsl.lum);
+    // float ledSat = 1.0f;
+    // float ledLum = 0.5f;
+    // RSGlobal.themes[themeIdx].lAColor = nvgHSL(RSGlobal.themes[themeIdx].ledAh, ledSat, ledLum);
+    // RSGlobal.themes[themeIdx].lBColor = nvgHSL(RSGlobal.themes[themeIdx].ledBh, ledSat, ledLum);
 }
 
 static void saveRSGlobal() {
@@ -124,7 +144,7 @@ static void loadRSGlobal() {
         RSGlobal.themes[3].ssColor = {0.0f, 0.0f, 0.6f};
 
         RSGlobal.themeIdx = 0;
-        updateRSTheme();
+        updateRSTheme(RSGlobal.themeIdx);
         saveRSGlobal();
     }
     else {

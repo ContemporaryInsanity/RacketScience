@@ -1,13 +1,14 @@
 #include "plugin.hpp"
 
-#include "components/RSComponents.hpp"
-#include "RSUtils.hpp"
+#include "RS.hpp"
 
-struct RSReheat : Module {
+struct RSReheat : RSModule {
     enum ParamIds {
+        THEME_BUTTON,
         RESET_BUTTON,
         GAIN_KNOB,
         LOSS_KNOB,
+        MODE_SWITCH,
         NUM_PARAMS
     };
     enum InputIds {
@@ -35,8 +36,7 @@ struct RSReheat : Module {
         NUM_LIGHTS
     };
 
-    dsp::ClockDivider lightDivider;
-    dsp::ClockDivider fadeDivider;
+    dsp::BooleanTrigger themeTrigger;
 
     dsp::SchmittTrigger gateTrigger;
     dsp::BooleanTrigger resetTrigger;
@@ -54,20 +54,32 @@ struct RSReheat : Module {
     dsp::PulseGenerator noteTogglePulse;
     dsp::PulseGenerator resetPulse;
 
+
     RSReheat() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-        configParam(GAIN_KNOB, 0.01f, 5.0f, 0.05f, "GAIN");
-        configParam(LOSS_KNOB, 0.01f, 0.5f, 0.05f, "LOSS");
+
+        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
+
+        configParam(GAIN_KNOB, 0.01f, 10.0f, 0.05f, "GAIN");
+        configParam(LOSS_KNOB, 0.f, 0.0005f, 0.00001f, "LOSS");
+        configParam(MODE_SWITCH, 0.f, 2.f, 1.f);
     }
 
     void process(const ProcessArgs &args) override {
+		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
+			RSTheme++;
+			if(RSTheme > RSGlobal.themeCount) RSTheme = 1;
+		}
+
         static bool firstTime = true;
         static float priorHeat[12];
 
-        if(firstTime) {
-            INFO("Racket Science: sizeof priorHeat[] = %i", sizeof(priorHeat));
-            firstTime = false;
-        }
+        // if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
+        //     theme++;
+        //     if(theme > RSGlobal.themeCount - 1) theme = 0;
+        //     updateRSTheme(theme);
+        //     INFO("Racket Science: local theme changed to %i", theme);
+        // }
 
         float cvIn = RSclamp(inputs[CV_INPUT].getVoltage(), -10.f, 10.f);
         int noteIdx = note(cvIn);
@@ -79,8 +91,18 @@ struct RSReheat : Module {
         if(gateTrigger.process(inputs[GATE_INPUT].getVoltage())) {
             if(semiHeat[noteIdx] < 10.f) semiHeat[noteIdx] += heatGain;
             if(semiHeat[noteIdx] > 10.f) semiHeat[noteIdx] = 10.f;
-            if(octHeat[octIdx] + heatGain < 10.f) octHeat[octIdx] += heatGain;
+            if(octHeat[octIdx] < 10.f) octHeat[octIdx] += heatGain;
             if(octHeat[octIdx] > 10.f) octHeat[octIdx] = 10.f;
+        }
+
+        for(int i = 0; i < 12; i++) {
+            if(semiHeat[i] > 0.f) semiHeat[i] -= heatLoss;
+            if(semiHeat[i] < 0.f) semiHeat[i] = 0.f;
+        }
+
+        for(int i = 0; i < 10; i++) {
+            if(octHeat[i] > 0.f) octHeat[i] -= heatLoss;
+            if(octHeat[i] < 0.f) octHeat[i] = 0.f;
         }
 
         if(resetTrigger.process(params[RESET_BUTTON].getValue())) {
@@ -116,13 +138,23 @@ struct RSReheat : Module {
             }
         }
 
-        float coolestOct = warmestOct = 0.f;
+        float coolestOct = 10.f;
+        float warmestOct = 0.f;
+        int coolestOctIdx = 0;
+        int warmestOctIdx = 0;
 
         // Grab coolest & hottest octave here
         for(int i = 0; i < 10; i++) {
             outputs[OCTAVE_OUTPUTS + 9 - i].setVoltage(octHeat[i]);
             if(octHeat[i] > 0.f) {
-
+                if(octHeat[i] > warmestOct) {
+                    warmestOct = octHeat[i];
+                    warmestOctIdx = i - 4;
+                }
+                if(octHeat[i] < coolestOct) {
+                    coolestOct = octHeat[i];
+                    coolestOctIdx = i - 4;
+                }
             }
         }
 
@@ -131,8 +163,8 @@ struct RSReheat : Module {
 
         outputs[WARMEST_SEMI_OUTPUT].setVoltage(this->warmestSemi);
         outputs[COOLEST_SEMI_OUTPUT].setVoltage(this->coolestSemi);
-        outputs[WARMEST_OCT_OUTPUT].setVoltage(this->warmestOct);
-        outputs[COOLEST_OCT_OUTPUT].setVoltage(this->coolestOct);
+        outputs[WARMEST_OCT_OUTPUT].setVoltage(warmestOctIdx);
+        outputs[COOLEST_OCT_OUTPUT].setVoltage(coolestOctIdx);
         outputs[VALID_OUTPUT].setVoltage(valid ? 10.f : 0.f);
 
         bool quantumNoteToggle = noteTogglePulse.process(args.sampleTime);
@@ -145,17 +177,18 @@ struct RSReheat : Module {
             // Keep track so we can tell if we've gained and not lost, i.e. not only toggle note output, inc / dec an array element
             for(int i = 0; i < 12; i++) {
                 if(priorHeat[i] && !semiHeat[i]) { // Had heat last call, doesn't now
-                    INFO("Racket Science: %i Lost heat", i);
+                    //INFO("Racket Science: %i Lost heat", i);
                     noteTogglePulse.trigger(1e-3f);
                     outputs[QUANTUM_NOTE_OUTPUT].setVoltage(noteVoltage[i]);
                 } else
                 if(!priorHeat[i] && semiHeat[i]) { // Didn't have heat last call, does now
-                    INFO("Racket Science: %i Gained heat", i);
+                    //INFO("Racket Science: %i Gained heat", i);
                     noteTogglePulse.trigger(1e-3f);
                     outputs[QUANTUM_NOTE_OUTPUT].setVoltage(noteVoltage[i]);
                 }
             }
         }
+        else firstTime = false;
 
         std::memcpy(priorHeat, semiHeat, sizeof(semiHeat));
     }
@@ -168,16 +201,21 @@ struct RSReheat : Module {
     json_t* dataToJson() override {
         json_t* rootJ = json_object();
 
+        json_object_set_new(rootJ, "theme", json_integer(RSTheme));
+
         return rootJ;
     }
 
     void dataFromJson(json_t* rootJ) override {
+        json_t* themeJ = json_object_get(rootJ, "theme");
 
+        if(themeJ) RSTheme = json_integer_value(themeJ);
     }
 };
 
 struct RSReheatWidget : ModuleWidget {
     RSReheat* module;
+
     Widget* panelBorder;
 
     RSReheatWidget(RSReheat *module) {
@@ -194,35 +232,42 @@ struct RSReheatWidget : ModuleWidget {
 
         LightWidget *lightWidget;
 
-        addChild(new RSLabelCentered(middle, box.pos.y + 14, "REHEAT beta", 15));
+		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSReheat::THEME_BUTTON));
+
+        addChild(new RSLabelCentered(middle, box.pos.y + 14, "REHEAT beta", 15, module));
         //addChild(new RSLabelCentered(middle, box.pos.y + 30, "Module Subtitle", 14));
-        addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12)); // >= 4HP
+        addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12, module)); // >= 4HP
         //addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12));
         //addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12));
 
+        //addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSReheat::THEME_BUTTON));
+
         addInput(createInputCentered<RSJackMonoIn>(Vec(sixth, 30), module, RSReheat::CV_INPUT));
-        addChild(new RSLabelCentered(sixth, 52, "V/OCT"));
+        addChild(new RSLabelCentered(sixth, 52, "V/OCT", 10, module));
         
         addInput(createInputCentered<RSJackMonoIn>(Vec(sixth, 70), module, RSReheat::GATE_INPUT));
-        addChild(new RSLabelCentered(sixth, 92, "GATE"));
+        addChild(new RSLabelCentered(sixth, 92, "GATE", 10, module));
 
         addParam(createParamCentered<RSButtonMomentary>(Vec(sixth, 110), module, RSReheat::RESET_BUTTON));
-        addChild(new RSLabelCentered(sixth, 113, "RESET"));
+        addChild(new RSLabelCentered(sixth, 113, "RESET", 10, module));
 
         addParam(createParamCentered<RSKnobSml>(Vec(sixth * 3, 33), module, RSReheat::GAIN_KNOB));
-        addChild(new RSLabelCentered(sixth * 3, 57, "GAIN"));
+        addChild(new RSLabelCentered(sixth * 3, 57, "GAIN", 10, module));
 
         addParam(createParamCentered<RSKnobSml>(Vec(sixth * 5, 33), module, RSReheat::LOSS_KNOB));
-        addChild(new RSLabelCentered(sixth * 5, 57, "LOSS"));
+        addChild(new RSLabelCentered(sixth * 5, 57, "LOSS", 10, module));
+
+        addParam(createParamCentered<RSSwitch3PV>(Vec(sixth * 6, 33), module, RSReheat::MODE_SWITCH));
+
 
         // Need a switch to select gate count or cv duration mode
 
-        addChild(new RSLabelCentered(sixth * 4, 76, "HOT"));
-        addChild(new RSLabelCentered(sixth * 5, 76, "COLD"));
-        addChild(new RSLabelCentered(sixth * 6, 76, "VALID"));
+        addChild(new RSLabelCentered(sixth * 4, 76, "HOT", 10, module));
+        addChild(new RSLabelCentered(sixth * 5, 76, "COLD", 10, module));
+        addChild(new RSLabelCentered(sixth * 6, 76, "VALID", 10, module));
 
-        addChild(new RSLabelCentered(sixth * 3 - 7, 92, "SEMITONES"));
-        addChild(new RSLabelCentered(sixth * 3 - 4, 112, "OCTAVES"));
+        addChild(new RSLabelCentered(sixth * 3 - 7, 92, "SEMITONES", 10, module));
+        addChild(new RSLabelCentered(sixth * 3 - 4, 112, "OCTAVES", 10, module));
 
         addOutput(createOutputCentered<RSJackSmallMonoOut>(Vec(sixth * 4, 88), module, RSReheat::WARMEST_SEMI_OUTPUT));
         addOutput(createOutputCentered<RSJackSmallMonoOut>(Vec(sixth * 5, 88), module, RSReheat::COOLEST_SEMI_OUTPUT));
@@ -234,16 +279,16 @@ struct RSReheatWidget : ModuleWidget {
         lightWidget->bgColor = nvgRGBA(10, 10, 10, 128);
         addChild(lightWidget);
 
-        addOutput(createOutputCentered<RSJackSmallMonoOut>(Vec(sixth * 6, 108), module, RSReheat::VALID_OUTPUT));        
+        addOutput(createOutputCentered<RSJackSmallMonoOut>(Vec(sixth * 6, 108), module, RSReheat::VALID_OUTPUT));
 
         // Outputs to drive ML Quantum
-        addChild(new RSLabelCentered(sixth * 7, 138, "QUANTUM"));
+        addChild(new RSLabelCentered(sixth * 7, 138, "QUANTUM", 10, module));
         addOutput(createOutputCentered<RSJackMonoOut>(Vec(sixth * 7, 154), module, RSReheat::QUANTUM_NOTE_OUTPUT));
-        addChild(new RSLabelCentered(sixth * 7, 178, "NOTE"));
+        addChild(new RSLabelCentered(sixth * 7, 178, "NOTE", 10, module));
         addOutput(createOutputCentered<RSJackMonoOut>(Vec(sixth * 7, 194), module, RSReheat::QUANTUM_TOGGLE_OUTPUT));
-        addChild(new RSLabelCentered(sixth * 7, 218, "TOGGLE"));
+        addChild(new RSLabelCentered(sixth * 7, 218, "TOGGLE", 10, module));
         addOutput(createOutputCentered<RSJackMonoOut>(Vec(sixth * 7, 234), module, RSReheat::QUANTUM_RESET_OUTPUT));
-        addChild(new RSLabelCentered(sixth * 7, 258, "RESET"));
+        addChild(new RSLabelCentered(sixth * 7, 258, "RESET", 10, module));
 
         // Semitone lights & outputs
         for(int i = 0 ; i < 12; i++) {
@@ -254,6 +299,8 @@ struct RSReheatWidget : ModuleWidget {
             }
             lightWidget = createLightCentered<LargeLight<BlueLight>>(Vec(sixth - offset, 144 + (i * 19)), module, RSReheat::SEMITONE_LIGHTS + i);
             lightWidget->bgColor = nvgRGBA(10, 10, 10, 128);
+            //lightWidget->borderColor = nvgRGB(255, 255, 255);
+            //lightWidget->color = nvgRGB(255, 0, 0);
             addChild(lightWidget);
 
             addOutput(createOutputCentered<RSJackSmallMonoOut>(Vec(sixth * 3.75 - offset, 144 + (i * 19)), module, RSReheat::SEMITONE_OUTPUTS + i));
@@ -267,8 +314,6 @@ struct RSReheatWidget : ModuleWidget {
 
             addOutput(createOutputCentered<RSJackSmallMonoOut>(Vec(sixth * 4.75 + 7, 144 + (i * 23.25)), module, RSReheat::OCTAVE_OUTPUTS + i));
         }
-
-
     }
 
     void step() override {
@@ -279,15 +324,6 @@ struct RSReheatWidget : ModuleWidget {
         }
         for(int i = 0; i < 10; i++) {
             module->lights[21 - i].setBrightness(module->octHeat[i] / 10);
-        }
-
-        for(int i = 0; i < 12; i++) {
-            if(module->semiHeat[i] > 0.f) module->semiHeat[i] -= module->heatLoss;
-            if(module->semiHeat[i] < 0.f) module->semiHeat[i] = 0.f;
-        }
-        for(int i = 0; i < 10; i++) {
-            if(module->octHeat[i] > 0.f) module->octHeat[i] -= module->heatLoss;
-            if(module->octHeat[i] < 0.f) module->octHeat[i] = 0.f;
         }
 
         module->lights[RSReheat::VALID_LIGHT].setBrightness(module->valid ? 1.f : 0.f);

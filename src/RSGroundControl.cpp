@@ -1,10 +1,15 @@
 #include "plugin.hpp"
 
-#include "components/RSComponents.hpp"
-#include "RSUtils.hpp"
+#include "RS.hpp"
 
-struct RSGroundControl : Module {
+static bool owned = false;
+
+struct RSGroundControl : RSModule {
+	bool running = false;
+
 	enum ParamIds {
+		MOMENTARY_BUTTON, TOGGLE_BUTTON,
+		ROUND_MOMENTARY_BUTTON, ROUND_TOGGLE_BUTTON,
 		BGHUE_KNOB, BGSAT_KNOB, BGLUM_KNOB,
 		LBHUE_KNOB, LBSAT_KNOB, LBLUM_KNOB,
 		SSHUE_KNOB, SSSAT_KNOB, SSLUM_KNOB,
@@ -13,6 +18,7 @@ struct RSGroundControl : Module {
 		NUM_PARAMS
 	};
 	enum InputIds {
+		STEALTH_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -23,7 +29,20 @@ struct RSGroundControl : Module {
 	};
 
 	RSGroundControl() {
+		if(!owned) {
+			owned = true;
+			running = true;
+		}
+
+		RSTheme = 0;
+
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+
+		configParam(MOMENTARY_BUTTON, 0.f, 1.f, 0.f, "MOMENTARY");
+		configParam(TOGGLE_BUTTON, 0.f, 1.f, 0.f, "TOGGLE");
+
+		configParam(ROUND_MOMENTARY_BUTTON, 0.f, 1.f, 0.f, "MOMENTARY");
+		configParam(ROUND_TOGGLE_BUTTON, 0.f, 1.f, 0.f, "TOGGLE");
 
 		configParam(BGHUE_KNOB, 0.f, 1.f, 0.5f, "HUE");
 		configParam(BGSAT_KNOB, 0.f, 1.f, 0.5f, "SAT");
@@ -36,22 +55,27 @@ struct RSGroundControl : Module {
 		configParam(SSLUM_KNOB, 0.f, 1.f, 0.5f, "LUM");
 		configParam(LEDA_KNOB,  0.f, 1.f, 0.5f, "HUE");
 		configParam(LEDB_KNOB,  0.f, 1.f, 0.5f, "HUE");
-		configParam(THEME_KNOB, 0.f, 3.f, 0.0f, "THEME");
+
+		configParam(THEME_KNOB, 0.f, RSGlobal.themeCount - 1.f, 0.0f, "THEME");
 	}
 
 	void process(const ProcessArgs &args) override {
 	}
 
 	void updateParams() {
-		params[RSGroundControl::BGHUE_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].bgColor.hue);
-		params[RSGroundControl::BGSAT_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].bgColor.sat);
-		params[RSGroundControl::BGLUM_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].bgColor.lum);
-		params[RSGroundControl::LBHUE_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].lbColor.hue);
-		params[RSGroundControl::LBSAT_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].lbColor.sat);
-		params[RSGroundControl::LBLUM_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].lbColor.lum);
-		params[RSGroundControl::SSHUE_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].ssColor.hue);
-		params[RSGroundControl::SSSAT_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].ssColor.sat);
-		params[RSGroundControl::SSLUM_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].ssColor.lum);
+		if(!running) return;
+
+		params[RSGroundControl::BGHUE_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].bghsl.hue);
+		params[RSGroundControl::BGSAT_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].bghsl.sat);
+		params[RSGroundControl::BGLUM_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].bghsl.lum);
+		params[RSGroundControl::LBHUE_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].lbhsl.hue);
+		params[RSGroundControl::LBSAT_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].lbhsl.sat);
+		params[RSGroundControl::LBLUM_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].lbhsl.lum);
+		params[RSGroundControl::SSHUE_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].sshsl.hue);
+		params[RSGroundControl::SSSAT_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].sshsl.sat);
+		params[RSGroundControl::SSLUM_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].sshsl.lum);
+		params[RSGroundControl::LEDA_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].ledAh);
+		params[RSGroundControl::LEDB_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].ledBh);
 	}
 
 	json_t* dataToJson() override {
@@ -63,8 +87,100 @@ struct RSGroundControl : Module {
 	void dataFromJson(json_t* rootJ) override {
 
 	}
+
+	~RSGroundControl() {
+		if(running) {
+			owned = false;
+		}
+	}
 };
 
+// Move to RSComponents.hpp once perfected
+struct RSLedAWidget : TransparentWidget {
+	NVGcolor bgColor = nvgRGBA(0, 0, 0, 0);
+	NVGcolor color = nvgRGBA(0, 0, 0, 0);
+	NVGcolor borderColor = nvgRGBA(0, 0, 0, 0);
+
+	RSLedAWidget(int x, int y, int size = 15) {
+		box.pos = Vec(x, y);
+		box.size = Vec(size, size);
+	}
+
+	void draw(const DrawArgs& args) override {
+		drawLed(args);
+		drawHalo(args);
+	}
+
+	void drawLed(const DrawArgs& args) {
+		nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
+		color = RSGlobal.themes[RSGlobal.themeIdx].lAColor;
+		nvgFillColor(args.vg, color);
+		nvgBeginPath(args.vg);
+		// nvgRoundedRect(args.vg, box.pos.x, box.pos.y, box.size.x, box.size.y, 10);
+		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 10);
+		nvgStroke(args.vg);
+		nvgFill(args.vg);
+	}
+
+	void drawHalo(const DrawArgs& args) {
+		float radius = box.size.x / 2;
+		float oradius = radius * 4.f;
+
+		nvgBeginPath(args.vg);
+		nvgRect(args.vg, box.pos.x, box.pos.y, box.size.x, box.size.y);
+
+		NVGpaint paint;
+		NVGcolor icol = color::mult(color, 0.7f);
+		NVGcolor ocol = nvgRGB(0, 0, 0);
+		paint = nvgRadialGradient(args.vg, radius, radius, radius, oradius, icol, ocol);
+		nvgFillPaint(args.vg, paint);
+		nvgGlobalCompositeOperation(args.vg, NVG_LIGHTER);
+		nvgFill(args.vg);
+	}
+};
+
+struct RSLedBWidget : TransparentWidget {
+	NVGcolor bgColor = nvgRGBA(0, 0, 0, 0);
+	NVGcolor color = nvgRGBA(0, 0, 0, 0);
+	NVGcolor borderColor = nvgRGBA(0, 0, 0, 0);
+
+	RSLedBWidget(int x, int y, int size = 15) {
+		box.pos = Vec(x, y);
+		box.size = Vec(size, size);
+	}
+
+	void draw(const DrawArgs& args) override {
+		drawLed(args);
+		drawHalo(args);
+	}
+
+	void drawLed(const DrawArgs& args) {
+		nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
+		color = RSGlobal.themes[RSGlobal.themeIdx].lBColor;
+		nvgFillColor(args.vg, color);
+		nvgBeginPath(args.vg);
+		// nvgRoundedRect(args.vg, box.pos.x, box.pos.y, box.size.x, box.size.y, 10);
+		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 10);
+		nvgStroke(args.vg);
+		nvgFill(args.vg);
+	}
+
+	void drawHalo(const DrawArgs& args) {
+		float radius = box.size.x / 2;
+		float oradius = radius * 4.f;
+
+		nvgBeginPath(args.vg);
+		nvgRect(args.vg, box.pos.x, box.pos.y, box.size.x, box.size.y);
+
+		NVGpaint paint;
+		NVGcolor icol = color::mult(color, 0.7f);
+		NVGcolor ocol = nvgRGB(0, 0, 0);
+		paint = nvgRadialGradient(args.vg, radius, radius, radius, oradius, icol, ocol);
+		nvgFillPaint(args.vg, paint);
+		nvgGlobalCompositeOperation(args.vg, NVG_LIGHTER);
+		nvgFill(args.vg);
+	}
+};
 
 struct RSGroundControlWidget : ModuleWidget {
 	RSGroundControl* module;
@@ -79,6 +195,12 @@ struct RSGroundControlWidget : ModuleWidget {
 
 		addChild(new RSLabelCentered(middle, box.pos.y + 13, "GROUND CONTROL", 14));
 		addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12));
+		if(module)
+			if(!module->running) {
+				addChild(new RSLabelCentered(middle, box.size.y / 2, "DISABLED", 16));	
+				addChild(new RSLabelCentered(middle, box.size.y / 2 + 12, "ONLY ONE INSTANCE OF GC REQUIRED"));
+				return;
+			}
 
 		/*  What else to include?
 			Current date & time
@@ -95,6 +217,14 @@ struct RSGroundControlWidget : ModuleWidget {
 			int top = 190, left = 40;
 			int xsp = 30, ysp = 30, los = 30; // x spacing, y spacing, label offset
 
+			addParam(createParamCentered<RSButtonMomentary>(Vec(40, 40), module, RSGroundControl::MOMENTARY_BUTTON));
+			addParam(createParamCentered<RSButtonToggle>(Vec(40, 90), module, RSGroundControl::TOGGLE_BUTTON));
+
+			addParam(createParamCentered<RSRoundButtonMomentary>(Vec(70, 40), module, RSGroundControl::ROUND_MOMENTARY_BUTTON));
+			addInput(createInputCentered<RSStealthJack>(Vec(70, 40), module, RSGroundControl::STEALTH_INPUT));
+
+			addParam(createParamCentered<RSRoundButtonToggle>(Vec(70, 90), module, RSGroundControl::ROUND_TOGGLE_BUTTON));
+
 			addChild(new RSLabelCentered(middle, top, "ANY COLOUR YOU LIKE", 12));
 
 			addChild(new RSLabelCentered(left + (xsp * 1), top + (ysp / 2), "HUE"));
@@ -104,8 +234,8 @@ struct RSGroundControlWidget : ModuleWidget {
 			addChild(new RSLabelCentered(left - 10, top + (ysp * 1) + 3, "BACKGROUND"));
 			addChild(new RSLabelCentered(left - 10, top + (ysp * 2) + 3, "LABELS"));
 			addChild(new RSLabelCentered(left - 10, top + (ysp * 3) + 3, "SCRIBBLES"));
-			addChild(new RSLabelCentered(left - 10, top + (ysp * 4) + 3, "LEDS A"));
-			addChild(new RSLabelCentered(left - 10, top + (ysp * 5) + 3, "LEDS B"));
+			addChild(new RSLabelCentered(left - 20, top + (ysp * 4) + 3, "LEDS A"));
+			addChild(new RSLabelCentered(left - 20, top + (ysp * 5) + 3, "LEDS B"));
 
 			addParam(createParamCentered<RSKnobSml>(Vec(left + (xsp * 1), top + (ysp * 1)), module, RSGroundControl::BGHUE_KNOB));
 			addParam(createParamCentered<RSKnobSml>(Vec(left + (xsp * 2), top + (ysp * 1)), module, RSGroundControl::BGSAT_KNOB));
@@ -125,6 +255,8 @@ struct RSGroundControlWidget : ModuleWidget {
 			addParam(createParamCentered<RSKnobDetentMed>(Vec(left + (xsp * 2.5), top + (ysp * 4.5)), module, RSGroundControl::THEME_KNOB));
 			addChild(new RSLabelCentered(left + (xsp * 2.5), top + (ysp * 5.8), "THEME"));
 
+			addChild(new RSLedAWidget(left - 3, top + (ysp * 4) - 7));
+			addChild(new RSLedBWidget(left - 3, top + (ysp * 5) - 7));
 
 		}
 
@@ -140,36 +272,44 @@ struct RSGroundControlWidget : ModuleWidget {
 
 	void step() override {
 		if(!module) return;
+		if(!module->running) return;
 
 		static struct rsglobal lastRSGlobal;
 		
 		static int lastTheme = 0;
 		int theme = (int)module->params[RSGroundControl::THEME_KNOB].getValue();		
 
-		if(theme != lastTheme) { // Them has changed
+		if(theme != lastTheme) { // Theme has changed
 			RSGlobal.themeIdx = lastTheme = theme;
 			module->updateParams();
-			updateRSTheme();
+			updateRSTheme(theme);
 			saveRSGlobal();
 		}
 
-		RSGlobal.themes[RSGlobal.themeIdx].bgColor.hue = module->params[RSGroundControl::BGHUE_KNOB].getValue();
-		RSGlobal.themes[RSGlobal.themeIdx].bgColor.sat = module->params[RSGroundControl::BGSAT_KNOB].getValue();
-		RSGlobal.themes[RSGlobal.themeIdx].bgColor.lum = module->params[RSGroundControl::BGLUM_KNOB].getValue();
+		// Ideally only want to do the following if any params have changed
+		// How can we achieve that?  Can we test if the mouse is over our module, that would help
+		// No point checking each param for change before reflecting that in RSGlobal, may as well just assign blindly
 
-		RSGlobal.themes[RSGlobal.themeIdx].lbColor.hue = module->params[RSGroundControl::LBHUE_KNOB].getValue();
-		RSGlobal.themes[RSGlobal.themeIdx].lbColor.sat = module->params[RSGroundControl::LBSAT_KNOB].getValue();
-		RSGlobal.themes[RSGlobal.themeIdx].lbColor.lum = module->params[RSGroundControl::LBLUM_KNOB].getValue();
+		RSGlobal.themes[RSGlobal.themeIdx].bghsl.hue = module->params[RSGroundControl::BGHUE_KNOB].getValue();
+		RSGlobal.themes[RSGlobal.themeIdx].bghsl.sat = module->params[RSGroundControl::BGSAT_KNOB].getValue();
+		RSGlobal.themes[RSGlobal.themeIdx].bghsl.lum = module->params[RSGroundControl::BGLUM_KNOB].getValue();
 
-		RSGlobal.themes[RSGlobal.themeIdx].ssColor.hue = module->params[RSGroundControl::SSHUE_KNOB].getValue();
-		RSGlobal.themes[RSGlobal.themeIdx].ssColor.sat = module->params[RSGroundControl::SSSAT_KNOB].getValue();
-		RSGlobal.themes[RSGlobal.themeIdx].ssColor.lum = module->params[RSGroundControl::SSLUM_KNOB].getValue();
+		RSGlobal.themes[RSGlobal.themeIdx].lbhsl.hue = module->params[RSGroundControl::LBHUE_KNOB].getValue();
+		RSGlobal.themes[RSGlobal.themeIdx].lbhsl.sat = module->params[RSGroundControl::LBSAT_KNOB].getValue();
+		RSGlobal.themes[RSGlobal.themeIdx].lbhsl.lum = module->params[RSGroundControl::LBLUM_KNOB].getValue();
 
-		updateRSTheme();
+		RSGlobal.themes[RSGlobal.themeIdx].sshsl.hue = module->params[RSGroundControl::SSHUE_KNOB].getValue();
+		RSGlobal.themes[RSGlobal.themeIdx].sshsl.sat = module->params[RSGroundControl::SSSAT_KNOB].getValue();
+		RSGlobal.themes[RSGlobal.themeIdx].sshsl.lum = module->params[RSGroundControl::SSLUM_KNOB].getValue();
+
+		RSGlobal.themes[RSGlobal.themeIdx].ledAh = module->params[RSGroundControl::LEDA_KNOB].getValue();
+		RSGlobal.themes[RSGlobal.themeIdx].ledBh = module->params[RSGroundControl::LEDB_KNOB].getValue();
+
+		updateRSTheme(RSGlobal.themeIdx);
 
 		// memcmp should suffice, nothing unusual in rsglobal struct
 		if(memcmp(&RSGlobal, &lastRSGlobal, sizeof(rsglobal)) != 0) { // Theme settings have changed
-			lastRSGlobal = RSGlobal;
+			lastRSGlobal = RSGlobal; // memcpy?
 			saveRSGlobal();
 		}
 
@@ -178,3 +318,4 @@ struct RSGroundControlWidget : ModuleWidget {
 };
 
 Model *modelRSGroundControl = createModel<RSGroundControl, RSGroundControlWidget>("RSGroundControl");
+

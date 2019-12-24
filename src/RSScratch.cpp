@@ -3,11 +3,11 @@
 
 #include "plugin.hpp"
 
-#include "RSUtils.hpp"
-#include "components/RSComponents.hpp"
+#include "RS.hpp"
 
-struct RSScratch : Module {
-	enum ParamIds {		
+struct RSScratch : RSModule {
+	enum ParamIds {
+		THEME_BUTTON,
 		IN_A_PARAM, WRITE_A_PARAM, SCRUB_A_PARAM, CLEAR_A_PARAM, RAND_A_PARAM,
 		IN_B_PARAM, WRITE_B_PARAM, SCRUB_B_PARAM, CLEAR_B_PARAM, RAND_B_PARAM,
 		IN_C_PARAM, WRITE_C_PARAM, SCRUB_C_PARAM, CLEAR_C_PARAM, RAND_C_PARAM,
@@ -29,9 +29,28 @@ struct RSScratch : Module {
 		NUM_LIGHTS
 	};
 
+	dsp::BooleanTrigger themeTrigger;
+
+	RSScribbleStrip *ss[3];
+
+	dsp::BooleanTrigger clearTriggerA;
+	dsp::BooleanTrigger clearTriggerB;
+	dsp::BooleanTrigger clearTriggerC;
+	
+	dsp::BooleanTrigger randTriggerA;
+	dsp::BooleanTrigger randTriggerB;
+	dsp::BooleanTrigger randTriggerC;
+
+	#define SAMPLES 1000
+	float bufferA[SAMPLES] = {}; unsigned int idxA = 0; bool writeA = false;
+	float bufferB[SAMPLES] = {}; unsigned int idxB = 0; bool writeB = false;
+	float bufferC[SAMPLES] = {}; unsigned int idxC = 0; bool writeC = false;
 
 	RSScratch() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+
+        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
+
 		configParam(IN_A_PARAM, -10.f, 10.f, 0.f, "IN");
 		configParam(WRITE_A_PARAM, 0.f, 1.f, 0.f, "WRITE");
 		configParam(SCRUB_A_PARAM, -INFINITY, INFINITY, 0.f, "SCRUB");
@@ -49,26 +68,14 @@ struct RSScratch : Module {
 		configParam(SCRUB_C_PARAM, -INFINITY, INFINITY, 0.f, "SCRUB");
 		configParam(CLEAR_C_PARAM, 0.f, 1.f, 0.f, "CLEAR");
 		configParam(RAND_C_PARAM, 0.f, 1.f, 0.f, "RAND");
-
 	}
 
-	RSScribbleStrip *ss[3];
-
-	dsp::BooleanTrigger clearTriggerA;
-	dsp::BooleanTrigger clearTriggerB;
-	dsp::BooleanTrigger clearTriggerC;
-	
-	dsp::BooleanTrigger randTriggerA;
-	dsp::BooleanTrigger randTriggerB;
-	dsp::BooleanTrigger randTriggerC;
-
-	
-	#define SAMPLES 1000
-	float bufferA[SAMPLES] = {}; unsigned int idxA = 0; bool writeA = false;
-	float bufferB[SAMPLES] = {}; unsigned int idxB = 0; bool writeB = false;
-	float bufferC[SAMPLES] = {}; unsigned int idxC = 0; bool writeC = false;
-
 	void process(const ProcessArgs &args) override {
+		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
+			RSTheme++;
+			if(RSTheme > RSGlobal.themeCount) RSTheme = 1;
+		}
+
 		float inA, inB, inC;
 		float phaseA, phaseB, phaseC;
 
@@ -298,6 +305,8 @@ struct RSScratch : Module {
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
 
+        json_object_set_new(rootJ, "theme", json_integer(RSTheme));
+
 		json_t* ss0 = json_string(ss[0]->text.c_str());
 		json_t* ss1 = json_string(ss[1]->text.c_str());
 		json_t* ss2 = json_string(ss[2]->text.c_str());
@@ -324,6 +333,10 @@ struct RSScratch : Module {
 	}
 
 	void dataFromJson(json_t* rootJ) override {
+        json_t* themeJ = json_object_get(rootJ, "theme");
+
+        if(themeJ) RSTheme = json_integer_value(themeJ);
+
 		json_t* ss0 = json_object_get(rootJ, "ss0");
 		json_t* ss1 = json_object_get(rootJ, "ss1");
 		json_t* ss2 = json_object_get(rootJ, "ss2");
@@ -534,8 +547,10 @@ struct RSScratchWidget : ModuleWidget {
 		box.size.x = mm2px(5.08 * 100);
 		int middle = box.size.x / 2 + 1;
 
-        addChild(new RSLabelCentered(middle, box.pos.y + 13, "VECTOR VICTOR WITH KNOBS ON", 14));
-        addChild(new RSLabelCentered(middle, box.size.y - 6, "Racket Science", 12));
+		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSScratch::THEME_BUTTON));
+
+        addChild(new RSLabelCentered(middle, box.pos.y + 13, "VECTOR VICTOR WITH KNOBS ON", 14, module));
+        addChild(new RSLabelCentered(middle, box.size.y - 6, "Racket Science", 12, module));
 
 
 		int x, y;
@@ -545,39 +560,39 @@ struct RSScratchWidget : ModuleWidget {
 		// SCRUB / PHASE
 		x = 65; y = 70;
 		addParam(createParamCentered<RSKnobLrg>(Vec(x, y), module, RSScratch::SCRUB_A_PARAM));
-		addChild(new RSLabelCentered(x, y + 54, "SCRUB"));
+		addChild(new RSLabelCentered(x, y + 54, "SCRUB", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::PHASE_A_INPUT));
-		addChild(new RSLabelCentered(x, y + 22, "PHASE"));
+		addChild(new RSLabelCentered(x, y + 22, "PHASE", 10, module));
 
 		// WRITE
 		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::WRITE_A_PARAM));
-		addChild(new RSLabelCentered(x, y + 3, "WRITE"));
+		addChild(new RSLabelCentered(x, y + 3, "WRITE", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::WRITE_A_INPUT));
 
 		// CV IN
 		x += 73; y += 15;
 		addParam(createParamCentered<RSKnobLrg>(Vec(x, y), module, RSScratch::IN_A_PARAM));
-		addChild(new RSLabelCentered(x, y + 54, "CV"));
+		addChild(new RSLabelCentered(x, y + 54, "CV", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::IN_A_INPUT));
-		addChild(new RSLabelCentered(x, y + 22, "IN"));
+		addChild(new RSLabelCentered(x, y + 22, "IN", 10, module));
 
 		// CLEAR
 		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::CLEAR_A_PARAM));
-		addChild(new RSLabelCentered(x, y + 3, "CLEAR"));
+		addChild(new RSLabelCentered(x, y + 3, "CLEAR", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::CLEAR_A_INPUT));
 
 		// RAND
 		x += 37; y = y;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::RAND_A_PARAM));
-		addChild(new RSLabelCentered(x, y + 3, "RAND"));
+		addChild(new RSLabelCentered(x, y + 3, "RAND", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::RAND_A_INPUT));
 
 		// OUT
 		x += 37; y += 15;
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSScratch::OUT_A_OUTPUT));
-		addChild(new RSLabelCentered(x, y + 22, "OUT"));
+		addChild(new RSLabelCentered(x, y + 22, "OUT", 10, module));
 
 		// CHART
 		x += 43; y -= 70;
@@ -590,39 +605,39 @@ struct RSScratchWidget : ModuleWidget {
 		// SCRUB / PHASE
 		x = 65; y = 190;
 		addParam(createParamCentered<RSKnobLrg>(Vec(x, y), module, RSScratch::SCRUB_B_PARAM));
-		addChild(new RSLabelCentered(x, y + 54, "SCRUB"));
+		addChild(new RSLabelCentered(x, y + 54, "SCRUB", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::PHASE_B_INPUT));
-		addChild(new RSLabelCentered(x, y + 22, "PHASE"));
+		addChild(new RSLabelCentered(x, y + 22, "PHASE", 10, module));
 
 		// WRITE
 		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::WRITE_B_PARAM));
-		addChild(new RSLabelCentered(x, y + 3, "WRITE"));
+		addChild(new RSLabelCentered(x, y + 3, "WRITE", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::WRITE_B_INPUT));
 
 		// CV IN
 		x += 73; y += 15;
 		addParam(createParamCentered<RSKnobLrg>(Vec(x, y), module, RSScratch::IN_B_PARAM));
-		addChild(new RSLabelCentered(x, y + 54, "CV"));
+		addChild(new RSLabelCentered(x, y + 54, "CV", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::IN_B_INPUT));
-		addChild(new RSLabelCentered(x, y + 22, "IN"));
+		addChild(new RSLabelCentered(x, y + 22, "IN", 10, module));
 
 		// CLEAR
 		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::CLEAR_B_PARAM));
-		addChild(new RSLabelCentered(x, y + 3, "CLEAR"));
+		addChild(new RSLabelCentered(x, y + 3, "CLEAR", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::CLEAR_B_INPUT));
 
 		// RAND
 		x += 37; y = y;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::RAND_B_PARAM));
-		addChild(new RSLabelCentered(x, y + 3, "RAND"));
+		addChild(new RSLabelCentered(x, y + 3, "RAND", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::RAND_B_INPUT));
 
 		// OUT
 		x += 37; y += 15;
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSScratch::OUT_B_OUTPUT));
-		addChild(new RSLabelCentered(x, y + 22, "OUT"));
+		addChild(new RSLabelCentered(x, y + 22, "OUT", 10, module));
 
 		// CHART
 		x += 43; y -= 70;
@@ -635,39 +650,39 @@ struct RSScratchWidget : ModuleWidget {
 		// SCRUB / PHASE
 		x = 65; y = 310;
 		addParam(createParamCentered<RSKnobLrg>(Vec(x, y), module, RSScratch::SCRUB_C_PARAM));
-		addChild(new RSLabelCentered(x, y + 54, "SCRUB"));
+		addChild(new RSLabelCentered(x, y + 54, "SCRUB", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::PHASE_C_INPUT));
-		addChild(new RSLabelCentered(x, y + 22, "PHASE"));
+		addChild(new RSLabelCentered(x, y + 22, "PHASE", 10, module));
 
 		// WRITE
 		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::WRITE_C_PARAM));
-		addChild(new RSLabelCentered(x, y + 3, "WRITE"));
+		addChild(new RSLabelCentered(x, y + 3, "WRITE", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::WRITE_C_INPUT));
 
 		// CV IN
 		x += 73; y += 15;
 		addParam(createParamCentered<RSKnobLrg>(Vec(x, y), module, RSScratch::IN_C_PARAM));
-		addChild(new RSLabelCentered(x, y + 54, "CV"));
+		addChild(new RSLabelCentered(x, y + 54, "CV", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSScratch::IN_C_INPUT));
-		addChild(new RSLabelCentered(x, y + 22, "IN"));
+		addChild(new RSLabelCentered(x, y + 22, "IN", 10, module));
 
 		// CLEAR
 		x += 73; y -= 15;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::CLEAR_C_PARAM));
-		addChild(new RSLabelCentered(x, y + 3, "CLEAR"));
+		addChild(new RSLabelCentered(x, y + 3, "CLEAR", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::CLEAR_C_INPUT));
 
 		// RAND
 		x += 37; y = y;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSScratch::RAND_C_PARAM));
-		addChild(new RSLabelCentered(x, y + 3, "RAND"));
+		addChild(new RSLabelCentered(x, y + 3, "RAND", 10, module));
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y + 30), module, RSScratch::RAND_C_INPUT));
 
 		// OUT
 		x += 37; y += 15;
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSScratch::OUT_C_OUTPUT));
-		addChild(new RSLabelCentered(x, y + 22, "OUT"));
+		addChild(new RSLabelCentered(x, y + 22, "OUT", 10, module));
 
 		// CHART
 		x += 43; y -= 70;

@@ -1,3 +1,37 @@
+#include <ctime>
+#include <chrono>
+
+#include "RSModule.hpp"
+
+
+#define quantize(v)  (round(v * 12.f) / 12.f)
+#define octave(v)    int(floor(quantize(v)))
+#define note(v)      (int(round((v + 10) * 12)) % 12)
+
+static float noteVoltage[] = {
+    0.00000f, // C
+    0.08333f, // C#
+    0.16667f, // D
+    0.25000f, // D#
+    0.33333f, // E
+    0.41667f, // F
+    0.50000f, // F#
+    0.58333f, // G
+    0.66667f, // G#
+    0.75000f, // A
+    0.83333f, // A#
+    0.91667f, // B
+};
+
+static inline float RSclamp(float in, float min, float max) {
+	return in < min ? min : (in > max ? max : in);
+}
+
+static inline float RSscale(float in, float inMin, float inMax, float outMin, float outMax) {
+	return((outMax - outMin) * (in - inMin) / (inMax - inMin)) + outMin;
+}
+
+
 /*
 	Racket Science custom components
 	(C) 2019 Ewen Bates
@@ -5,23 +39,22 @@
 
 // Colours
 
-#define COLOR_BLACK  nvgRGB(0x00, 0x00, 0x00)
-#define COLOR_WHITE  nvgRGB(0xff, 0xff, 0xff)
-#define COLOR_RED    nvgRGB(0xff, 0x00, 0x00)
-#define COLOR_GREEN  nvgRGB(0x00, 0xff, 0x00)
-#define COLOR_BLUE   nvgRGB(0x00, 0x00, 0xff)
-#define COLOR_YELLOW nvgRGB(0xff, 0xff, 0x00)
-
 #define COLOR_RS_GREY   nvgRGB(0xB4, 0xB4, 0xB4)
 #define COLOR_RS_BRONZE nvgRGB(133, 135, 57)
-#define COLOR_RS_BG		nvgRGB(25, 25, 25)
-#define COLOR_RS_COMP	nvgRGB(42, 42, 42)
+#define COLOR_BLACK		nvgRGB(0x00, 0x00, 0x00)
+#define COLOR_RED		nvgRGB(0xFF, 0x00, 0x00)
+#define COLOR_GREEN		nvgRGB(0x00, 0xff, 0x00)
+#define COLOR_BLUE		nvgRGB(0x00, 0x00, 0xff)
+
+
+// LEDs
+
 
 
 // Labels
 
-
 // Uses own colour, intended for use with scale labels, green for pos, red for neg
+// Now we have themes this causes problems with contrast, perhaps have a black background?
 struct RSLabel : LedDisplay {
 	int fontSize;
 	std::shared_ptr<Font> font;
@@ -61,12 +94,15 @@ struct RSLabelCentered : LedDisplay {
 	int fontSize;
 	std::shared_ptr<Font> font;
 	std::string text;
+	int *themeIdx = NULL;
 
-	RSLabelCentered(int x, int y, const char* str = "", int fontSize = 10) {
+	RSLabelCentered(int x, int y, const char* str = "", int fontSize = 10, RSModule *module = NULL) {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Ubuntu Condensed 400.ttf"));
 		this->fontSize = fontSize;
 		box.pos = Vec(x, y);
 		text = str;
+
+        if(module) themeIdx = &(module->RSTheme);
 	}
 
 	void draw(const DrawArgs &args) override {
@@ -79,7 +115,9 @@ struct RSLabelCentered : LedDisplay {
 			nvgTextAlign(args.vg, NVG_ALIGN_CENTER);
 
 			nvgBeginPath(args.vg);
-			nvgFillColor(args.vg, RSGlobal.lbColor);
+			if(themeIdx == NULL) nvgFillColor(args.vg, RSGlobal.themes[RSGlobal.themeIdx].lbColor);
+			else                 nvgFillColor(args.vg, RSGlobal.themes[*themeIdx - 1].lbColor);
+			
 			nvgText(args.vg, 0, 0, text.c_str(), NULL);
 			nvgStroke(args.vg);
 
@@ -122,7 +160,7 @@ struct RSScribbleStrip : LedDisplayTextField {
 
 			// If we subtract textWidth / 2 from parameter 2 textOffset.x we get dynamically centered strips
 			//   however the mouse doesn't position the cursor accordingly
-			NVGcolor color = RSGlobal.ssColor;
+			NVGcolor color = RSGlobal.themes[RSGlobal.themeIdx].ssColor;
 			NVGcolor highlightColor = color;
 			highlightColor.a = 0.5;
 			int begin = std::min(cursor, selection);
@@ -148,6 +186,29 @@ struct RSJackPolyOut      : SVGPort { RSJackPolyOut() { setSvg(APP->window->load
 struct RSJackMonoIn       : SVGPort { RSJackMonoIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoIn.svg"))); } };
 struct RSJackSmallMonoIn  : SVGPort { RSJackSmallMonoIn() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackSmallMonoIn.svg"))); } };
 struct RSJackPolyIn       : SVGPort { RSJackPolyIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyIn.svg"))); } };
+
+struct RSStealthJack : SVGPort { // With thanks to https://github.com/DominoMarama/ReTunesFree
+	RSStealthJack() { 
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoIn.svg")));
+	}
+
+	void step() override {
+		if(!module) return;
+
+		if(module->inputs[portId].isConnected()) {
+			Widget::show();
+		}
+		else {
+			CableWidget* cw = APP->scene->rack->incompleteCable;
+			if(cw) {
+				if(cw->outputPort) Widget::show();
+				else Widget::hide();
+			}
+			else Widget::hide();
+		}
+		Widget::step();
+	}
+};
 
 
 // Knobs
@@ -193,19 +254,18 @@ struct RSButton : SVGSwitch {
 
 struct RSButtonToggle : RSButton {
 	RSButtonToggle() {
-		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButton.svg")));
-		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButtonPress.svg")));
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSButton.svg")));
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSButtonPress.svg")));
 	}
 };
 
-/*
-struct RSButtonToggleRed : RSButton {
-	RSButtonToggleRed() {
-		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButton.svg")));
-		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSMediumButtonRed.svg")));
+struct RSRoundButtonToggle : RSButton {
+	RSRoundButtonToggle() {
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSRoundButton.svg")));
+		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSRoundButtonPress.svg")));
 	}
 };
-*/
+
 struct RSButtonToggleInvisible : RSButton {
 	RSButtonToggleInvisible() {
 		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSButtonInvisibleIsh.svg")));
@@ -219,13 +279,12 @@ struct RSButtonMomentary : RSButtonToggle {
 	}
 };
 
-/*
-struct RSButtonMomentaryRed : RSButtonToggleRed {
-	RSButtonMomentaryRed() {
+struct RSRoundButtonMomentary : RSRoundButtonToggle {
+	RSRoundButtonMomentary() {
 		momentary = true;
 	}
 };
-*/
+
 struct RSButtonMomentaryInvisible : RSButtonToggleInvisible {
 	RSButtonMomentaryInvisible() {
 		momentary = true;
@@ -257,8 +316,8 @@ struct RSSwitch2P : SVGSwitch {
 	}
 };
 
-struct RSSwitch3P : SVGSwitch {
-	RSSwitch3P() {
+struct RSSwitch3PV : SVGSwitch {
+	RSSwitch3PV() {
 		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSSwitch_0.svg")));
 		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSSwitch_1.svg")));
 		addFrame(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSSwitch_2.svg")));

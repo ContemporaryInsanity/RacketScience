@@ -1,5 +1,6 @@
 #include "plugin.hpp"
-#include "RSUtils.hpp"
+
+#include "RSModule.hpp" 
 
 rsglobal RSGlobal;
 
@@ -9,15 +10,14 @@ void init(Plugin *p) {
 	pluginInstance = p;
 
 	// Add modules here
-    p->addModel(modelRSVectorVictor);
-    p->addModel(modelRSBoogieBay);
-	p->addModel(modelRSBoogieBayH8);
-	p->addModel(modelRSMFH);
+	p->addModel(modelRSVectorVictor);
+	p->addModel(modelRSGroundControl);
 	p->addModel(modelRSHeat);
 	p->addModel(modelRSReheat);
 	p->addModel(modelRSCVHeat);
-	p->addModel(modelRSGroundControl);
-
+	p->addModel(modelRSBoogieBay);
+	p->addModel(modelRSBoogieBayH8);
+	p->addModel(modelRSMFH);
 	p->addModel(modelRSScratch);
 
 	p->addModel(modelRSSkeleton);

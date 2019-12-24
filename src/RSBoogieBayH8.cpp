@@ -1,11 +1,10 @@
 #include "plugin.hpp"
 
-#include "components/RSComponents.hpp"
-#include "RSUtils.hpp"
+#include "RS.hpp"
 
-
-struct RSBoogieBayH8 : Module {
+struct RSBoogieBayH8 : RSModule {
 	enum ParamIds {
+		THEME_BUTTON,
 		ENUMS(LEFT_SCALE_BUTTONS, 8),
 		ENUMS(RIGHT_SCALE_BUTTONS, 8),
 		NUM_PARAMS
@@ -25,8 +24,9 @@ struct RSBoogieBayH8 : Module {
 		NUM_LIGHTS
 	};
 
-	dsp::ClockDivider scaleDivider;
 	dsp::BooleanTrigger themeTrigger;
+
+	dsp::ClockDivider scaleDivider;
 	dsp::BooleanTrigger leftScaleTrigger[8];
 	dsp::BooleanTrigger rightScaleTrigger[8];
 
@@ -44,6 +44,8 @@ struct RSBoogieBayH8 : Module {
 
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
+        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
+
 		for(int i = 0; i < 8; i++) {
 			configParam(LEFT_SCALE_BUTTONS + i, 0.f, 1.f, 0.f, "SCALE");
 			configParam(RIGHT_SCALE_BUTTONS + i, 0.f, 1.f, 0.f, "SCALE");
@@ -52,6 +54,11 @@ struct RSBoogieBayH8 : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
+		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
+			RSTheme++;
+			if(RSTheme > RSGlobal.themeCount) RSTheme = 1;
+		}
+
 		outputs[POLY_LEFT_OUTPUT].setChannels(8);
 		outputs[POLY_RIGHT_OUTPUT].setChannels(8);
 
@@ -86,6 +93,9 @@ struct RSBoogieBayH8 : Module {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
+
+        json_object_set_new(rootJ, "theme", json_integer(RSTheme));
+
 		char ssn[4], lsn[4], rsn[4];
 
 		for(int i = 0; i < 8; i++) {
@@ -109,6 +119,10 @@ struct RSBoogieBayH8 : Module {
 	}
 
 	void dataFromJson(json_t* rootJ) override {
+        json_t* themeJ = json_object_get(rootJ, "theme");
+
+        if(themeJ) RSTheme = json_integer_value(themeJ);
+
 		char ssn[4], lsn[4], rsn[4];
 
 		for(int i = 0; i < 8; i++) {
@@ -168,8 +182,10 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 		left = 40;
 		right = box.size.y - 40;
 
-		addChild(new RSLabelCentered(middle, box.pos.y + 13, "BOOGIE BAY H8", 14));
-		addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12));
+		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSBoogieBayH8::THEME_BUTTON));
+
+		addChild(new RSLabelCentered(middle, box.pos.y + 13, "BOOGIE BAY H8", 14, module));
+		addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12, module));
 
 		for(int i = 0; i < 8; i++) {
 			in[i] = createInputCentered<RSJackMonoIn>(Vec(middle, 40 + (i * 40)), module, RSBoogieBayH8::INPUTS + i); addInput(in[i]);

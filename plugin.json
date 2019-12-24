@@ -55,12 +55,6 @@
       ]
     },
     {
-      "slug": "RSSkeleton",
-      "name": "RSSkeleton",
-      "description": "",
-      "tags": []
-    },
-    {
       "slug": "RSBoogieBay",
       "name": "RSBoogieBay",
       "description": "Animated patchbay / voltage indicator",
@@ -95,6 +89,5 @@
         "Sequencer"
       ]
     }
-
   ]
 }

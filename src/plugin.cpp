@@ -10,7 +10,7 @@ void init(Plugin *p) {
 	pluginInstance = p;
 
 	// Add modules here
-	p->addModel(modelRSVectorVictor);
+	// Order dicates order they will show in module browser
 	p->addModel(modelRSGroundControl);
 	p->addModel(modelRSHeat);
 	p->addModel(modelRSReheat);
@@ -18,8 +18,10 @@ void init(Plugin *p) {
 	p->addModel(modelRSBoogieBay);
 	p->addModel(modelRSBoogieBayH8);
 	p->addModel(modelRSMFH);
+	p->addModel(modelRSBlank);
 	p->addModel(modelRSScratch);
 
+	p->addModel(modelRSVectorVictor);
 	p->addModel(modelRSSkeleton);
 
 	// Any other plugin initialization may go here.

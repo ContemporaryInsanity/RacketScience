@@ -23,7 +23,7 @@ struct rstheme {
 };
 
 struct rsglobal {
-    static const int themeCount = 8;
+    static const int themeCount = 16;
     int themeIdx;
     rstheme themes[themeCount];
 };
@@ -44,6 +44,7 @@ extern Model *modelRSCVHeat;
 extern Model *modelRSBoogieBay;
 extern Model *modelRSBoogieBayH8;
 extern Model *modelRSMFH;
+extern Model *modelRSBlank;
 extern Model *modelRSScratch;
 
 extern Model *modelRSSkeleton;

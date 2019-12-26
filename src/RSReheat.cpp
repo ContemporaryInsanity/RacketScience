@@ -8,7 +8,7 @@ struct RSReheat : RSModule {
         RESET_BUTTON,
         GAIN_KNOB,
         LOSS_KNOB,
-        MODE_SWITCH,
+        MODE_KNOB,
         NUM_PARAMS
     };
     enum InputIds {
@@ -49,6 +49,7 @@ struct RSReheat : RSModule {
     float coolestOct = 0.f;
     float heatGain = 0.1f;
     float heatLoss = 0.1f;
+    int heatMode = 1;
     bool valid = false;
 
     dsp::PulseGenerator noteTogglePulse;
@@ -62,7 +63,7 @@ struct RSReheat : RSModule {
 
         configParam(GAIN_KNOB, 0.01f, 10.0f, 0.05f, "GAIN");
         configParam(LOSS_KNOB, 0.f, 0.0005f, 0.00001f, "LOSS");
-        configParam(MODE_SWITCH, 0.f, 2.f, 1.f);
+        configParam(MODE_KNOB, 0.f, 2.f, 1.f, "MODE");
     }
 
     void process(const ProcessArgs &args) override {
@@ -87,6 +88,7 @@ struct RSReheat : RSModule {
 
         heatGain = params[GAIN_KNOB].getValue();
         heatLoss = params[LOSS_KNOB].getValue();
+        heatMode = (int)params[MODE_KNOB].getValue();
         
         if(gateTrigger.process(inputs[GATE_INPUT].getVoltage())) {
             if(semiHeat[noteIdx] < 10.f) semiHeat[noteIdx] += heatGain;
@@ -223,10 +225,10 @@ struct RSReheatWidget : ModuleWidget {
         this->module = module;
 
         // Is this key to fixing the problem with module dragging not always working first time? Taken from VCV blank panel
-        panelBorder = new PanelBorder;
-        addChild(panelBorder);
+        //panelBorder = new PanelBorder;
+        //addChild(panelBorder);
 
-        box.size.x = mm2px(5.08 * 12);
+        box.size = Vec(RACK_GRID_WIDTH * 12, RACK_GRID_HEIGHT);
         int middle = box.size.x / 2;
         int sixth = box.size.x / 8; // Cludge, panels needs redesign
 
@@ -254,13 +256,11 @@ struct RSReheatWidget : ModuleWidget {
         addParam(createParamCentered<RSKnobSml>(Vec(sixth * 3, 33), module, RSReheat::GAIN_KNOB));
         addChild(new RSLabelCentered(sixth * 3, 57, "GAIN", 10, module));
 
-        addParam(createParamCentered<RSKnobSml>(Vec(sixth * 5, 33), module, RSReheat::LOSS_KNOB));
-        addChild(new RSLabelCentered(sixth * 5, 57, "LOSS", 10, module));
+        addParam(createParamCentered<RSKnobSml>(Vec(sixth * 4.5, 33), module, RSReheat::LOSS_KNOB));
+        addChild(new RSLabelCentered(sixth * 4.5, 57, "LOSS", 10, module));
 
-        addParam(createParamCentered<RSSwitch3PV>(Vec(sixth * 6, 33), module, RSReheat::MODE_SWITCH));
-
-
-        // Need a switch to select gate count or cv duration mode
+        addParam(createParamCentered<RSKnobDetentSml>(Vec(sixth * 6, 33), module, RSReheat::MODE_KNOB));
+        addChild(new RSLabelCentered(sixth * 6, 57, "MODE", 10, module));
 
         addChild(new RSLabelCentered(sixth * 4, 76, "HOT", 10, module));
         addChild(new RSLabelCentered(sixth * 5, 76, "COLD", 10, module));

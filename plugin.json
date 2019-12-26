@@ -13,15 +13,6 @@
   "donateUrl": "https://www.paypal.me/EwenBates",
   "modules": [
     {
-      "slug": "RSVectorVictor",
-      "name": "RSVectorVictor",
-      "description": "Phase Driven CV Looper",
-      "tags": [
-        "Recorder",
-        "Sequencer"
-      ]
-    },
-    {
       "slug": "RSGroundControl",
       "name": "RSGroundControl",
       "description": "",
@@ -81,8 +72,25 @@
       ]
     },
     {
+      "slug": "RSBlank",
+      "name": "RSBlank",
+      "description": "Resizeable blank panel",
+      "tags": [
+        "Utility"
+      ]
+    },
+    {
       "slug": "RSScratch",
       "name": "RSScratch",
+      "description": "Phase Driven CV Looper",
+      "tags": [
+        "Recorder",
+        "Sequencer"
+      ]
+    },
+    {
+      "slug": "RSVectorVictor",
+      "name": "RSVectorVictor",
       "description": "Phase Driven CV Looper",
       "tags": [
         "Recorder",

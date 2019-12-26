@@ -30,40 +30,18 @@ static void saveRSGlobal() {
 static void loadRSGlobal() {
     std::string RSGDir = rack::asset::user("RacketScience/");
     if(!rack::system::isDirectory(RSGDir)) {
+        INFO("Racket Science: Creating default themes");
+
         rack::system::createDirectory(RSGDir);
 
-        // First time so create defaults
-        RSGlobal.themes[0].bgColor = {0.0f, 0.0f, 0.1f};
-        RSGlobal.themes[0].lbColor = {0.0f, 0.0f, 0.6f};
-        RSGlobal.themes[0].ssColor = {0.0f, 0.0f, 0.6f};
-
-        RSGlobal.themes[1].bgColor = {0.0f, 0.0f, 0.0f};
-        RSGlobal.themes[1].lbColor = {0.17f, 0.4f, 0.37f};
-        RSGlobal.themes[1].ssColor = {0.17f, 0.4f, 0.37f};
-
-        RSGlobal.themes[2].bgColor = {0.2f, 0.5f, 0.2f};
-        RSGlobal.themes[2].lbColor = {0.0f, 0.0f, 0.6f};
-        RSGlobal.themes[2].ssColor = {0.0f, 0.0f, 0.6f};
-
-        RSGlobal.themes[3].bgColor = {0.4f, 0.5f, 0.2f};
-        RSGlobal.themes[3].lbColor = {0.0f, 0.0f, 0.6f};
-        RSGlobal.themes[3].ssColor = {0.0f, 0.0f, 0.6f};
-
-        RSGlobal.themes[4].bgColor = {0.0f, 0.0f, 0.1f};
-        RSGlobal.themes[4].lbColor = {0.0f, 0.0f, 0.6f};
-        RSGlobal.themes[4].ssColor = {0.0f, 0.0f, 0.6f};
-
-        RSGlobal.themes[5].bgColor = {0.0f, 0.0f, 0.0f};
-        RSGlobal.themes[5].lbColor = {0.17f, 0.4f, 0.37f};
-        RSGlobal.themes[5].ssColor = {0.17f, 0.4f, 0.37f};
-
-        RSGlobal.themes[6].bgColor = {0.2f, 0.5f, 0.2f};
-        RSGlobal.themes[6].lbColor = {0.0f, 0.0f, 0.6f};
-        RSGlobal.themes[6].ssColor = {0.0f, 0.0f, 0.6f};
-
-        RSGlobal.themes[7].bgColor = {0.4f, 0.5f, 0.2f};
-        RSGlobal.themes[7].lbColor = {0.0f, 0.0f, 0.6f};
-        RSGlobal.themes[7].ssColor = {0.0f, 0.0f, 0.6f};
+        float hue = 0.f;
+        float hueStep = 1.f / RSGlobal.themeCount;
+        for(int i = 0; i < RSGlobal.themeCount; i++, hue += hueStep) {
+            RSGlobal.themes[i].bghsl = {hue, .5f, .3f};
+            RSGlobal.themes[i].lbhsl = {hue, .5f, .6f};
+            RSGlobal.themes[i].sshsl = {hue, .5f, .8f};
+            // LEDs here too once complete
+        }
 
         RSGlobal.themeIdx = 0;
         updateRSTheme(RSGlobal.themeIdx);

@@ -85,7 +85,7 @@ struct RSMFHWidget : ModuleWidget {
 		setModule(module);
 		this->module = module;
 
-		box.size.x = mm2px(5.08 * 3);
+        box.size = Vec(RACK_GRID_WIDTH * 3, RACK_GRID_HEIGHT);
 		int middle = box.size.x / 2 + 1;
 
 		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSMFH::THEME_BUTTON));

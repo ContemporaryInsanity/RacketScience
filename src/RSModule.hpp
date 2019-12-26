@@ -38,9 +38,10 @@ static void loadRSGlobal() {
         float hueStep = 1.f / RSGlobal.themeCount;
         for(int i = 0; i < RSGlobal.themeCount; i++, hue += hueStep) {
             RSGlobal.themes[i].bghsl = {hue, .5f, .3f};
-            RSGlobal.themes[i].lbhsl = {hue, .5f, .6f};
-            RSGlobal.themes[i].sshsl = {hue, .5f, .8f};
+            RSGlobal.themes[i].lbhsl = {hue, .7f, .6f};
+            RSGlobal.themes[i].sshsl = {hue, .6f, .8f};
             // LEDs here too once complete
+            updateRSTheme(i);
         }
 
         RSGlobal.themeIdx = 0;

@@ -78,6 +78,23 @@ struct RSGroundControl : RSModule {
 		params[RSGroundControl::LEDB_KNOB].setValue(RSGlobal.themes[RSGlobal.themeIdx].ledBh);
 	}
 
+	void onReset() override {
+        float hue = 0.f;
+        float hueStep = 1.f / RSGlobal.themeCount;
+        for(int i = 0; i < RSGlobal.themeCount; i++, hue += hueStep) {
+            RSGlobal.themes[i].bghsl = {hue, .5f, .3f};
+            RSGlobal.themes[i].lbhsl = {hue, .7f, .6f};
+            RSGlobal.themes[i].sshsl = {hue, .6f, .8f};
+            // LEDs here too once complete
+            updateRSTheme(i);
+        }
+
+        RSGlobal.themeIdx = 0;
+        //updateRSTheme(RSGlobal.themeIdx);
+		updateParams();
+        saveRSGlobal();
+	}
+
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
 

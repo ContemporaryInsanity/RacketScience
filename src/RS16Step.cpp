@@ -106,8 +106,6 @@ struct RS16Step : RSModule {
 
         configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 
-		rateDivider.setDivision(48000); // Set to sample rate, should tick every second
-
 		for(int row = 0; row < rows; row++) {
 			stepIdx[row] = 0;
 			eoc[row] = false;
@@ -138,6 +136,8 @@ struct RS16Step : RSModule {
 			configParam(SCALE_KNOBS + row, -1.f, 1.f, 0.f, "SCALE");
 			configParam(OFFSET_KNOBS + row, -10.f, 10.f, 0.f, "OFFSET");
 		}
+
+		rateDivider.setDivision(4);
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -146,119 +146,118 @@ struct RS16Step : RSModule {
 			if(RSTheme > RSGlobal.themeCount) RSTheme = 1;
 		}
 
-		if(rateDivider.process()) INFO("Racket Science: tick");
+		if(rateDivider.process()) {
+			for(int row = 0; row < rows; row++) {
+				// Process phase step
+				if(inputs[PHASE_STEP_INS + row].isConnected()) {
+					phaseIn = RSclamp(inputs[PHASE_STEP_INS + row].getVoltage(), 0.f, 10.f);
+					phaseRow = (int)RSscale(phaseIn, 0.f, 10.f, 0.f, 16.f);
+					if(phaseRow < 16) stepIdx[row] = phaseRow; // Defensive, square waves overrun
 
-		for(int row = 0; row < rows; row++) {
-			// Process phase step
-			if(inputs[PHASE_STEP_INS + row].isConnected()) {
-				phaseIn = RSclamp(inputs[PHASE_STEP_INS + row].getVoltage(), 0.f, 10.f);
-				phaseRow = (int)RSscale(phaseIn, 0.f, 10.f, 0.f, 16.f);
-				if(phaseRow < 16) stepIdx[row] = phaseRow; // Defensive, square waves overrun
+					if(phaseIn < priorPhaseIn) eocPulse[row].trigger();
+					priorPhaseIn = phaseIn;
 
-				if(phaseIn < priorPhaseIn) eocPulse[row].trigger();
-				priorPhaseIn = phaseIn;
-
-				if(phaseRow != priorPhaseRow) {
-					if(params[PULSE_BUTTONS + (row * steps) + stepIdx[row]].getValue()) stepPulse[row][stepIdx[row]].trigger();
+					if(phaseRow != priorPhaseRow) {
+						if(params[PULSE_BUTTONS + (row * steps) + stepIdx[row]].getValue()) stepPulse[row][stepIdx[row]].trigger();
+					}
+					priorPhaseRow = phaseRow;
 				}
-				priorPhaseRow = phaseRow;
-			}
-			else {
-				// Process prev step
-				if(inputs[PREV_STEP_INS + row].isConnected()) {
-					if(prevStepTrigger[row].process(inputs[PREV_STEP_INS + row].getVoltage())) prevStep(row);
-				}
-				else if(prevStepTrigger[row].process(params[PREV_STEP_BUTTONS + row].getValue())) prevStep(row);
+				else {
+					// Process prev step
+					if(inputs[PREV_STEP_INS + row].isConnected()) {
+						if(prevStepTrigger[row].process(inputs[PREV_STEP_INS + row].getVoltage())) prevStep(row);
+					}
+					else if(prevStepTrigger[row].process(params[PREV_STEP_BUTTONS + row].getValue())) prevStep(row);
 
-				// Process next step
-				if(inputs[NEXT_STEP_INS + row].isConnected()) {
-					if(nextStepTrigger[row].process(inputs[NEXT_STEP_INS + row].getVoltage())) nextStep(row);
-				}
-				else if(nextStepTrigger[row].process(params[NEXT_STEP_BUTTONS + row].getValue())) nextStep(row);
+					// Process next step
+					if(inputs[NEXT_STEP_INS + row].isConnected()) {
+						if(nextStepTrigger[row].process(inputs[NEXT_STEP_INS + row].getVoltage())) nextStep(row);
+					}
+					else if(nextStepTrigger[row].process(params[NEXT_STEP_BUTTONS + row].getValue())) nextStep(row);
 
-				// Process rand step
-				if(inputs[RAND_STEP_INS + row].isConnected()) {
-					if(randStepTrigger[row].process(inputs[RAND_STEP_INS + row].getVoltage())) randStep(row);
+					// Process rand step
+					if(inputs[RAND_STEP_INS + row].isConnected()) {
+						if(randStepTrigger[row].process(inputs[RAND_STEP_INS + row].getVoltage())) randStep(row);
+					}
+					else if(randStepTrigger[row].process(params[RAND_STEP_BUTTONS + row].getValue())) randStep(row);
 				}
-				else if(randStepTrigger[row].process(params[RAND_STEP_BUTTONS + row].getValue())) randStep(row);
-			}
 
-			// Process write CV in
-			if(inputs[WRITE_INS + row].isConnected()) {
-				if(writeStepTrigger[row].process(inputs[WRITE_INS + row].getVoltage())) {
+				// Process write CV in
+				if(inputs[WRITE_INS + row].isConnected()) {
+					if(writeStepTrigger[row].process(inputs[WRITE_INS + row].getVoltage())) {
+						params[STEP_KNOBS + (row * steps) + stepIdx[row]].setValue(RSclamp(inputs[CV_INS + row].getVoltage(), -10.f, 10.f));
+					}
+				}
+				else if(writeStepTrigger[row].process(params[WRITE_BUTTONS + row].getValue())) {
 					params[STEP_KNOBS + (row * steps) + stepIdx[row]].setValue(RSclamp(inputs[CV_INS + row].getVoltage(), -10.f, 10.f));
 				}
+
+				// Process randomize all
+				if(inputs[RAND_ALL_INS + row].isConnected()) {
+					if(randAllTrigger[row].process(inputs[RAND_ALL_INS + row].getVoltage())) randomizeAll(row);
+				}
+				else if(randAllTrigger[row].process(params[RAND_ALL_BUTTONS + row].getValue())) randomizeAll(row);
+
+				// Process randomize steps
+				if(inputs[RAND_STEPS_INS + row].isConnected()) {
+					if(randStepsTrigger[row].process(inputs[RAND_STEPS_INS + row].getVoltage())) randomizeSteps(row);
+				}
+				else if(randStepsTrigger[row].process(params[RAND_STEPS_BUTTONS + row].getValue())) randomizeSteps(row);
+
+				// Process randomize doors
+				if(inputs[RAND_DOORS_INS + row].isConnected()) {
+					if(randGatesTrigger[row].process(inputs[RAND_DOORS_INS + row].getVoltage())) randomizeDoors(row);
+				}
+				else if(randGatesTrigger[row].process(params[RAND_DOORS_BUTTONS + row].getValue())) randomizeDoors(row);
+
+				// Process randomize pulses
+				if(inputs[RAND_PULSES_INS + row].isConnected()) {
+					if(randPulsesTrigger[row].process(inputs[RAND_PULSES_INS + row].getVoltage())) randomizePulses(row);
+				}
+				else if(randPulsesTrigger[row].process(params[RAND_PULSES_BUTTONS + row].getValue())) randomizePulses(row);
+
+				// Process reset all
+				if(inputs[RESET_STEP_INS + row].isConnected()) {
+					if(resetAllTrigger[row].process(inputs[RESET_STEP_INS + row].getVoltage())) resetStep(row);
+				}
+				else if(resetAllTrigger[row].process(params[RESET_STEP_BUTTONS + row].getValue())) resetStep(row);
+
+				// Process reset steps
+				if(inputs[RESET_STEPS_INS + row].isConnected()) {
+					if(resetStepsTrigger[row].process(inputs[RESET_STEPS_INS + row].getVoltage())) resetSteps(row);
+				}
+				else if(resetStepsTrigger[row].process(params[RESET_STEPS_BUTTONS + row].getValue())) resetSteps(row);
+
+				// Process reset doors
+				if(inputs[RESET_DOORS_INS + row].isConnected()) {
+					if(resetGatesTrigger[row].process(inputs[RESET_DOORS_INS + row].getVoltage())) resetDoors(row);
+				}
+				else if(resetGatesTrigger[row].process(params[RESET_DOORS_BUTTONS + row].getValue())) resetDoors(row);
+
+				// Process reset pulses
+				if(inputs[RESET_PULSES_INS + row].isConnected()) {
+					if(resetPulsesTrigger[row].process(inputs[RESET_PULSES_INS + row].getVoltage())) resetPulses(row);
+				}
+				else if(resetPulsesTrigger[row].process(params[RESET_PULSES_BUTTONS + row].getValue())) resetPulses(row);
+				
+				// Set lights
+				for(int step = 0; step < steps; step++) {
+					lights[STEP_LIGHTS + (row * steps) + step].setBrightness(step == stepIdx[row] ? 1.f : 0.f);
+				}
+
+				float cvOut = params[STEP_KNOBS + (row * steps) + stepIdx[row]].getValue();
+				cvOut = cvOut * params[SCALE_KNOBS + row].getValue() + params[OFFSET_KNOBS + row].getValue();
+				cvOut = RSclamp(cvOut, -10.f, 10.f);
+				outputs[CV_OUTS + row].setVoltage(cvOut);
+
+				eoc[row] = eocPulse[row].process(1.f / args.sampleRate);
+				outputs[EOC_OUTS + row].setVoltage(eoc[row] ? 10.f : 0.f);
+
+				outputs[DOOR_OUTS + row].setVoltage(params[DOOR_BUTTONS + (row * steps) + stepIdx[row]].getValue() > 0.f ? 10.f : 0.f);
+
+				pulse[row][stepIdx[row]] = stepPulse[row][stepIdx[row]].process(1.f / args.sampleRate);
+				outputs[PULSE_OUTS + row].setVoltage(pulse[row][stepIdx[row]] ? 10.f : 0.f);
 			}
-			else if(writeStepTrigger[row].process(params[WRITE_BUTTONS + row].getValue())) {
-				params[STEP_KNOBS + (row * steps) + stepIdx[row]].setValue(RSclamp(inputs[CV_INS + row].getVoltage(), -10.f, 10.f));
-			}
-
-			// Process randomize all
-			if(inputs[RAND_ALL_INS + row].isConnected()) {
-				if(randAllTrigger[row].process(inputs[RAND_ALL_INS + row].getVoltage())) randomizeAll(row);
-			}
-			else if(randAllTrigger[row].process(params[RAND_ALL_BUTTONS + row].getValue())) randomizeAll(row);
-
-			// Process randomize steps
-			if(inputs[RAND_STEPS_INS + row].isConnected()) {
-				if(randStepsTrigger[row].process(inputs[RAND_STEPS_INS + row].getVoltage())) randomizeSteps(row);
-			}
-			else if(randStepsTrigger[row].process(params[RAND_STEPS_BUTTONS + row].getValue())) randomizeSteps(row);
-
-			// Process randomize doors
-			if(inputs[RAND_DOORS_INS + row].isConnected()) {
-				if(randGatesTrigger[row].process(inputs[RAND_DOORS_INS + row].getVoltage())) randomizeDoors(row);
-			}
-			else if(randGatesTrigger[row].process(params[RAND_DOORS_BUTTONS + row].getValue())) randomizeDoors(row);
-
-			// Process randomize pulses
-			if(inputs[RAND_PULSES_INS + row].isConnected()) {
-				if(randPulsesTrigger[row].process(inputs[RAND_PULSES_INS + row].getVoltage())) randomizePulses(row);
-			}
-			else if(randPulsesTrigger[row].process(params[RAND_PULSES_BUTTONS + row].getValue())) randomizePulses(row);
-
-			// Process reset all
-			if(inputs[RESET_STEP_INS + row].isConnected()) {
-				if(resetAllTrigger[row].process(inputs[RESET_STEP_INS + row].getVoltage())) resetStep(row);
-			}
-			else if(resetAllTrigger[row].process(params[RESET_STEP_BUTTONS + row].getValue())) resetStep(row);
-
-			// Process reset steps
-			if(inputs[RESET_STEPS_INS + row].isConnected()) {
-				if(resetStepsTrigger[row].process(inputs[RESET_STEPS_INS + row].getVoltage())) resetSteps(row);
-			}
-			else if(resetStepsTrigger[row].process(params[RESET_STEPS_BUTTONS + row].getValue())) resetSteps(row);
-
-			// Process reset doors
-			if(inputs[RESET_DOORS_INS + row].isConnected()) {
-				if(resetGatesTrigger[row].process(inputs[RESET_DOORS_INS + row].getVoltage())) resetDoors(row);
-			}
-			else if(resetGatesTrigger[row].process(params[RESET_DOORS_BUTTONS + row].getValue())) resetDoors(row);
-
-			// Process reset pulses
-			if(inputs[RESET_PULSES_INS + row].isConnected()) {
-				if(resetPulsesTrigger[row].process(inputs[RESET_PULSES_INS + row].getVoltage())) resetPulses(row);
-			}
-			else if(resetPulsesTrigger[row].process(params[RESET_PULSES_BUTTONS + row].getValue())) resetPulses(row);
-			
-			// Set lights
-			for(int step = 0; step < steps; step++) {
-				lights[STEP_LIGHTS + (row * steps) + step].setBrightness(step == stepIdx[row] ? 1.f : 0.f);
-			}
-
-			float cvOut = params[STEP_KNOBS + (row * steps) + stepIdx[row]].getValue();
-			cvOut = cvOut * params[SCALE_KNOBS + row].getValue() + params[OFFSET_KNOBS + row].getValue();
-			cvOut = RSclamp(cvOut, -10.f, 10.f);
-			outputs[CV_OUTS + row].setVoltage(cvOut);
-//			outputs[CV_OUTS + row].setVoltage(params[STEP_KNOBS + (row * steps) + stepIdx[row]].getValue());
-
-			eoc[row] = eocPulse[row].process(1.f / args.sampleRate);
-			outputs[EOC_OUTS + row].setVoltage(eoc[row] ? 10.f : 0.f);
-
-			outputs[DOOR_OUTS + row].setVoltage(params[DOOR_BUTTONS + (row * steps) + stepIdx[row]].getValue() > 0.f ? 10.f : 0.f);
-
-			pulse[row][stepIdx[row]] = stepPulse[row][stepIdx[row]].process(1.f / args.sampleRate);
-			outputs[PULSE_OUTS + row].setVoltage(pulse[row][stepIdx[row]] ? 10.f : 0.f);
 		}
 	}
 

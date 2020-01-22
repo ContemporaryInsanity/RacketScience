@@ -2,7 +2,7 @@
 
 #include "RS.hpp"
 
-struct RSSkeleton : RSModule {
+struct RSMissionControl : RSModule {
 	enum ParamIds {
 		THEME_BUTTON,
 		NUM_PARAMS
@@ -19,7 +19,7 @@ struct RSSkeleton : RSModule {
 
 	dsp::BooleanTrigger themeTrigger;
 
-	RSSkeleton() {
+	RSMissionControl() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
         configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
@@ -48,24 +48,20 @@ struct RSSkeleton : RSModule {
 };
 
 
-struct RSSkeletonWidget : ModuleWidget {
-	RSSkeleton* module;
+struct RSMissionControlWidget : ModuleWidget {
+	RSMissionControl* module;
 
-	RSSkeletonWidget(RSSkeleton *module) {
+	RSMissionControlWidget(RSMissionControl *module) {
 		setModule(module);
 		this->module = module;
 
-		box.size = Vec(RACK_GRID_WIDTH * 3, RACK_GRID_HEIGHT);
+		box.size = Vec(RACK_GRID_WIDTH * 30, RACK_GRID_HEIGHT);
 		int middle = box.size.x / 2 + 1;
 
-		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSSkeleton::THEME_BUTTON));
+		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSMissionControl::THEME_BUTTON));
 
-		addChild(new RSLabelCentered(middle, box.pos.y + 13, "TITLE1", 14, module));
-		addChild(new RSLabelCentered(middle, box.pos.y + 25, "TITLE2", 14, module));
-		addChild(new RSLabelCentered(middle, box.pos.y + 37, "TITLE3", 14, module));
-
-		addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12, module));
-		addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12, module));
+		addChild(new RSLabelCentered(middle, box.pos.y + 13, "MISSION CONTROL", 14, module));
+		addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12, module));
 
 	}
 
@@ -79,4 +75,4 @@ struct RSSkeletonWidget : ModuleWidget {
 	#include "RSModuleWidgetDraw.hpp"
 };
 
-Model *modelRSSkeleton = createModel<RSSkeleton, RSSkeletonWidget>("RSSkeleton");
+Model *modelRSMissionControl = createModel<RSMissionControl, RSMissionControlWidget>("RSMissionControl");

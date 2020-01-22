@@ -27,7 +27,7 @@ struct RSCVHeat : RSModule {
         configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 
         configParam(GAIN_KNOB, 0.00001f, 0.001f, 0.0005f, "GAIN");
-        configParam(LOSS_KNOB, 0.00001f, 0.001f, 0.0005f, "LOSS");
+        configParam(LOSS_KNOB, 0.f, 0.001f, 0.0005f, "LOSS");
 		configParam(RESET_BUTTON, 0.f, 1.f, 0.f, "RESET");
 	}
 
@@ -131,15 +131,15 @@ struct RSCVHeatWidget : ModuleWidget {
 		setModule(module);
 		this->module = module;
 
-		box.size.x = mm2px(5.08 * 3);
+		box.size = Vec(RACK_GRID_WIDTH * 6, RACK_GRID_HEIGHT);
 		int middle = box.size.x / 2 + 1;
 
 		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSCVHeat::THEME_BUTTON));
 
 		addChild(new RSLabelCentered(middle, box.pos.y + 13, "CVHEAT", 14, module));
+		addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12, module));
 
-		addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12, module));
-		addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12, module));
+		middle = middle + (middle / 2);
 
 		addParam(createParamCentered<RSKnobSml>(Vec(middle, 36), module, RSCVHeat::GAIN_KNOB));
 		addChild(new RSLabelCentered(middle, 60, "GAIN", 10, module));
@@ -153,12 +153,12 @@ struct RSCVHeatWidget : ModuleWidget {
 		// Top label & invisibutton for top scale
 
 		// CV heat display
-		addChild(new RSCVHeatDisplay(module, module->heat, 3, 72, box.size.x - 11, 168));
+		addChild(new RSCVHeatDisplay(module, module->heat, 3, 10, (box.size.x / 2) - 11, 340));
 
 		// Bottom label & invisibutton for bottom scale
 
-		addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 328), module, RSCVHeat::CV_INPUT));
-		addChild(new RSLabelCentered(middle, 350, "CV", 10, module));
+		addInput(createInputCentered<RSJackMonoIn>(Vec(middle, 335), module, RSCVHeat::CV_INPUT));
+		addChild(new RSLabelCentered(middle, 357, "CV", 10, module));
 	}
 
     void customDraw(const DrawArgs& args) {}

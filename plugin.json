@@ -15,8 +15,20 @@
     {
       "slug": "RSGroundControl",
       "name": "RSGroundControl",
-      "description": "",
-      "tags": []
+      "description": "Theme settings",
+      "tags": [
+        "Visual",
+        "Utility"
+      ]
+    },
+    {
+      "slug": "RSMajorTom",
+      "name": "RSMajorTom",
+      "description": "Colour cycling",
+      "tags": [
+        "Visual",
+        "Utility"
+      ]
     },
     {
       "slug": "RSHeat",
@@ -80,11 +92,46 @@
       ]
     },
     {
-      "slug": "RSScratch",
-      "name": "RSScratch",
-      "description": "Phase Driven CV Looper",
+      "slug": "RSShades",
+      "name": "RSShades",
+      "description": "Colour Control",
+      "tags": [
+        "Visual",
+        "Utility"
+      ]
+    },
+    {
+      "slug": "RS16Step",
+      "name": "RS16Step",
+      "description": "16 Step Sequencer",
+      "tags": [
+        "Sequencer"
+      ]
+    },
+    {
+      "slug": "RSPhaseOne",
+      "name": "RSPhaseOne",
+      "description": "Phase Recorder / Step Sequencer",
       "tags": [
         "Recorder",
+        "Sequencer"
+      ]
+    },
+    {
+      "slug": "RSMissionControl",
+      "name": "RSMissionControl",
+      "description": "Seuqncer Launcher Sequencer",
+      "tags": [
+        "Utility",
+        "Sequencer"
+      ]
+    },
+    {
+      "slug": "RSLaunchControl",
+      "name": "RSLaunchControl",
+      "description": "Phase Sequencer Launcher",
+      "tags": [
+        "Utility",
         "Sequencer"
       ]
     },

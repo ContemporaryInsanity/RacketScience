@@ -3,8 +3,14 @@
 void draw(const DrawArgs& args) override {
     nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
 
-    if(module && module->RSTheme > 0) nvgFillColor(args.vg, RSGlobal.themes[module->RSTheme - 1].bgColor);
-    else                              nvgFillColor(args.vg, RSGlobal.themes[RSGlobal.themeIdx].bgColor);
+    if(module && module->RSTheme > 0)
+        nvgFillColor(args.vg, RSGlobal.themes[module->RSTheme - 1].bgColor); // Module has own theme
+    else
+        nvgFillColor(args.vg, RSGlobal.themes[RSGlobal.themeIdx].bgColor); // Module uses global theme
+
+    if(!module) { // Module browser being populated, pick random theme
+        nvgFillColor(args.vg, RSGlobal.themes[rand() % RSGlobal.themeCount].bgColor);
+    }
 
     nvgStrokeWidth(args.vg, 2);
     nvgBeginPath(args.vg);

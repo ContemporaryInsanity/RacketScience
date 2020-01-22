@@ -39,16 +39,25 @@ static inline float RSscale(float in, float inMin, float inMax, float outMin, fl
 
 // Colours
 
-#define COLOR_RS_GREY   nvgRGB(0xB4, 0xB4, 0xB4)
-#define COLOR_RS_BRONZE nvgRGB(133, 135, 57)
+#define COLOR_RS_GREY   nvgRGB(0xb4, 0xb4, 0xb4)
+#define COLOR_RS_BRONZE nvgRGB(0x85, 0x87, 0x39)
 #define COLOR_BLACK		nvgRGB(0x00, 0x00, 0x00)
-#define COLOR_RED		nvgRGB(0xFF, 0x00, 0x00)
+#define COLOR_RED		nvgRGB(0xff, 0x00, 0x00)
 #define COLOR_GREEN		nvgRGB(0x00, 0xff, 0x00)
 #define COLOR_BLUE		nvgRGB(0x00, 0x00, 0xff)
+#define COLOR_YELLOW	nvgRGB(0xff, 0xff, 0x00)
+#define COLOR_WHITE		nvgRGB(0xff, 0xff, 0xff)
 
 
 // LEDs
 
+struct RSLightWidget : LightWidget {
+
+
+
+	
+
+};
 
 
 // Labels
@@ -180,12 +189,12 @@ struct RSScribbleStrip : LedDisplayTextField {
 
 // Ports
 
-struct RSJackMonoOut      : SVGPort { RSJackMonoOut() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoOut.svg"))); } };
+struct RSJackMonoOut      : SVGPort { RSJackMonoOut()      { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoOut.svg"))); } };
 struct RSJackSmallMonoOut : SVGPort { RSJackSmallMonoOut() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackSmallMonoOut.svg"))); } };
-struct RSJackPolyOut      : SVGPort { RSJackPolyOut() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyOut.svg"))); } };
-struct RSJackMonoIn       : SVGPort { RSJackMonoIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoIn.svg"))); } };
-struct RSJackSmallMonoIn  : SVGPort { RSJackSmallMonoIn() { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackSmallMonoIn.svg"))); } };
-struct RSJackPolyIn       : SVGPort { RSJackPolyIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyIn.svg"))); } };
+struct RSJackPolyOut      : SVGPort { RSJackPolyOut()      { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyOut.svg"))); } };
+struct RSJackMonoIn       : SVGPort { RSJackMonoIn()       { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoIn.svg"))); } };
+struct RSJackSmallMonoIn  : SVGPort { RSJackSmallMonoIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackSmallMonoIn.svg"))); } };
+struct RSJackPolyIn       : SVGPort { RSJackPolyIn()       { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyIn.svg"))); } };
 
 struct RSStealthJack : SVGPort { // With thanks to https://github.com/DominoMarama/ReTunesFree
 	RSStealthJack() { 

@@ -37,7 +37,9 @@ extern Plugin *pluginInstance;
 
 // Declare each Model, defined in each module source file
 extern Model *modelRSVectorVictor;
+
 extern Model *modelRSGroundControl;
+extern Model *modelRSMajorTom;
 extern Model *modelRSHeat;
 extern Model *modelRSReheat;
 extern Model *modelRSCVHeat;
@@ -45,6 +47,8 @@ extern Model *modelRSBoogieBay;
 extern Model *modelRSBoogieBayH8;
 extern Model *modelRSMFH;
 extern Model *modelRSBlank;
-extern Model *modelRSScratch;
-
-extern Model *modelRSSkeleton;
+extern Model *modelRSShades;
+extern Model *modelRS16Step;
+extern Model *modelRSPhaseOne;
+extern Model *modelRSMissionControl;
+extern Model *modelRSLaunchControl;

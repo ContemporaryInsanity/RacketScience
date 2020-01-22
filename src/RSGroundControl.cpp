@@ -8,8 +8,6 @@ struct RSGroundControl : RSModule {
 	bool running = false;
 
 	enum ParamIds {
-		MOMENTARY_BUTTON, TOGGLE_BUTTON,
-		ROUND_MOMENTARY_BUTTON, ROUND_TOGGLE_BUTTON,
 		BGHUE_KNOB, BGSAT_KNOB, BGLUM_KNOB,
 		LBHUE_KNOB, LBSAT_KNOB, LBLUM_KNOB,
 		SSHUE_KNOB, SSSAT_KNOB, SSLUM_KNOB,
@@ -37,12 +35,6 @@ struct RSGroundControl : RSModule {
 		RSTheme = 0;
 
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-
-		configParam(MOMENTARY_BUTTON, 0.f, 1.f, 0.f, "MOMENTARY");
-		configParam(TOGGLE_BUTTON, 0.f, 1.f, 0.f, "TOGGLE");
-
-		configParam(ROUND_MOMENTARY_BUTTON, 0.f, 1.f, 0.f, "MOMENTARY");
-		configParam(ROUND_TOGGLE_BUTTON, 0.f, 1.f, 0.f, "TOGGLE");
 
 		configParam(BGHUE_KNOB, 0.f, 1.f, 0.5f, "HUE");
 		configParam(BGSAT_KNOB, 0.f, 1.f, 0.5f, "SAT");
@@ -79,18 +71,18 @@ struct RSGroundControl : RSModule {
 	}
 
 	void onReset() override {
+		// How about just removing the RacketScience settings dir & calling SaveRSGlobal?
         float hue = 0.f;
         float hueStep = 1.f / RSGlobal.themeCount;
         for(int i = 0; i < RSGlobal.themeCount; i++, hue += hueStep) {
-            RSGlobal.themes[i].bghsl = {hue, .5f, .3f};
-            RSGlobal.themes[i].lbhsl = {hue, .7f, .6f};
-            RSGlobal.themes[i].sshsl = {hue, .6f, .8f};
+            RSGlobal.themes[i].bghsl = {hue, .6f, .5f};
+            RSGlobal.themes[i].lbhsl = {hue, .8f, .9f};
+            RSGlobal.themes[i].sshsl = {hue, .7f, .8f};
             // LEDs here too once complete
             updateRSTheme(i);
         }
 
         RSGlobal.themeIdx = 0;
-        //updateRSTheme(RSGlobal.themeIdx);
 		updateParams();
         saveRSGlobal();
 	}
@@ -206,7 +198,7 @@ struct RSGroundControlWidget : ModuleWidget {
 		setModule(module);
 		this->module = module;
 
-		box.size.x = mm2px(5.08 * 10);
+		box.size = Vec(RACK_GRID_WIDTH * 10, RACK_GRID_HEIGHT);
 		int middle = box.size.x / 2 + 1;
 		int quarter = middle / 2;
 
@@ -218,6 +210,9 @@ struct RSGroundControlWidget : ModuleWidget {
 				addChild(new RSLabelCentered(middle, box.size.y / 2 + 12, "ONLY ONE INSTANCE OF GC REQUIRED"));
 				return;
 			}
+
+		addChild(new RSLabelCentered(middle, 80, "THIS SPACE AVAILABLE", 16));
+		addChild(new RSLabelCentered(middle, 100, "FOR SHORT TERM RENT", 16));
 
 		/*  What else to include?
 			Current date & time
@@ -234,13 +229,6 @@ struct RSGroundControlWidget : ModuleWidget {
 			int top = 190, left = 40;
 			int xsp = 30, ysp = 30, los = 30; // x spacing, y spacing, label offset
 
-			addParam(createParamCentered<RSButtonMomentary>(Vec(40, 40), module, RSGroundControl::MOMENTARY_BUTTON));
-			addParam(createParamCentered<RSButtonToggle>(Vec(40, 90), module, RSGroundControl::TOGGLE_BUTTON));
-
-			addParam(createParamCentered<RSRoundButtonMomentary>(Vec(70, 40), module, RSGroundControl::ROUND_MOMENTARY_BUTTON));
-			addInput(createInputCentered<RSStealthJack>(Vec(70, 40), module, RSGroundControl::STEALTH_INPUT));
-
-			addParam(createParamCentered<RSRoundButtonToggle>(Vec(70, 90), module, RSGroundControl::ROUND_TOGGLE_BUTTON));
 
 			addChild(new RSLabelCentered(middle, top, "ANY COLOUR YOU LIKE", 12));
 

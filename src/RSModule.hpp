@@ -19,8 +19,8 @@ static void updateRSTheme(int themeIdx) {
 }
 
 static void saveRSGlobal() {
-    std::string settingsFile = asset::user("RacketScience/RSGlobal.dat");
-    FILE *file = fopen(settingsFile.c_str(), "w");
+    std::string RSGFile = asset::user("RacketScience/RSGlobal.dat");
+    FILE *file = fopen(RSGFile.c_str(), "w");
     if(file) {
         fwrite(&RSGlobal, sizeof(struct rsglobal), 1, file);
         fclose(file);
@@ -29,7 +29,9 @@ static void saveRSGlobal() {
 
 static void loadRSGlobal() {
     std::string RSGDir = rack::asset::user("RacketScience/");
-    if(!rack::system::isDirectory(RSGDir)) {
+    std::string RSGFile = rack::asset::user("RacketScience/RSGlobal.dat");
+
+    if(!rack::system::isDirectory(RSGDir) || !rack::system::isFile(RSGFile)) {
         INFO("Racket Science: Creating default themes");
 
         rack::system::createDirectory(RSGDir);
@@ -38,8 +40,8 @@ static void loadRSGlobal() {
         float hueStep = 1.f / RSGlobal.themeCount;
         for(int i = 0; i < RSGlobal.themeCount; i++, hue += hueStep) {
             RSGlobal.themes[i].bghsl = {hue, .5f, .3f};
-            RSGlobal.themes[i].lbhsl = {hue, .7f, .6f};
-            RSGlobal.themes[i].sshsl = {hue, .6f, .8f};
+            RSGlobal.themes[i].lbhsl = {hue, .8f, .8f};
+            RSGlobal.themes[i].sshsl = {hue, .6f, .7f};
             // LEDs here too once complete
             updateRSTheme(i);
         }
@@ -49,8 +51,7 @@ static void loadRSGlobal() {
         saveRSGlobal();
     }
     else {
-        std::string settingsFile = asset::user("RacketScience/RSGlobal.dat");
-        FILE *file = fopen(settingsFile.c_str(), "r");
+        FILE *file = fopen(RSGFile.c_str(), "r");
         if(file) {
             fread(&RSGlobal, sizeof(struct rsglobal), 1, file);
             fclose(file);

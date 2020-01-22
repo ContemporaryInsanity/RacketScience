@@ -76,12 +76,13 @@ struct RSBlankWidget : ModuleWidget {
         setModule(module);
         this->module = module;
 
-        box.size = Vec(RACK_GRID_WIDTH * 10, RACK_GRID_HEIGHT);
+        box.size = Vec(RACK_GRID_WIDTH * 3, RACK_GRID_HEIGHT);
+		int middle = box.size.x / 2 + 1;
 
 		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSBlank::THEME_BUTTON));
 
-        addChild(new RSLabelCentered(18, box.size.y - 15, "Racket", 12, module));
-        addChild(new RSLabelCentered(18, box.size.y - 4, "Science", 12, module));
+        addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12, module));
+        addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12, module));
 
         ModuleResizeHandle *rightHandle = new ModuleResizeHandle;
         rightHandle->right = true;

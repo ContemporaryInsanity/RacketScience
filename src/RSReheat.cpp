@@ -5,6 +5,7 @@
 struct RSReheat : RSModule {
     enum ParamIds {
         THEME_BUTTON,
+        HOLD_BUTTON,
         RESET_BUTTON,
         GAIN_KNOB,
         LOSS_KNOB,
@@ -37,11 +38,16 @@ struct RSReheat : RSModule {
     };
 
     dsp::BooleanTrigger themeTrigger;
-
-    dsp::SchmittTrigger gateTrigger;
     dsp::BooleanTrigger resetTrigger;
 
+    dsp::SchmittTrigger gateTrigger;
+    
+    dsp::PulseGenerator noteTogglePulse;
+    dsp::PulseGenerator resetPulse;
+
+    bool hold = false;
     float semiHeat[12] = {};
+    float priorHeat[12] = {};
     float octHeat[10] = {};
     float warmestSemi = 0.f;
     float coolestSemi = 0.f;
@@ -49,17 +55,16 @@ struct RSReheat : RSModule {
     float coolestOct = 0.f;
     float heatGain = 0.1f;
     float heatLoss = 0.1f;
+    int lastHeatMode = 1;
     int heatMode = 1;
     bool valid = false;
-
-    dsp::PulseGenerator noteTogglePulse;
-    dsp::PulseGenerator resetPulse;
-
 
     RSReheat() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
         configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
+        configParam(HOLD_BUTTON, 0.f, 1.f, 0.f, "HOLD");
+        configParam(RESET_BUTTON, 0.f, 1.f, 0.f, "RESET");
 
         configParam(GAIN_KNOB, 0.01f, 10.0f, 0.05f, "GAIN");
         configParam(LOSS_KNOB, 0.f, 0.0005f, 0.00001f, "LOSS");
@@ -72,15 +77,14 @@ struct RSReheat : RSModule {
 			if(RSTheme > RSGlobal.themeCount) RSTheme = 1;
 		}
 
-        static bool firstTime = true;
-        static float priorHeat[12];
+        if(resetTrigger.process(params[RESET_BUTTON].getValue())) {
+            onReset();
+            resetPulse.trigger(1e-3f);
+        }
 
-        // if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
-        //     theme++;
-        //     if(theme > RSGlobal.themeCount - 1) theme = 0;
-        //     updateRSTheme(theme);
-        //     INFO("Racket Science: local theme changed to %i", theme);
-        // }
+        hold = params[HOLD_BUTTON].getValue() ? true : false;
+        
+        static bool firstTime = true;
 
         float cvIn = RSclamp(inputs[CV_INPUT].getVoltage(), -10.f, 10.f);
         int noteIdx = note(cvIn);
@@ -89,28 +93,47 @@ struct RSReheat : RSModule {
         heatGain = params[GAIN_KNOB].getValue();
         heatLoss = params[LOSS_KNOB].getValue();
         heatMode = (int)params[MODE_KNOB].getValue();
-        
-        if(gateTrigger.process(inputs[GATE_INPUT].getVoltage())) {
-            if(semiHeat[noteIdx] < 10.f) semiHeat[noteIdx] += heatGain;
-            if(semiHeat[noteIdx] > 10.f) semiHeat[noteIdx] = 10.f;
-            if(octHeat[octIdx] < 10.f) octHeat[octIdx] += heatGain;
-            if(octHeat[octIdx] > 10.f) octHeat[octIdx] = 10.f;
-        }
 
-        for(int i = 0; i < 12; i++) {
-            if(semiHeat[i] > 0.f) semiHeat[i] -= heatLoss;
-            if(semiHeat[i] < 0.f) semiHeat[i] = 0.f;
-        }
+        if(heatMode != lastHeatMode) onReset();
+        lastHeatMode = heatMode;
 
-        for(int i = 0; i < 10; i++) {
-            if(octHeat[i] > 0.f) octHeat[i] -= heatLoss;
-            if(octHeat[i] < 0.f) octHeat[i] = 0.f;
-        }
+        if(!hold) {
+            switch(heatMode) {
+                case 0: // Count CV duration, ignore gates
+                    if(semiHeat[noteIdx] < 10.f) semiHeat[noteIdx] += heatGain / 10.f;
+                    if(semiHeat[noteIdx] > 10.f) semiHeat[noteIdx] = 10.f;
+                    if(octHeat[octIdx] < 10.f) octHeat[octIdx] += heatGain / 10.f;
+                    if(octHeat[octIdx] > 10.f) octHeat[octIdx] = 10.f;
+                    break;
+                case 1: // Count CV duration while gate open
+                    if(inputs[GATE_INPUT].getVoltage() > 1.f) {
+                        if(semiHeat[noteIdx] < 10.f) semiHeat[noteIdx] += heatGain / 10.f;
+                        if(semiHeat[noteIdx] > 10.f) semiHeat[noteIdx] = 10.f;
+                        if(octHeat[octIdx] < 10.f) octHeat[octIdx] += heatGain / 10.f;
+                        if(octHeat[octIdx] > 10.f) octHeat[octIdx] = 10.f;
+                    }
+                    break;
+                case 2: // Just count gates
+                    if(gateTrigger.process(inputs[GATE_INPUT].getVoltage() > 1.f)) {
+                        if(semiHeat[noteIdx] < 10.f) semiHeat[noteIdx] += heatGain;
+                        if(semiHeat[noteIdx] > 10.f) semiHeat[noteIdx] = 10.f;
+                        if(octHeat[octIdx] < 10.f) octHeat[octIdx] += heatGain;
+                        if(octHeat[octIdx] > 10.f) octHeat[octIdx] = 10.f;
+                    }
+                    break;
+                default:
+                    break;
+            }
 
-        if(resetTrigger.process(params[RESET_BUTTON].getValue())) {
-            for(int i = 0; i < 12; i++) semiHeat[i] = 0.f;
-            for(int i = 0; i < 10; i++) octHeat[i] = 0.f;
-            resetPulse.trigger(1e-3f);
+            for(int i = 0; i < 12; i++) {
+                if(semiHeat[i] > 0.f) semiHeat[i] -= heatLoss;
+                if(semiHeat[i] < 0.f) semiHeat[i] = 0.f;
+            }
+
+            for(int i = 0; i < 10; i++) {
+                if(octHeat[i] > 0.f) octHeat[i] -= heatLoss;
+                if(octHeat[i] < 0.f) octHeat[i] = 0.f;
+            }
         }
 
         float coolestSemi = 10.f;
@@ -138,6 +161,10 @@ struct RSReheat : RSModule {
                     valid = true;
                 }
             }
+        }
+
+        if(valid && coolestSemi > warmestSemi) {
+            INFO("Racket Science: coolestSemi= %f warmestSemi= %f", coolestSemi, warmestSemi);
         }
 
         float coolestOct = 10.f;
@@ -169,35 +196,36 @@ struct RSReheat : RSModule {
         outputs[COOLEST_OCT_OUTPUT].setVoltage(coolestOctIdx);
         outputs[VALID_OUTPUT].setVoltage(valid ? 10.f : 0.f);
 
-        bool quantumNoteToggle = noteTogglePulse.process(args.sampleTime);
-        outputs[QUANTUM_TOGGLE_OUTPUT].setVoltage(quantumNoteToggle ? 10.f: 0.f);
-
         bool quantumReset = resetPulse.process(args.sampleTime);
         outputs[QUANTUM_RESET_OUTPUT].setVoltage(quantumReset ? 10.f : 0.f);
+
+        bool quantumNoteToggle = noteTogglePulse.process(args.sampleTime);
+        outputs[QUANTUM_TOGGLE_OUTPUT].setVoltage(quantumNoteToggle ? 10.f: 0.f);
 
         if(!firstTime) {
             // Keep track so we can tell if we've gained and not lost, i.e. not only toggle note output, inc / dec an array element
             for(int i = 0; i < 12; i++) {
                 if(priorHeat[i] && !semiHeat[i]) { // Had heat last call, doesn't now
                     //INFO("Racket Science: %i Lost heat", i);
-                    noteTogglePulse.trigger(1e-3f);
+                    noteTogglePulse.trigger();
                     outputs[QUANTUM_NOTE_OUTPUT].setVoltage(noteVoltage[i]);
                 } else
                 if(!priorHeat[i] && semiHeat[i]) { // Didn't have heat last call, does now
                     //INFO("Racket Science: %i Gained heat", i);
-                    noteTogglePulse.trigger(1e-3f);
+                    noteTogglePulse.trigger();
                     outputs[QUANTUM_NOTE_OUTPUT].setVoltage(noteVoltage[i]);
                 }
             }
         }
-        else firstTime = false;
+        firstTime = false;
 
         std::memcpy(priorHeat, semiHeat, sizeof(semiHeat));
     }
 
     void onReset() override {
-        std::memset(semiHeat, 0, sizeof(semiHeat));
-        std::memset(octHeat, 0, sizeof(octHeat));
+        INFO("Racket Science: RSReheat reset");
+        for(int i = 0; i < 12; i++) semiHeat[i] = 0.f;
+        for(int i = 0; i < 10; i++) octHeat[i] = 0.f;
     }
 
     json_t* dataToJson() override {
@@ -250,6 +278,9 @@ struct RSReheatWidget : ModuleWidget {
         addInput(createInputCentered<RSJackMonoIn>(Vec(sixth, 70), module, RSReheat::GATE_INPUT));
         addChild(new RSLabelCentered(sixth, 92, "GATE", 10, module));
 
+        addParam(createParamCentered<RSButtonToggle>(Vec(sixth * 7.5, 33), module, RSReheat::HOLD_BUTTON));
+        addChild(new RSLabelCentered(sixth * 7.5, 36, "HOLD"));
+
         addParam(createParamCentered<RSButtonMomentary>(Vec(sixth, 110), module, RSReheat::RESET_BUTTON));
         addChild(new RSLabelCentered(sixth, 113, "RESET", 10, module));
 
@@ -261,13 +292,14 @@ struct RSReheatWidget : ModuleWidget {
 
         addParam(createParamCentered<RSKnobDetentSml>(Vec(sixth * 6, 33), module, RSReheat::MODE_KNOB));
         addChild(new RSLabelCentered(sixth * 6, 57, "MODE", 10, module));
+        addChild(new RSLabelCentered(sixth * 6, 48, "CV            GT", 6, module));
 
         addChild(new RSLabelCentered(sixth * 4, 76, "HOT", 10, module));
         addChild(new RSLabelCentered(sixth * 5, 76, "COLD", 10, module));
         addChild(new RSLabelCentered(sixth * 6, 76, "VALID", 10, module));
 
-        addChild(new RSLabelCentered(sixth * 3 - 7, 92, "SEMITONES", 10, module));
-        addChild(new RSLabelCentered(sixth * 3 - 4, 112, "OCTAVES", 10, module));
+        addChild(new RSLabelCentered(sixth * 3 - 9, 92, "SEMITONES", 10, module));
+        addChild(new RSLabelCentered(sixth * 3 - 5, 112, "OCTAVES", 10, module));
 
         addOutput(createOutputCentered<RSJackSmallMonoOut>(Vec(sixth * 4, 88), module, RSReheat::WARMEST_SEMI_OUTPUT));
         addOutput(createOutputCentered<RSJackSmallMonoOut>(Vec(sixth * 5, 88), module, RSReheat::COOLEST_SEMI_OUTPUT));

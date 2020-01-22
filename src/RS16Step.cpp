@@ -8,6 +8,9 @@ struct RS16Step : RSModule {
 
 	enum ParamIds {
 		THEME_BUTTON,
+
+		RATE_DIVIDER,
+
 		ENUMS(NEXT_STEP_BUTTONS, rows),
 		ENUMS(PREV_STEP_BUTTONS, rows),
 		ENUMS(RAND_STEP_BUTTONS, rows),
@@ -27,6 +30,9 @@ struct RS16Step : RSModule {
 		ENUMS(STEP_KNOBS, rows * steps),
 		ENUMS(DOOR_BUTTONS, rows * steps),
 		ENUMS(PULSE_BUTTONS, rows * steps),
+
+		ENUMS(SCALE_KNOBS, rows),
+		ENUMS(OFFSET_KNOBS, rows),
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -128,6 +134,9 @@ struct RS16Step : RSModule {
 				configParam(PULSE_BUTTONS + (row * steps) + step, 0.f, 1.f, 0.f, "PULSE");
 				pulse[row][step] = false;
 			}
+
+			configParam(SCALE_KNOBS + row, -1.f, 1.f, 0.f, "SCALE");
+			configParam(OFFSET_KNOBS + row, -10.f, 10.f, 0.f, "OFFSET");
 		}
 	}
 
@@ -237,7 +246,11 @@ struct RS16Step : RSModule {
 				lights[STEP_LIGHTS + (row * steps) + step].setBrightness(step == stepIdx[row] ? 1.f : 0.f);
 			}
 
-			outputs[CV_OUTS + row].setVoltage(params[STEP_KNOBS + (row * steps) + stepIdx[row]].getValue());
+			float cvOut = params[STEP_KNOBS + (row * steps) + stepIdx[row]].getValue();
+			cvOut = cvOut * params[SCALE_KNOBS + row].getValue() + params[OFFSET_KNOBS + row].getValue();
+			cvOut = RSclamp(cvOut, -10.f, 10.f);
+			outputs[CV_OUTS + row].setVoltage(cvOut);
+//			outputs[CV_OUTS + row].setVoltage(params[STEP_KNOBS + (row * steps) + stepIdx[row]].getValue());
 
 			eoc[row] = eocPulse[row].process(1.f / args.sampleRate);
 			outputs[EOC_OUTS + row].setVoltage(eoc[row] ? 10.f : 0.f);
@@ -328,12 +341,12 @@ struct RS16StepWidget : ModuleWidget {
 		setModule(module);
 		this->module = module;
 
-		box.size = Vec(RACK_GRID_WIDTH * 94, RACK_GRID_HEIGHT);
+		box.size = Vec(RACK_GRID_WIDTH * 96, RACK_GRID_HEIGHT);
 		int middle = box.size.x / 2 + 1;
 
 		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RS16Step::THEME_BUTTON));
 
-		addChild(new RSLabelCentered(middle, box.pos.y + 13, "4x16", 14, module));
+		addChild(new RSLabelCentered(middle, box.pos.y + 13, "16Step", 14, module));
 		addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12, module));
 
 		x = 30; y = 50;
@@ -381,6 +394,13 @@ struct RS16StepWidget : ModuleWidget {
 		x += (lrgGap * module->steps);
 
 		// Right side labels
+
+		// scale & offset here
+		addChild(new RSLabelCentered(x, y - labOfs, "SCALE", 10, module));
+		y += 55;
+		addChild(new RSLabelCentered(x, y, "OFFSET", 10, module));
+		x += smlGap; y -= 55;
+
 		addChild(new RSLabelCentered(x, y - labOfs, "CV OUT", 10, module));
 		x += smlGap;
 		addChild(new RSLabelCentered(x, y - labOfs, "EOC", 10, module));
@@ -473,6 +493,14 @@ struct RS16StepWidget : ModuleWidget {
 			addParam(createParamCentered<RSButtonToggle>(Vec(x - 15, y + 42), module, RS16Step::DOOR_BUTTONS + (row * module->steps) + step));
 			addParam(createParamCentered<RSButtonToggle>(Vec(x + 15, y + 42), module, RS16Step::PULSE_BUTTONS + (row * module->steps) + step));
 		}
+
+		// Add scale knob
+		addParam(createParamCentered<RSKnobSml>(Vec(x, y), module, RS16Step::SCALE_KNOBS + row));
+		y += 30;
+
+		// Add offset knob
+		addParam(createParamCentered<RSKnobSml>(Vec(x, y), module, RS16Step::OFFSET_KNOBS + row));
+		x += smlGap; y -= 30;
 
 		// Add CV out
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RS16Step::CV_OUTS + row));

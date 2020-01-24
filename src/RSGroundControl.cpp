@@ -74,6 +74,7 @@ struct RSGroundControl : RSModule {
 		// How about just removing the RacketScience settings dir & calling SaveRSGlobal?
         float hue = 0.f;
         float hueStep = 1.f / RSGlobal.themeCount;
+		// Amend this to 1-13, customise 0, 14 & 15
         for(int i = 0; i < RSGlobal.themeCount; i++, hue += hueStep) {
             RSGlobal.themes[i].bghsl = {hue, .6f, .5f};
             RSGlobal.themes[i].lbhsl = {hue, .8f, .9f};
@@ -284,7 +285,7 @@ struct RSGroundControlWidget : ModuleWidget {
 		static int lastTheme = 0;
 		int theme = (int)module->params[RSGroundControl::THEME_KNOB].getValue();		
 
-		if(theme != lastTheme) { // Theme has changed
+		if(theme != lastTheme) {
 			RSGlobal.themeIdx = lastTheme = theme;
 			module->updateParams();
 			updateRSTheme(theme);

@@ -91,23 +91,29 @@ struct RS16Step : RSModule {
 	float phaseIn, priorPhaseIn;
 	int phaseRow, priorPhaseRow;
 
-	struct RowBuffer {
+	struct StepBuffer {
 		float step;
 		bool door;
 		bool pulse;
 	};
 
+	struct RowBuffer {
+		StepBuffer step[steps];
+		float scale;
+		float offset;
+	};
+
 	struct PatternBuffer {
-		RowBuffer rowBuffer[rows][steps];
+		RowBuffer rowBuffer[rows];
 	};
 
 	// Copy & paste buffers
-	RowBuffer rowBuffer[steps];
+	RowBuffer rowBuffer;
 	PatternBuffer patternBuffer;
 
 	//Pattern storage
 	PatternBuffer patterns[100];
-
+	RSScribbleStrip *ssPatternDescription;
 	int pattern, priorPattern;
 	
 
@@ -188,9 +194,33 @@ struct RS16Step : RSModule {
 		}
 
 		for(int step = 0; step < steps; step++) {
-			rowBuffer[step].step = 0.f;
-			rowBuffer[step].door = false;
-			rowBuffer[step].pulse = false;
+			rowBuffer.step[step].step = 0.f;
+			rowBuffer.step[step].door = false;
+			rowBuffer.step[step].pulse = false;
+		}
+		rowBuffer.scale = .25f;
+		rowBuffer.offset = 0.f;
+
+		for(int row = 0; row < rows; row++) {
+			for(int step = 0; step < steps; step++) {
+				patternBuffer.rowBuffer[row].step[step].step = 0.f;
+				patternBuffer.rowBuffer[row].step[step].door = false;
+				patternBuffer.rowBuffer[row].step[step].pulse = false;
+			}
+			patternBuffer.rowBuffer[row].scale = .25f;
+			patternBuffer.rowBuffer[row].offset = 0.f;
+		}
+
+		for(int pattern = 0; pattern < 100; pattern++) {
+			for(int row = 0; row < rows; row++) {
+				for(int step = 0; step < steps; step++) {
+					patterns[pattern].rowBuffer[row].step[step].step = 0.f;
+					patterns[pattern].rowBuffer[row].step[step].door = false;
+					patterns[pattern].rowBuffer[row].step[step].pulse = false;
+				}
+				patterns[pattern].rowBuffer[row].scale = 0.25f;
+				patterns[pattern].rowBuffer[row].offset = 0.f;
+			}
 		}
 
 		pattern = 0;
@@ -410,61 +440,83 @@ struct RS16Step : RSModule {
 
 	void copyRow(int row) {
 		for(int step = 0; step < steps; step++) {
-			rowBuffer[step].step = params[STEP_KNOBS + (row * steps) + step].getValue();
-			rowBuffer[step].door = params[DOOR_BUTTONS + (row * steps) + step].getValue();
-			rowBuffer[step].pulse = params[PULSE_BUTTONS + (row * steps) + step].getValue();
+			rowBuffer.step[step].step = params[STEP_KNOBS + (row * steps) + step].getValue();
+			rowBuffer.step[step].door = params[DOOR_BUTTONS + (row * steps) + step].getValue();
+			rowBuffer.step[step].pulse = params[PULSE_BUTTONS + (row * steps) + step].getValue();
 		}
+		rowBuffer.scale = params[SCALE_KNOBS + row].getValue();
+		rowBuffer.offset = params[OFFSET_KNOBS + row].getValue();		
 	}
 
 	void pasteRow(int row) {
 		for(int step = 0; step < steps; step++) {
-			params[STEP_KNOBS + (row * steps) + step].setValue(rowBuffer[step].step);
-			params[DOOR_BUTTONS + (row * steps) + step].setValue(rowBuffer[step].door);
-			params[PULSE_BUTTONS + (row * steps) + step].setValue(rowBuffer[step].pulse);
+			params[STEP_KNOBS + (row * steps) + step].setValue(rowBuffer.step[step].step);
+			params[DOOR_BUTTONS + (row * steps) + step].setValue(rowBuffer.step[step].door);
+			params[PULSE_BUTTONS + (row * steps) + step].setValue(rowBuffer.step[step].pulse);
 		}
+		params[SCALE_KNOBS + row].setValue(rowBuffer.scale);
+		params[OFFSET_KNOBS + row].setValue(rowBuffer.offset);
 	}
-
+	
 	void savePattern() {
-		if(pattern == priorPattern) {
-			INFO("Racket Science: savePattern() called without pattern change");
-			return;
-		}
-		// Save current settings to priorPattern
 		for(int row = 0; row < rows; row++) {
 			for(int step = 0; step < steps; step++) {
-				patterns[priorPattern].rowBuffer[row][step].step  = params[STEP_KNOBS + (row * steps) + step].getValue();
-				patterns[priorPattern].rowBuffer[row][step].door  = params[DOOR_BUTTONS + (row * steps) + step].getValue();
-				patterns[priorPattern].rowBuffer[row][step].pulse  = params[PULSE_BUTTONS + (row * steps) + step].getValue();
+				patterns[priorPattern].rowBuffer[row].step[step].step  = params[STEP_KNOBS + (row * steps) + step].getValue();
+				patterns[priorPattern].rowBuffer[row].step[step].door  = params[DOOR_BUTTONS + (row * steps) + step].getValue();
+				patterns[priorPattern].rowBuffer[row].step[step].pulse  = params[PULSE_BUTTONS + (row * steps) + step].getValue();
 			}
+			patterns[priorPattern].rowBuffer[row].scale = params[SCALE_KNOBS + row].getValue();
+			patterns[priorPattern].rowBuffer[row].offset = params[OFFSET_KNOBS + row].getValue();
 		}
 	}
 
 	void loadPattern() {
-		if(pattern == priorPattern) {
-			INFO("Racket Science: loadPattern() called without pattern change");
-			return;
-		}
-		// Set current settings to pattern
 		for(int row = 0; row < rows; row++) {
 			for(int step = 0; step < steps; step++) {
-				params[STEP_KNOBS + (row * steps) + step].setValue(patterns[pattern].rowBuffer[row][step].step);
-				params[DOOR_BUTTONS + (row * steps) + step].setValue(patterns[pattern].rowBuffer[row][step].door);
-				params[PULSE_BUTTONS + (row * steps) + step].setValue(patterns[pattern].rowBuffer[row][step].pulse);
+				params[STEP_KNOBS + (row * steps) + step].setValue(patterns[pattern].rowBuffer[row].step[step].step);
+				params[DOOR_BUTTONS + (row * steps) + step].setValue(patterns[pattern].rowBuffer[row].step[step].door);
+				params[PULSE_BUTTONS + (row * steps) + step].setValue(patterns[pattern].rowBuffer[row].step[step].pulse);
 			}
+			params[SCALE_KNOBS + row].setValue(patterns[pattern].rowBuffer[row].scale);
+			params[OFFSET_KNOBS + row].setValue(patterns[pattern].rowBuffer[row].offset);
 		}
 	}
 
 	void copyPattern() {
-
+		for(int row = 0; row < rows; row++) {
+			for(int step = 0; step < steps; step++) {
+				patternBuffer.rowBuffer[row].step[step].step = params[STEP_KNOBS + (row * steps) + step].getValue();
+				patternBuffer.rowBuffer[row].step[step].door = params[DOOR_BUTTONS + (row * steps) + step].getValue();
+				patternBuffer.rowBuffer[row].step[step].pulse = params[PULSE_BUTTONS + (row * steps) + step].getValue();
+			}
+			patternBuffer.rowBuffer[row].scale = params[SCALE_KNOBS + row].getValue();
+			patternBuffer.rowBuffer[row].offset = params[OFFSET_KNOBS + row].getValue();
+		}
 	}
 
 	void pastePattern() {
-
+		for(int row = 0; row < rows; row++) {
+			for(int step = 0; step < steps; step++) {
+				params[STEP_KNOBS + (row * steps) + step].setValue(patternBuffer.rowBuffer[row].step[step].step);
+				params[DOOR_BUTTONS + (row * steps) + step].setValue(patternBuffer.rowBuffer[row].step[step].door);
+				params[PULSE_BUTTONS + (row * steps) + step].setValue(patternBuffer.rowBuffer[row].step[step].pulse);
+			}
+			params[SCALE_KNOBS + row].setValue(patternBuffer.rowBuffer[row].scale);
+			params[OFFSET_KNOBS + row].setValue(patternBuffer.rowBuffer[row].offset);
+		}
 	}
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
         json_object_set_new(rootJ, "theme", json_integer(RSTheme));
+
+		for(int pattern = 0; pattern < 100; pattern++) {
+			for(int row = 0; row < rows; row++) {
+				for(int step = 0; step < steps; step++) {
+
+				}
+			}
+		}
 
 		return rootJ;
 	}
@@ -472,6 +524,14 @@ struct RS16Step : RSModule {
 	void dataFromJson(json_t* rootJ) override {
         json_t* themeJ = json_object_get(rootJ, "theme");
         if(themeJ) RSTheme = json_integer_value(themeJ);
+
+		for(int pattern = 0; pattern < 100; pattern++) {
+			for(int row = 0; row < rows; row++) {
+				for(int step = 0; step < steps; step++) {
+
+				}
+			}
+		}
 	}
 };
 
@@ -505,7 +565,7 @@ struct RS16StepWidget : ModuleWidget {
 
 		// Pattern knob
 		addParam(createParamCentered<RSKnobDetentLrg>(Vec(x, y), module, RS16Step::PATTERN_KNOB));
-		patternLabel = new RSLabelCentered(x, y, "0", 16, module);
+		patternLabel = new RSLabelCentered(x, y, "0", 22, module);
 		addChild(patternLabel);
 		y += 80;
 

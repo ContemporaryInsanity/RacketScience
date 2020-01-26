@@ -3,6 +3,7 @@
 #include "RS.hpp"
 
 struct RS16Step : RSModule {
+	static const int patterns = 100;
 	static const int steps = 16;
 	static const int rows = 4;
 
@@ -70,6 +71,9 @@ struct RS16Step : RSModule {
 		NUM_INPUTS
 	};
 	enum OutputIds {
+		ENUMS(DOORS_OUTS, rows * steps),
+		ENUMS(PULSES_OUTS, rows * steps),
+
 		ENUMS(CV_OUTS, rows),
 		ENUMS(EOC_OUTS, rows),
 		ENUMS(DOOR_OUTS, rows),
@@ -104,6 +108,7 @@ struct RS16Step : RSModule {
 	};
 
 	struct PatternBuffer {
+		char description[30];
 		RowBuffer rowBuffer[rows];
 	};
 
@@ -112,7 +117,7 @@ struct RS16Step : RSModule {
 	PatternBuffer patternBuffer;
 
 	//Pattern storage
-	PatternBuffer patterns[100];
+	PatternBuffer patternStore[patterns];
 	RSScribbleStrip *ssPatternDescription;
 	int pattern, priorPattern;
 	
@@ -140,19 +145,22 @@ struct RS16Step : RSModule {
 	dsp::BooleanTrigger copyRowTrigger[rows];
 	dsp::BooleanTrigger pasteRowTrigger[rows];
 
-	dsp::PulseGenerator stepPulse[rows][steps];
+	dsp::PulseGenerator rowPulse[rows][steps];
 	bool pulse[rows][steps];
+
+	dsp::PulseGenerator stepPulse[rows][steps];
 
 	dsp::PulseGenerator eocPulse[rows];
 	bool eoc[rows];
 
+	
 
 	RS16Step() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
         configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
 
-		configParam(PATTERN_KNOB, 0.f, 99.f, 0.f, "PATTERN SELECT");
+		configParam(PATTERN_KNOB, 0.f, (float)patterns - 1, 0.f, "PATTERN SELECT");
 		configParam(COPY_PATTERN_BUTTON, 0.f, 1.f, 0.f, "COPY PATTERN");
 		configParam(PASTE_PATTERN_BUTTON, 0.f, 1.f, 0.f, "PASTE PATTERN");
 
@@ -211,15 +219,16 @@ struct RS16Step : RSModule {
 			patternBuffer.rowBuffer[row].offset = 0.f;
 		}
 
-		for(int pattern = 0; pattern < 100; pattern++) {
+		for(int pattern = 0; pattern < patterns; pattern++) {
+			sprintf(patternStore[pattern].description, "Pattern %i", pattern);
 			for(int row = 0; row < rows; row++) {
 				for(int step = 0; step < steps; step++) {
-					patterns[pattern].rowBuffer[row].step[step].step = 0.f;
-					patterns[pattern].rowBuffer[row].step[step].door = false;
-					patterns[pattern].rowBuffer[row].step[step].pulse = false;
+					patternStore[pattern].rowBuffer[row].step[step].step = 0.f;
+					patternStore[pattern].rowBuffer[row].step[step].door = false;
+					patternStore[pattern].rowBuffer[row].step[step].pulse = false;
 				}
-				patterns[pattern].rowBuffer[row].scale = 0.25f;
-				patterns[pattern].rowBuffer[row].offset = 0.f;
+				patternStore[pattern].rowBuffer[row].scale = 0.25f;
+				patternStore[pattern].rowBuffer[row].offset = 0.f;
 			}
 		}
 
@@ -238,22 +247,14 @@ struct RS16Step : RSModule {
 		if(rateDivider.process()) {
 			// Process prev / next pattern
 			if(inputs[PREV_PATTERN_IN].isConnected()) {
-
+				if(prevPatternTrigger.process(inputs[PREV_PATTERN_IN].getVoltage())) prevPattern();
 			}
-			else if(prevPatternTrigger.process(params[PREV_PATTERN_BUTTON].getValue())) {
-				if(pattern == 0) pattern = 99;
-				else pattern--;
-				params[PATTERN_KNOB].setValue(pattern);
-			}
+			else if(prevPatternTrigger.process(params[PREV_PATTERN_BUTTON].getValue())) prevPattern();
 
 			if(inputs[NEXT_PATTERN_IN].isConnected()) {
-
+				if(nextPatternTrigger.process(inputs[NEXT_PATTERN_IN].getVoltage())) nextPattern();
 			}
-			else if(nextPatternTrigger.process(params[NEXT_PATTERN_BUTTON].getValue())) {
-				if(pattern == 99) pattern = 0;
-				else pattern++;
-				params[PATTERN_KNOB].setValue(pattern);
-			}
+			else if(nextPatternTrigger.process(params[NEXT_PATTERN_BUTTON].getValue())) nextPattern();
 
 			for(int row = 0; row < rows; row++) {
 				// Process phase step
@@ -262,13 +263,13 @@ struct RS16Step : RSModule {
 					phaseRow = (int)RSscale(phaseIn, 0.f, 10.f, 0.f, 16.f);
 					if(phaseRow < 16) stepIdx[row] = phaseRow; // Defensive, square waves overrun
 
-					if(phaseIn < priorPhaseIn) eocPulse[row].trigger();
+					if(phaseIn < priorPhaseIn) eocPulse[row].trigger(); // Fucks up when more than one row phase driven?
 					priorPhaseIn = phaseIn;
 
 					if(phaseRow != priorPhaseRow) {
-						if(params[PULSE_BUTTONS + (row * steps) + stepIdx[row]].getValue()) stepPulse[row][stepIdx[row]].trigger();
+						if(params[PULSE_BUTTONS + (row * steps) + stepIdx[row]].getValue()) rowPulse[row][stepIdx[row]].trigger();
 					}
-					else stepPulse[row][stepIdx[row]].reset();
+					else rowPulse[row][stepIdx[row]].reset();
 					priorPhaseRow = phaseRow;
 				}
 				else {
@@ -292,9 +293,9 @@ struct RS16Step : RSModule {
 
 					// Process pulses
 					if(stepIdx[row] != priorStepIdx[row]) {
-						if(params[PULSE_BUTTONS + (row * steps) + stepIdx[row]].getValue()) stepPulse[row][stepIdx[row]].trigger();
+						if(params[PULSE_BUTTONS + (row * steps) + stepIdx[row]].getValue()) rowPulse[row][stepIdx[row]].trigger();
 					}
-					else stepPulse[row][stepIdx[row]].reset();
+					else rowPulse[row][stepIdx[row]].reset();
 					priorStepIdx[row] = stepIdx[row];
 				}
 
@@ -357,21 +358,51 @@ struct RS16Step : RSModule {
 				}
 
 				float cvOut = params[STEP_KNOBS + (row * steps) + stepIdx[row]].getValue();
-				// Ouput raw CV here
+				// Ouput raw CV
 
+
+				// Output scaled CV
 				cvOut = cvOut * params[SCALE_KNOBS + row].getValue() + params[OFFSET_KNOBS + row].getValue();
 				cvOut = RSclamp(cvOut, -10.f, 10.f);
 				outputs[CV_OUTS + row].setVoltage(cvOut);
 
+				// Output EOC
 				eoc[row] = eocPulse[row].process(1.f / args.sampleRate);
 				outputs[EOC_OUTS + row].setVoltage(eoc[row] ? 10.f : 0.f);
 
+				// Output row doors
 				outputs[DOOR_OUTS + row].setVoltage(params[DOOR_BUTTONS + (row * steps) + stepIdx[row]].getValue() ? 10.f : 0.f);
 
-				pulse[row][stepIdx[row]] = stepPulse[row][stepIdx[row]].process(1.f / args.sampleRate);
+				// Output row pulses
+				pulse[row][stepIdx[row]] = rowPulse[row][stepIdx[row]].process(1.f / args.sampleRate);
 				outputs[PULSE_OUTS + row].setVoltage(pulse[row][stepIdx[row]] ? 10.f : 0.f);
+
+				// Output step doors & pulses
+				for(int step = 0; step < steps; step++) {
+					if(step == stepIdx[row]) {
+						outputs[DOORS_OUTS + (row * steps) + step].setVoltage(params[DOOR_BUTTONS + (row * steps) + step].getValue() ? 10.f : 0.f);
+						if(params[PULSE_BUTTONS + (row * steps) + step].getValue()) stepPulse[row][step].trigger();
+					}
+					else {
+						outputs[DOORS_OUTS + (row * steps) + step].setVoltage(0.f);
+					}
+
+					outputs[PULSES_OUTS + (row * steps) + step].setVoltage(stepPulse[row][step].process(1.f /  args.sampleRate));
+				}
 			}
 		}
+	}
+
+	void nextPattern() {
+		if(pattern == patterns - 1) pattern = 0;
+		else pattern++;
+		params[PATTERN_KNOB].setValue(pattern);
+	}
+
+	void prevPattern() {
+		if(pattern == 0) pattern = patterns - 1;
+		else pattern--;
+		params[PATTERN_KNOB].setValue(pattern);
 	}
 
 	void nextStep(int row) {
@@ -458,31 +489,34 @@ struct RS16Step : RSModule {
 		params[OFFSET_KNOBS + row].setValue(rowBuffer.offset);
 	}
 	
-	void savePattern() {
+	void savePattern(int pattern) {
+		strcpy(patternStore[pattern].description, ssPatternDescription->text.c_str());
 		for(int row = 0; row < rows; row++) {
 			for(int step = 0; step < steps; step++) {
-				patterns[priorPattern].rowBuffer[row].step[step].step  = params[STEP_KNOBS + (row * steps) + step].getValue();
-				patterns[priorPattern].rowBuffer[row].step[step].door  = params[DOOR_BUTTONS + (row * steps) + step].getValue();
-				patterns[priorPattern].rowBuffer[row].step[step].pulse  = params[PULSE_BUTTONS + (row * steps) + step].getValue();
+				patternStore[pattern].rowBuffer[row].step[step].step  = params[STEP_KNOBS + (row * steps) + step].getValue();
+				patternStore[pattern].rowBuffer[row].step[step].door  = params[DOOR_BUTTONS + (row * steps) + step].getValue();
+				patternStore[pattern].rowBuffer[row].step[step].pulse  = params[PULSE_BUTTONS + (row * steps) + step].getValue();
 			}
-			patterns[priorPattern].rowBuffer[row].scale = params[SCALE_KNOBS + row].getValue();
-			patterns[priorPattern].rowBuffer[row].offset = params[OFFSET_KNOBS + row].getValue();
+			patternStore[pattern].rowBuffer[row].scale = params[SCALE_KNOBS + row].getValue();
+			patternStore[pattern].rowBuffer[row].offset = params[OFFSET_KNOBS + row].getValue();
 		}
 	}
 
-	void loadPattern() {
+	void loadPattern(int pattern) {
+		ssPatternDescription->setText(patternStore[pattern].description);
 		for(int row = 0; row < rows; row++) {
 			for(int step = 0; step < steps; step++) {
-				params[STEP_KNOBS + (row * steps) + step].setValue(patterns[pattern].rowBuffer[row].step[step].step);
-				params[DOOR_BUTTONS + (row * steps) + step].setValue(patterns[pattern].rowBuffer[row].step[step].door);
-				params[PULSE_BUTTONS + (row * steps) + step].setValue(patterns[pattern].rowBuffer[row].step[step].pulse);
+				params[STEP_KNOBS + (row * steps) + step].setValue(patternStore[pattern].rowBuffer[row].step[step].step);
+				params[DOOR_BUTTONS + (row * steps) + step].setValue(patternStore[pattern].rowBuffer[row].step[step].door);
+				params[PULSE_BUTTONS + (row * steps) + step].setValue(patternStore[pattern].rowBuffer[row].step[step].pulse);
 			}
-			params[SCALE_KNOBS + row].setValue(patterns[pattern].rowBuffer[row].scale);
-			params[OFFSET_KNOBS + row].setValue(patterns[pattern].rowBuffer[row].offset);
+			params[SCALE_KNOBS + row].setValue(patternStore[pattern].rowBuffer[row].scale);
+			params[OFFSET_KNOBS + row].setValue(patternStore[pattern].rowBuffer[row].offset);
 		}
 	}
 
 	void copyPattern() {
+		strcpy(patternBuffer.description, ssPatternDescription->text.c_str());
 		for(int row = 0; row < rows; row++) {
 			for(int step = 0; step < steps; step++) {
 				patternBuffer.rowBuffer[row].step[step].step = params[STEP_KNOBS + (row * steps) + step].getValue();
@@ -495,6 +529,7 @@ struct RS16Step : RSModule {
 	}
 
 	void pastePattern() {
+		ssPatternDescription->setText(patternBuffer.description);
 		for(int row = 0; row < rows; row++) {
 			for(int step = 0; step < steps; step++) {
 				params[STEP_KNOBS + (row * steps) + step].setValue(patternBuffer.rowBuffer[row].step[step].step);
@@ -510,13 +545,49 @@ struct RS16Step : RSModule {
 		json_t* rootJ = json_object();
         json_object_set_new(rootJ, "theme", json_integer(RSTheme));
 
-		for(int pattern = 0; pattern < 100; pattern++) {
-			for(int row = 0; row < rows; row++) {
-				for(int step = 0; step < steps; step++) {
+		// If the pattern number hasn't changed since the pattern was modified, so widget step hasn't had a chance to save params to pattern array,
+		//   we need to ensure that the current pattern params are stored in the pattern array
+		//savePattern(pattern);
 
-				}
-			}
-		}
+		// json_t* descriptionArray = json_array();
+		// json_t* stepArray = json_array();
+		// json_t* doorArray = json_array();
+		// json_t* pulseArray = json_array();
+		// json_t* scaleArray = json_array();
+		// json_t* offsetArray = json_array();
+
+		// for(int pattern = 0; pattern < patterns; pattern++)
+		// 	json_array_append_new(descriptionArray, json_string(patternStore[pattern].description));
+
+		// for(int pattern = 0; pattern < patterns; pattern++)
+		// 	for(int row = 0; row < rows; row++)
+		// 		for(int step = 0; step < steps; step++)
+		// 			json_array_append_new(stepArray, json_real(patternStore[pattern].rowBuffer[row].step[step].step));
+
+		// for(int pattern = 0; pattern < patterns; pattern++)
+		// 	for(int row = 0; row < rows; row++)
+		// 		for(int step = 0; step < steps; step++)
+		// 			json_array_append_new(doorArray, json_boolean(patternStore[pattern].rowBuffer[row].step[step].door));
+
+		// for(int pattern = 0; pattern < patterns; pattern++)
+		// 	for(int row = 0; row < rows; row++)
+		// 		for(int step = 0; step < steps; step++)
+		// 			json_array_append_new(pulseArray, json_boolean(patternStore[pattern].rowBuffer[row].step[step].pulse));
+
+		// for(int pattern = 0; pattern < patterns; pattern++)
+		// 	for(int row = 0; row < rows; row++)
+		// 		json_array_append(scaleArray, json_real(patternStore[pattern].rowBuffer[row].scale));
+
+		// for(int pattern = 0; pattern < patterns; pattern++)
+		// 	for(int row = 0; row < rows; row++)
+		// 		json_array_append(offsetArray, json_real(patternStore[pattern].rowBuffer[row].offset));
+
+		// json_object_set_new(rootJ, "descriptions", descriptionArray);
+		// json_object_set_new(rootJ, "steps", stepArray);
+		// json_object_set_new(rootJ, "doors", doorArray);
+		// json_object_set_new(rootJ, "pulses", pulseArray);
+		// json_object_set_new(rootJ, "scales", scaleArray);
+		// json_object_set_new(rootJ, "offsets", offsetArray);
 
 		return rootJ;
 	}
@@ -524,14 +595,47 @@ struct RS16Step : RSModule {
 	void dataFromJson(json_t* rootJ) override {
         json_t* themeJ = json_object_get(rootJ, "theme");
         if(themeJ) RSTheme = json_integer_value(themeJ);
+		
+		// json_t* descriptionArray = json_object_get(rootJ, "descriptions");
+		// json_t* stepArray = json_object_get(rootJ, "steps");
+		// json_t* doorArray = json_object_get(rootJ, "doors");
+		// json_t* pulseArray = json_object_get(rootJ, "pulses");
+		// json_t* scaleArray = json_object_get(rootJ, "scales");
+		// json_t* offsetArray = json_object_get(rootJ, "offsets");
+		
+		// if(descriptionArray)
+		// 	for(int pattern = 0, i = 0; pattern < patterns; pattern++, i++)
+		// 		strcpy(patternStore[pattern].description, json_string_value(json_array_get(descriptionArray, i)));
 
-		for(int pattern = 0; pattern < 100; pattern++) {
-			for(int row = 0; row < rows; row++) {
-				for(int step = 0; step < steps; step++) {
+		// if(stepArray)
+		// 	for(int pattern = 0, i = 0; pattern < patterns; pattern++, i++)
+		// 		for(int row = 0; row < rows; row++, i++)
+		// 			for(int step = 0; step < steps; step++, i++)
+		// 				patternStore[pattern].rowBuffer[row].step[step].step = json_real_value(json_array_get(stepArray, i));
+		
+		// if(doorArray)
+		// 	for(int pattern = 0, i = 0; pattern < patterns; pattern++, i++)
+		// 		for(int row = 0; row < rows; row++, i++)
+		// 			for(int step = 0; step < steps; step++, i++)
+		// 				patternStore[pattern].rowBuffer[row].step[step].door = json_boolean_value(json_array_get(doorArray, i));
 
-				}
-			}
-		}
+		// if(pulseArray)
+		// 	for(int pattern = 0, i = 0; pattern < patterns; pattern++, i++)
+		// 		for(int row = 0; row < rows; row++, i++)
+		// 			for(int step = 0; step < steps; step++, i++)
+		// 				patternStore[pattern].rowBuffer[row].step[step].pulse = json_boolean_value(json_array_get(pulseArray, i));
+
+		// if(scaleArray)
+		// 	for(int pattern = 0, i = 0; pattern < patterns; pattern++, i++)
+		// 		for(int row = 0; row < rows; row++, i++)
+		// 			patternStore[pattern].rowBuffer[row].scale = json_real_value(json_array_get(scaleArray, i));
+		
+		// if(offsetArray)
+		// 	for(int pattern = 0, i = 0; pattern < patterns; pattern++, i++)
+		// 		for(int row = 0; row < rows; row++, i++)
+		// 			patternStore[pattern].rowBuffer[row].offset = json_real_value(json_array_get(offsetArray, i));
+		
+		// pattern = 0; priorPattern = patterns - 1; // So widget step() updates
 	}
 };
 
@@ -547,7 +651,7 @@ struct RS16StepWidget : ModuleWidget {
 		setModule(module);
 		this->module = module;
 
-		box.size = Vec(RACK_GRID_WIDTH * 110, RACK_GRID_HEIGHT);
+		box.size = Vec(RACK_GRID_WIDTH * 110, RACK_GRID_HEIGHT); // Amend so number of steps scales accordingly
 		int middle = box.size.x / 2 + 1;
 
 		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RS16Step::THEME_BUTTON));
@@ -567,9 +671,14 @@ struct RS16StepWidget : ModuleWidget {
 		addParam(createParamCentered<RSKnobDetentLrg>(Vec(x, y), module, RS16Step::PATTERN_KNOB));
 		patternLabel = new RSLabelCentered(x, y, "0", 22, module);
 		addChild(patternLabel);
-		y += 80;
+		y += smlGap + 10;
 
 		// Pattern name scribble strip
+		if(module) {
+			addChild(module->ssPatternDescription = new RSScribbleStrip(x - 50, y, 100));
+			module->ssPatternDescription->setText(module->patternStore[(int)module->params[RS16Step::PATTERN_KNOB].getValue()].description);
+		}
+		y += smlGap;
 
 		// Pattern copy & paste
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x - 20, y), module, RS16Step::COPY_PATTERN_BUTTON));
@@ -578,15 +687,15 @@ struct RS16StepWidget : ModuleWidget {
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x + 20, y), module, RS16Step::PASTE_PATTERN_BUTTON));
 		addChild(new RSLabelCentered(x + 20, y + 3, "PASTE", 10, module));
 
-		y += 35;
+		y += smlGap;
 
 		// Pattern prev / next ins
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x - 20, y), module, RS16Step::PREV_PATTERN_BUTTON));
-		addInput(createInputCentered<RSStealthJack>(Vec(x - 20, y), module, RS16Step::PREV_PATTERN_IN));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x - 20, y), module, RS16Step::PREV_PATTERN_IN));
 		addChild(new RSLabelCentered(x - 20, y + 25, "PREV", 10, module));
 
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x + 20, y), module, RS16Step::NEXT_PATTERN_BUTTON));
-		addInput(createInputCentered<RSStealthJack>(Vec(x + 20, y), module, RS16Step::NEXT_PATTERN_IN));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x + 20, y), module, RS16Step::NEXT_PATTERN_IN));
 		addChild(new RSLabelCentered(x + 20, y + 25, "NEXT", 10, module));
 
 		// Want a reset all steps on all rows option
@@ -659,12 +768,12 @@ struct RS16StepWidget : ModuleWidget {
 	void addStepSeqRow(int row, int x, int y) {
 		// Add prev step in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::PREV_STEP_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::PREV_STEP_INS + row));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::PREV_STEP_INS + row));
 		x += smlGap;
 
 		// Add next step in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::NEXT_STEP_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::NEXT_STEP_INS + row));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::NEXT_STEP_INS + row));
 		x -= smlGap; y += 30;
 
 		// Add phase step in
@@ -673,7 +782,7 @@ struct RS16StepWidget : ModuleWidget {
 
 		// Add rand step in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_STEP_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::RAND_STEP_INS + row));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_STEP_INS + row));
 		x += smlGap; y -= 30;
 
 		// Add CV in
@@ -682,47 +791,47 @@ struct RS16StepWidget : ModuleWidget {
 
 		// Add write in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::WRITE_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::WRITE_INS + row));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::WRITE_INS + row));
 		x += smlGap; y -= 30;
 		
 		// Add randomize all in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_ALL_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::RAND_ALL_INS + row));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_ALL_INS + row));
 		x += smlGap;
 		
 		// Add randomize steps in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_STEPS_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::RAND_STEPS_INS  + row ));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_STEPS_INS  + row ));
 		x -= smlGap; y += 30;
 
 		// Add randomize doors in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_DOORS_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::RAND_DOORS_INS  + row ));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_DOORS_INS  + row ));
 		x += smlGap;
 
 		// Add randomize pulses in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_PULSES_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::RAND_PULSES_INS  + row ));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_PULSES_INS  + row ));
 		x += smlGap; y -= 30;
 
 		// Add reset step in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_STEP_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::RESET_STEP_INS + row));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_STEP_INS + row));
 		x += smlGap;
 
 		// Add reset steps in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_STEPS_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::RESET_STEPS_INS + row));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_STEPS_INS + row));
 		x -= smlGap; y += 30;
 
 		// Add reset doors in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_DOORS_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::RESET_DOORS_INS + row));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_DOORS_INS + row));
 		x += smlGap;
 
 		// Add reset pulses in
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_PULSES_BUTTONS + row));
-		addInput(createInputCentered<RSStealthJack>(Vec(x, y), module, RS16Step::RESET_PULSES_INS + row));
+		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_PULSES_INS + row));
 		x += smlGap; y -= 30;
 
 		// Add copy & paste
@@ -735,13 +844,18 @@ struct RS16StepWidget : ModuleWidget {
 		
 		x += smlGap;
 
-		// Add step knobs & lights, door & pulse buttons
+		// Add step knobs & lights, door & pulse buttons, door & pulse outputs
 		for(int step = 0; step < module->steps; step++, x += lrgGap) {
 			addParam(createParamCentered<RSKnobMed>(Vec(x, y), module, RS16Step::STEP_KNOBS + (row * module->steps) + step));
 			addChild(createLightCentered<LargeLight<GreenLight>>(Vec(x, y), module, RS16Step::STEP_LIGHTS + (row * module->steps) + step));
 
 			addParam(createParamCentered<RSButtonToggle>(Vec(x - 15, y + 42), module, RS16Step::DOOR_BUTTONS + (row * module->steps) + step));
+			// Add door outs
+			addOutput(createOutputCentered<RSStealthJackSmallMonoOut>(Vec(x - 15, y + 42), module, RS16Step::DOORS_OUTS + (row * module->steps) + step));
+
 			addParam(createParamCentered<RSButtonToggle>(Vec(x + 15, y + 42), module, RS16Step::PULSE_BUTTONS + (row * module->steps) + step));
+			// Add pulse outs
+			addOutput(createOutputCentered<RSStealthJackSmallMonoOut>(Vec(x + 15, y + 42), module, RS16Step::PULSES_OUTS + (row * module->steps) + step));
 		}
 
 		// Add scale knob
@@ -775,9 +889,10 @@ struct RS16StepWidget : ModuleWidget {
 		// Pattern selection
 		module->pattern = (int)module->params[RS16Step::PATTERN_KNOB].getValue();
 		if(module->pattern != module->priorPattern) {
+			INFO("Racket Science: New pattern");
 			patternLabel->text = std::to_string(module->pattern);
-			module->savePattern(); // Save settings to prior pattern
-			module->loadPattern(); // Load current pattern into settings
+			module->savePattern(module->priorPattern);
+			module->loadPattern(module->pattern);
 		}
 		module->priorPattern = module->pattern;
 

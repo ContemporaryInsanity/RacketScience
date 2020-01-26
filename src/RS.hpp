@@ -140,7 +140,7 @@ struct RSLabelCentered : LedDisplay {
 
 struct RSScribbleStrip : LedDisplayTextField {
 	int textSize = 12;
-	int numChars = 40;
+	int numChars = 25;
 
 	RSScribbleStrip(int x, int y, int size = 150, const char* str = "_") {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Ubuntu Condensed 400.ttf"));
@@ -196,8 +196,8 @@ struct RSJackMonoIn       : SVGPort { RSJackMonoIn()       { setSvg(APP->window-
 struct RSJackSmallMonoIn  : SVGPort { RSJackSmallMonoIn()  { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackSmallMonoIn.svg"))); } };
 struct RSJackPolyIn       : SVGPort { RSJackPolyIn()       { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyIn.svg"))); } };
 
-struct RSStealthJack : SVGPort { // With thanks to https://github.com/DominoMarama/ReTunesFree
-	RSStealthJack() { 
+struct RSStealthJackIn : app::SvgPort { // With thanks to https://github.com/DominoMarama/ReTunesFree
+	RSStealthJackIn() { 
 		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoIn.svg")));
 	}
 
@@ -216,6 +216,65 @@ struct RSStealthJack : SVGPort { // With thanks to https://github.com/DominoMara
 			else Widget::hide();
 		}
 		Widget::step();
+	}
+};
+
+struct RSStealthJackOut : app::SvgPort {
+	RSStealthJackOut() { 
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoOut.svg")));
+	}
+
+	void step() override {
+		if(!module) return;
+
+		if(module->outputs[portId].isConnected()) {
+			Widget::show();
+		}
+		else {
+			CableWidget* cw = APP->scene->rack->incompleteCable;
+			if(cw) {
+				if(cw->inputPort) Widget::show();
+				else Widget::hide();
+			}
+			else Widget::hide();
+		}
+		Widget::step();
+	}
+};
+
+struct RSStealthJackMonoIn : RSStealthJackIn {
+	RSStealthJackMonoIn() { 
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoIn.svg")));
+	}
+};
+
+struct RSStealthJackSmallMonoIn : RSStealthJackIn {
+	RSStealthJackSmallMonoIn() { 
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackSmallMonoIn.svg")));
+	}
+};
+
+struct RSStealthJackMonoOut : RSStealthJackOut {
+	RSStealthJackMonoOut() { 
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoOut.svg")));
+	}
+};
+
+struct RSStealthJackSmallMonoOut : RSStealthJackOut {
+	RSStealthJackSmallMonoOut() { 
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackSmallMonoOut.svg")));
+	}
+};
+
+struct RSStealthJackPolyIn : RSStealthJackIn {
+	RSStealthJackPolyIn() { 
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyIn.svg")));
+	}
+};
+
+struct RSStealthJackPolyOut : RSStealthJackOut {
+	RSStealthJackPolyOut() { 
+		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyOut.svg")));
 	}
 };
 

@@ -279,7 +279,7 @@ struct RS16Step : RSModule {
 
 		pattern = 0; priorPattern = 0;
 
-		rateDivider.setDivision(4);
+		rateDivider.setDivision(8);
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -370,6 +370,12 @@ struct RS16Step : RSModule {
 
 			// Process rows
 			for(int row = 0; row < rows; row++) {
+				// Process write CV in
+				// Subtle bug solved, using a door to update a step via CV in & write could touch the next step if this is processed after step processing
+				if(inputs[CV_INS + row].isConnected())
+					if(inputs[WRITE_INS + row].getVoltage() or params[WRITE_BUTTONS + row].getValue()) 
+						params[STEP_KNOBS + (row * steps) + stepIdx[row]].setValue(RSclamp(inputs[CV_INS + row].getVoltage(), -10.f, 10.f));
+
 				// Process phase step
 				if(inputs[PHASE_STEP_INS + row].isConnected()) {
 					phaseIn = RSclamp(inputs[PHASE_STEP_INS + row].getVoltage(), 0.f, 10.f);
@@ -411,11 +417,6 @@ struct RS16Step : RSModule {
 					else rowPulse[row][stepIdx[row]].reset();
 					priorStepIdx[row] = stepIdx[row];
 				}
-
-				// Process write CV in
-				if(inputs[CV_INS + row].isConnected())
-					if(inputs[WRITE_INS + row].getVoltage() or params[WRITE_BUTTONS + row].getValue()) 
-						params[STEP_KNOBS + (row * steps) + stepIdx[row]].setValue(RSclamp(inputs[CV_INS + row].getVoltage(), -10.f, 10.f));
 
 				// Process randomize all
 				if(inputs[RAND_ALL_INS + row].isConnected()) {
@@ -656,7 +657,6 @@ struct RS16Step : RSModule {
 			patternStore[pattern].rowBuffer[row].scale = params[SCALE_KNOBS + row].getValue();
 			patternStore[pattern].rowBuffer[row].offset = params[OFFSET_KNOBS + row].getValue();
 		}
-		INFO("Racket Science: savePattern %i desc %s", pattern, patternStore[pattern].description);
 	}
 
 	void loadPattern(int pattern) {
@@ -670,7 +670,6 @@ struct RS16Step : RSModule {
 			params[SCALE_KNOBS + row].setValue(patternStore[pattern].rowBuffer[row].scale);
 			params[OFFSET_KNOBS + row].setValue(patternStore[pattern].rowBuffer[row].offset);
 		}
-		INFO("Racket Science: loadPattern %i  desc %s", pattern, patternStore[pattern].description);
 	}
 
 	void copyPattern() {

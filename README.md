@@ -1,5 +1,6 @@
 # Racket Science
 Modules for the VCV Rack virtual modular synthesizer.
+![](./img/fido3.png)
 
 ![](./img/boogie.png)
 
@@ -26,9 +27,9 @@ Note that VV saves state, so if you record a loop with it and then duplicate or 
 
 ## Notices
 
-**Racket Science** is copyright © 2019 Ewen Bates, specifically:
+**Racket Science** is copyright © 2020 Ewen Bates, specifically:
 
-All **source code** is copyright © 2019 Ewen Bates and is licensed under the [GNU General Public License v3.0](gpl-3.0.txt).
+All **source code** is copyright © 2020 Ewen Bates and is licensed under the [GNU General Public License v3.0](gpl-3.0.txt).
 
 All **graphics** in the `res` directory are copyright © 2019 Ewen Bates and licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 

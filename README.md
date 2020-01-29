@@ -8,7 +8,7 @@ I know, yet another bloody step sequencer.  I built this as an exercise and as a
 
 You get sixteen patterns of four rows of sixteen steps with pulses and doors (gates that stay open across adjacent steps) for each step, each row also has an attenuverter and scaled CV output.  There are currently 276 parameters, 71 inputs, 148 outputs and 64 blinkenlights, in order to fit all of that into a meagre 104hp there are stealth sockets that only appear when you drag a cable, every pulse & door has it's own output and the buttons on the left also double up as inputs.  There are CV & write inputs, you can record a sequence from a midi keyboard should you wish.  Outputs can be fed back into inputs so, for instance, if you want a row to be eight steps long, set a pulse on the ninth step and feed that back to the index reset input for that row.  If you want to modify steps on the fly, you could take a door output into write in.  Similarly you can play back multiple pattern by feeding a EOC output back to the next pattern input.  You could use pulses from one row to step another row etc etc. The possibilties are endless really.
 
-There is also a phase input so it can be driven by modules such as ZZC and run backwards if you like.
+There are also phase inputs so it can be driven by modules such as ZZC and run backwards if you like.
 
 ![](./img/boogie.png) 
 

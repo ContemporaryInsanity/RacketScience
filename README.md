@@ -32,7 +32,7 @@ Typically you would feed the phase input with a slow rising sawtooth from a LFO,
 
 **Racket Science** is copyright © 2020 Ewen Bates, specifically:
 
-The **brand name** **Racket Science**.  If you want to use this for a racket sports brand just ask, but in the context of creations that a noise (aka racket) with synthesis, this is mine.
+The **brand name** **Racket Science**.  If you want to use this for a racket sports brand just ask, but in the context of creations that make a noise (aka racket) with synthesis, this is mine.
 
 All **source code** is copyright © 2020 Ewen Bates and is licensed under the [GNU General Public License v3.0](gpl-3.0.txt).
 

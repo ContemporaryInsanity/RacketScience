@@ -413,6 +413,8 @@ struct RSPhaseOneWidget : ModuleWidget {
 	RSScribbleStrip *ss;
 
 	RSPhaseOneWidget(RSPhaseOne *module) {
+		INFO("Racket Science: RSPhaseOneWidget()");
+
 		setModule(module);
 		this->module = module;
 

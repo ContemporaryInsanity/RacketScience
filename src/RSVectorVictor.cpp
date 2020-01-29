@@ -93,6 +93,8 @@ struct RSVectorVictor : Module {
 
 struct RSVectorVictorWidget : ModuleWidget {
 	RSVectorVictorWidget(RSVectorVictor *module) {
+        INFO("Racket Science: RSVectorVictorWidget()");
+
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/RSVectorVictor.svg")));
 

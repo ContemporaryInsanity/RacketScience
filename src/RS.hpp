@@ -34,7 +34,7 @@ static inline float RSscale(float in, float inMin, float inMax, float outMin, fl
 
 /*
 	Racket Science custom components
-	(C) 2019 Ewen Bates
+	(C) 2020 Ewen Bates
 */
 
 // Colours
@@ -197,9 +197,9 @@ struct RSJackSmallMonoIn  : SVGPort { RSJackSmallMonoIn()  { setSvg(APP->window-
 struct RSJackPolyIn       : SVGPort { RSJackPolyIn()       { setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackPolyIn.svg"))); } };
 
 struct RSStealthJackIn : app::SvgPort { // With thanks to https://github.com/DominoMarama/ReTunesFree
-	RSStealthJackIn() { 
-		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoIn.svg")));
-	}
+//	RSStealthJackIn() { 
+//		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoIn.svg")));
+//	}
 
 	void step() override {
 		if(!module) return;
@@ -220,9 +220,9 @@ struct RSStealthJackIn : app::SvgPort { // With thanks to https://github.com/Dom
 };
 
 struct RSStealthJackOut : app::SvgPort {
-	RSStealthJackOut() { 
-		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoOut.svg")));
-	}
+//	RSStealthJackOut() { 
+//		setSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/components/RSJackMonoOut.svg")));
+//	}
 
 	void step() override {
 		if(!module) return;

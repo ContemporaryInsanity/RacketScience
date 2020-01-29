@@ -196,6 +196,8 @@ struct RSGroundControlWidget : ModuleWidget {
 	RSGroundControl* module;
 
 	RSGroundControlWidget(RSGroundControl *module) {
+		INFO("Racket Science: RSGroundControlWidget()");
+
 		setModule(module);
 		this->module = module;
 

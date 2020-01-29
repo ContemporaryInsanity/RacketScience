@@ -73,6 +73,8 @@ struct RSBlankWidget : ModuleWidget {
     Widget *rightHandle;
 
     RSBlankWidget(RSBlank *module) {
+		INFO("Racket Science: RSBlankWidget()");
+		
         setModule(module);
         this->module = module;
 

@@ -52,6 +52,8 @@ struct RSMajorTomWidget : ModuleWidget {
 	RSMajorTom* module;
 
 	RSMajorTomWidget(RSMajorTom *module) {
+		INFO("Racket Science: RSMajorTomWidget()");
+
 		setModule(module);
 		this->module = module;
 

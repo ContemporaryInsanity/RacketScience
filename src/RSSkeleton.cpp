@@ -52,6 +52,8 @@ struct RSSkeletonWidget : ModuleWidget {
 	RSSkeleton* module;
 
 	RSSkeletonWidget(RSSkeleton *module) {
+		INFO("Racket Science: RSSkeletonWidget()");
+
 		setModule(module);
 		this->module = module;
 

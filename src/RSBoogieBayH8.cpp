@@ -174,6 +174,8 @@ struct RSBoogieBayH8Widget : ModuleWidget {
 	int middle, left, right;
 
 	RSBoogieBayH8Widget(RSBoogieBayH8 *module) {
+		INFO("Racket Science: RSBoogieBayH8Widget()");
+
 		setModule(module);
 		this->module = module;
 

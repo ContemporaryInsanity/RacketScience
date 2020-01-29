@@ -52,6 +52,8 @@ struct RSMissionControlWidget : ModuleWidget {
 	RSMissionControl* module;
 
 	RSMissionControlWidget(RSMissionControl *module) {
+		INFO("Racket Science: RSMissionControlWidget()");
+
 		setModule(module);
 		this->module = module;
 

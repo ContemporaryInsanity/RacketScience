@@ -128,6 +128,8 @@ struct RSCVHeatWidget : ModuleWidget {
 	RSCVHeat* module;
 
 	RSCVHeatWidget(RSCVHeat *module) {
+		INFO("Racket Science: RSCVHeatWidget()");
+
 		setModule(module);
 		this->module = module;
 

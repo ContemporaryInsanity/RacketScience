@@ -3,7 +3,7 @@
 #include "RS.hpp"
 
 struct RS16Step : RSModule {
-	static const int patterns = 100;
+	static const int patterns = 16;
 	static const int steps = 16;
 	static const int rows = 4;
 
@@ -127,8 +127,7 @@ struct RS16Step : RSModule {
 	dsp::ClockDivider rateDivider;
 
 	int stepIdx[rows], priorStepIdx[rows];
-	float phaseIn, priorPhaseIn;
-	int phaseRow, priorPhaseRow;
+	int phaseStep[rows], priorPhaseStep[rows];
 
 	struct StepBuffer {
 		float step;
@@ -141,6 +140,9 @@ struct RS16Step : RSModule {
 		float scale;
 		float offset;
 	};
+
+	float scaleDefault = .25f;
+	float offsetDefault = 0.f;
 
 	struct PatternBuffer {
 		char description[30];
@@ -242,8 +244,8 @@ struct RS16Step : RSModule {
 				pulse[row][step] = false;
 			}
 
-			configParam(SCALE_KNOBS + row, -.5f, .5f, 0.25f, "SCALE");
-			configParam(OFFSET_KNOBS + row, -2.5f, 2.5f, 0.f, "OFFSET");
+			configParam(SCALE_KNOBS + row, -.5f, .5f, scaleDefault, "SCALE");
+			configParam(OFFSET_KNOBS + row, -2.5f, 2.5f, offsetDefault, "OFFSET");
 		}
 
 		for(int step = 0; step < steps; step++) {
@@ -251,8 +253,8 @@ struct RS16Step : RSModule {
 			rowBuffer.step[step].door = false;
 			rowBuffer.step[step].pulse = false;
 		}
-		rowBuffer.scale = .25f;
-		rowBuffer.offset = 0.f;
+		rowBuffer.scale = scaleDefault;
+		rowBuffer.offset = offsetDefault;
 
 		for(int row = 0; row < rows; row++) {
 			for(int step = 0; step < steps; step++) {
@@ -260,24 +262,24 @@ struct RS16Step : RSModule {
 				patternBuffer.rowBuffer[row].step[step].door = false;
 				patternBuffer.rowBuffer[row].step[step].pulse = false;
 			}
-			patternBuffer.rowBuffer[row].scale = .25f;
-			patternBuffer.rowBuffer[row].offset = 0.f;
+			patternBuffer.rowBuffer[row].scale = scaleDefault;
+			patternBuffer.rowBuffer[row].offset = offsetDefault;
 		}
 
 		for(int pattern = 0; pattern < patterns; pattern++) {
-			sprintf(patternStore[pattern].description, "Pattern %i", pattern);
+			sprintf(patternStore[pattern].description, "Pattern %i", pattern + 1);
 			for(int row = 0; row < rows; row++) {
 				for(int step = 0; step < steps; step++) {
 					patternStore[pattern].rowBuffer[row].step[step].step = 0.f;
 					patternStore[pattern].rowBuffer[row].step[step].door = false;
 					patternStore[pattern].rowBuffer[row].step[step].pulse = false;
 				}
-				patternStore[pattern].rowBuffer[row].scale = .25f; // TODO: float scaleDefault = .25f;
-				patternStore[pattern].rowBuffer[row].offset = 0.f; // TODO: float offsetDefault = 0.f
+				patternStore[pattern].rowBuffer[row].scale = scaleDefault;
+				patternStore[pattern].rowBuffer[row].offset = offsetDefault;
 			}
 		}
 
-		pattern = 0; priorPattern = 0;
+		pattern = 0; priorPattern = patterns - 1;
 
 		rateDivider.setDivision(8);
 	}
@@ -337,7 +339,6 @@ struct RS16Step : RSModule {
 			else if(randPatternAllTrigger.process(params[RAND_PATTERN_ALL_BUTTON].getValue())) randomizePatternAll();
 
 			// Process pattern resets
-
 			if(inputs[RESET_PATTERN_STEPS_IN].isConnected()) {
 				if(resetPatternStepsTrigger.process(inputs[RESET_PATTERN_STEPS_IN].getVoltage())) resetPatternSteps();
 			}
@@ -371,25 +372,29 @@ struct RS16Step : RSModule {
 			// Process rows
 			for(int row = 0; row < rows; row++) {
 				// Process write CV in
-				// Subtle bug solved, using a door to update a step via CV in & write could touch the next step if this is processed after step processing
+				// Subtle bug solved, using a door to update a step via CV in & write could touch the next step if this is processed after 
+				//   step processing as step index could change before door closes
 				if(inputs[CV_INS + row].isConnected())
 					if(inputs[WRITE_INS + row].getVoltage() or params[WRITE_BUTTONS + row].getValue()) 
 						params[STEP_KNOBS + (row * steps) + stepIdx[row]].setValue(RSclamp(inputs[CV_INS + row].getVoltage(), -10.f, 10.f));
 
 				// Process phase step
 				if(inputs[PHASE_STEP_INS + row].isConnected()) {
-					phaseIn = RSclamp(inputs[PHASE_STEP_INS + row].getVoltage(), 0.f, 10.f);
-					phaseRow = (int)RSscale(phaseIn, 0.f, 10.f, 0.f, 16.f);
-					if(phaseRow < 16) stepIdx[row] = phaseRow; // Defensive, square waves overrun
+					float phaseIn = RSclamp(inputs[PHASE_STEP_INS + row].getVoltage(), 0.f, 10.f);
+					phaseStep[row] = (int)RSscale(phaseIn, 0.f, 10.f, 0.f, 16.f);
+					if(phaseStep[row] < 16) stepIdx[row] = phaseStep[row]; // Defensive, square waves overrun
 
-					if(phaseIn < priorPhaseIn) eocPulse[row].trigger(); // Fucks up when more than one row phase driven?
-					priorPhaseIn = phaseIn;
+					// This should now trigger when we cross from first to last step in either direction, hopefully across all rows
+					if((priorPhaseStep[row] == steps - 1 && phaseStep[row] == 0) or
+					   (priorPhaseStep[row] == 0 && phaseStep[row] == steps - 1))
+						   eocPulse[row].trigger();
 
-					if(phaseRow != priorPhaseRow) {
+					if(phaseStep[row] != priorPhaseStep[row]) {
 						if(params[PULSE_BUTTONS + (row * steps) + stepIdx[row]].getValue()) rowPulse[row][stepIdx[row]].trigger();
 					}
 					else rowPulse[row][stepIdx[row]].reset();
-					priorPhaseRow = phaseRow;
+
+					priorPhaseStep[row] = phaseStep[row];
 				}
 				else {
 					// Process prev step
@@ -509,36 +514,26 @@ struct RS16Step : RSModule {
 	}
 
 	void nextPattern() {
-		//savePattern(pattern);
 		if(pattern == patterns - 1) pattern = 0;
 		else pattern++;
-		//loadPattern(pattern);
 		params[PATTERN_KNOB].setValue(pattern);
 	}
 
 	void randomPattern() {
-		//savePattern(pattern);
 		pattern = rand() % patterns;
-		//loadPattern(pattern);
 		params[PATTERN_KNOB].setValue(pattern);
 	}
 
 	void prevPattern() {
-		//savePattern(pattern);
 		if(pattern == 0) pattern = patterns - 1;
 		else pattern--;
-		//loadPattern(pattern);
 		params[PATTERN_KNOB].setValue(pattern);
 	}
 
 	void randomizePatternSteps() { for(int row = 0; row < rows; row++) randomizeSteps(row); }
-
 	void randomizePatternDoors() { for(int row = 0; row < rows; row++) randomizeDoors(row); }
-
 	void randomizePatternPulses() { for(int row = 0; row < rows; row++) randomizePulses(row); }
-
 	void randomizePatternIdxs() { for(int row = 0; row < rows; row++) randomizeStepIdx(row); }
-
 	void randomizePatternScalings() { for(int row = 0; row < rows; row++) randomizeScalings(row); }
 
 	void randomizePatternAll() {
@@ -549,13 +544,9 @@ struct RS16Step : RSModule {
 	}
 
 	void resetPatternIdxs() { for(int row = 0; row < rows; row++) resetStepIdx(row); }
-
 	void resetPatternSteps() { for(int row = 0; row < rows; row++) resetSteps(row); }
-
 	void resetPatternDoors() { for(int row = 0; row < rows; row++) resetDoors(row); }
-
 	void resetPatternPulses() { for(int row = 0; row < rows; row++) resetPulses(row); }
-
 	void resetPatternScalings() { for(int row = 0; row < rows; row++) resetScalings(row); }
 
 	void resetPatternAll() {
@@ -592,9 +583,7 @@ struct RS16Step : RSModule {
 	}
 
 	void randomizeSteps(int row) { for(int step = 0; step < steps; step++) params[STEP_KNOBS + (row * steps) + step].setValue((((float)rand() / (float)RAND_MAX) * 20.f) - 10.f); }
-
 	void randomizeDoors(int row) { for(int step = 0; step < steps; step++) params[DOOR_BUTTONS + (row * steps) + step].setValue(rand() %2); }
-
 	void randomizePulses(int row) { for(int step = 0; step < steps; step++) params[PULSE_BUTTONS + (row * steps) + step].setValue(rand() %2); }
 
 	void randomizeScalings(int row) {
@@ -613,18 +602,10 @@ struct RS16Step : RSModule {
 	}
 
 	void resetStepIdx(int row) { stepIdx[row] = 0; eocPulse[row].trigger(); }
-
 	void resetSteps(int row) { for(int step = 0; step < steps; step++) params[STEP_KNOBS + (row * steps) + step].setValue(0.f); }
-
-	void resetDoors(int row) {
-		 for(int step = 0; step < steps; step++) params[DOOR_BUTTONS + (row * steps) + step].setValue(doorsToggle ? 1.f : 0.f);
-	}
-
-	void resetPulses(int row) { 
-		for(int step = 0; step < steps; step++) params[PULSE_BUTTONS + (row * steps) + step].setValue(pulsesToggle? 1.f : 0.f);
-	}
-
-	void resetScalings(int row) { params[SCALE_KNOBS + row].setValue(0.25f); params[OFFSET_KNOBS + row].setValue(0.f); }
+	void resetDoors(int row) { for(int step = 0; step < steps; step++) params[DOOR_BUTTONS + (row * steps) + step].setValue(doorsToggle ? 1.f : 0.f); }
+	void resetPulses(int row) { for(int step = 0; step < steps; step++) params[PULSE_BUTTONS + (row * steps) + step].setValue(pulsesToggle? 1.f : 0.f); }
+	void resetScalings(int row) { params[SCALE_KNOBS + row].setValue(scaleDefault); params[OFFSET_KNOBS + row].setValue(offsetDefault); }
 
 	void copyRow(int row) {
 		for(int step = 0; step < steps; step++) {
@@ -702,8 +683,6 @@ struct RS16Step : RSModule {
 		json_t* rootJ = json_object();
         json_object_set_new(rootJ, "theme", json_integer(RSTheme));
 
-		// If the pattern number hasn't changed since the pattern was modified, so widget step hasn't had a chance to save params to pattern array,
-		//   we need to ensure that the current pattern params are stored in the pattern array
 		savePattern(pattern);
 
 		for(int pattern = 0; pattern < patterns; pattern++) {
@@ -776,10 +755,12 @@ struct RS16StepWidget : ModuleWidget {
 	RSLabelCentered *patternLabel;
 
 	RS16StepWidget(RS16Step *module) {
+		INFO("Racket Science: RS16StepWidget()");
+		
 		setModule(module);
 		this->module = module;
 
-		box.size = Vec(RACK_GRID_WIDTH * 104, RACK_GRID_HEIGHT); // Amend so number of steps scales accordingly
+		box.size = Vec(RACK_GRID_WIDTH * 104, RACK_GRID_HEIGHT); // Amend so number of steps scales accordingly?
 		int middle = box.size.x / 2 + 1;
 
 		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RS16Step::THEME_BUTTON));
@@ -1087,7 +1068,7 @@ struct RS16StepWidget : ModuleWidget {
 		// Pattern selection
 		module->pattern = (int)module->params[RS16Step::PATTERN_KNOB].getValue();
 		if(module->pattern != module->priorPattern) {
-			patternLabel->text = std::to_string(module->pattern);
+			patternLabel->text = std::to_string(module->pattern + 1);
 			module->savePattern(module->priorPattern);
 			module->loadPattern(module->pattern);
 			module->priorPattern = module->pattern;

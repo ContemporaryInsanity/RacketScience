@@ -19,6 +19,8 @@ static void updateRSTheme(int themeIdx) {
 }
 
 static void saveRSGlobal() {
+	INFO("Racket Science: saveRsGlobal()");
+
     std::string RSGFile = asset::user("RacketScience/RSGlobal.dat");
     FILE *file = fopen(RSGFile.c_str(), "w");
     if(file) {
@@ -28,6 +30,8 @@ static void saveRSGlobal() {
 }
 
 static void loadRSGlobal() {
+	INFO("Racket Science: loadRSGlobal()");
+
     std::string RSGDir = rack::asset::user("RacketScience/");
     std::string RSGFile = rack::asset::user("RacketScience/RSGlobal.dat");
 

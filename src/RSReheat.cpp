@@ -249,6 +249,8 @@ struct RSReheatWidget : ModuleWidget {
     Widget* panelBorder;
 
     RSReheatWidget(RSReheat *module) {
+		INFO("Racket Science: RSReheatWidget()");
+
         setModule(module);
         this->module = module;
 

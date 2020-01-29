@@ -82,6 +82,8 @@ struct RSMFHWidget : ModuleWidget {
 	RSMFH* module;
 
 	RSMFHWidget(RSMFH *module) {
+		INFO("Racket Science: RSMFHWidget()");
+
 		setModule(module);
 		this->module = module;
 

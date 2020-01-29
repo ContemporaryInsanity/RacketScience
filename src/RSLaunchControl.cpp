@@ -141,6 +141,8 @@ struct RSLaunchControlWidget : ModuleWidget {
 	RSLaunchControl* module;
 
 	RSLaunchControlWidget(RSLaunchControl *module) {
+		INFO("Racket Science: RSLaunchControlWidget()");
+
 		setModule(module);
 		this->module = module;
 

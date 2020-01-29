@@ -87,6 +87,8 @@ struct RSBoogieBayWidget : ModuleWidget {
     RSLabel* botScalebLabel;
    
 	RSBoogieBayWidget(RSBoogieBay *module) {
+        INFO("Racket Science: RSBoogieBayWidget()");
+
 		setModule(module);
         this->module = module;
 

@@ -53,6 +53,8 @@ struct RSShadesWidget : ModuleWidget {
 	RSShades* module;
 
 	RSShadesWidget(RSShades *module) {
+		INFO("Racket Science: RSShadesWidget()");
+
 		setModule(module);
 		this->module = module;
 

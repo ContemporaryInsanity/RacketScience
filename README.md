@@ -4,6 +4,12 @@ Modules for the VCV Rack virtual modular synthesizer.
 
 ![](./img/boogie.png)
 
+## PHYDEAUX III
+
+I know, yet another bloody step sequencer.  I built this as an exercise and as a result feel much more confident developing for VCV now.  It's the size of a bus so I named at after one of Frank Zappa's.
+
+You get sixteen patterns of four rows of sixteen steps with pulses and doors (gates that stay open across adjacent steps) for each step, each row also has an attenuverter and scaled CV output.  There are currently 276 parameters, 71 inputs, 148 outputs and 64 blinkenlights, in order to fit all of that into a meagre 104hp there are stealth sockets that only appear when you drag a cable, every pulse & door has it's own output and the buttons on the left also double up as inputs.  There are CV & write inputs, you can record a sequence from a midi keyboard should you wish.  Outputs can be fed back into inputs so, for instance, if you want a row to be eight steps long, set a pulse on the ninth step and feed that back to the index reset input for that row.  Similarly you can play back multiple pattern by feeding a EOC output back to the next pattern input.  You could use pulses from one row to step another row etc etc. The possibilties are endless really.
+
 ## Boogie Bay
 
 You've seen flying faders, with Boogie Bay you have sliding sockets for all of your wire wobbling needs.

@@ -32,6 +32,8 @@ Typically you would feed the phase input with a slow rising sawtooth from a LFO,
 
 **Racket Science** is copyright © 2020 Ewen Bates, specifically:
 
+The **brand name** **Racket Science**.
+
 All **source code** is copyright © 2020 Ewen Bates and is licensed under the [GNU General Public License v3.0](gpl-3.0.txt).
 
 All **graphics** in the `res` directory are copyright © 2020 Ewen Bates and licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).

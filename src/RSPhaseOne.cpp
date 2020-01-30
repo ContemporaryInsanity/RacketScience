@@ -378,16 +378,11 @@ struct RSPhaseOneDisplay : TransparentWidget {
 
 		// Divisions
 		nvgStrokeColor(args.vg, COLOR_WHITE);
-		float step = (float)module->SAMPLES / (float)module->divide;
-		//INFO("Racket Science: step %f", step);
-		float x = step;
-
-		while(x < module->SAMPLES - 1) {
-			nvgBeginPath(args.vg);
-			nvgMoveTo(args.vg, box.pos.x + x, box.pos.y);
-			nvgLineTo(args.vg, box.pos.x + x, box.pos.y + box.size.y);
-			nvgStroke(args.vg);
-			x += step;
+		for(int i = 0; i < box.size.x; i += box.size.x / module->divide) {
+				nvgBeginPath(args.vg);
+				nvgMoveTo(args.vg, box.pos.x + i, box.pos.y);
+				nvgLineTo(args.vg, box.pos.x + i, box.pos.y + box.size.y);
+				nvgStroke(args.vg);
 		}
 
 		// Index
@@ -418,7 +413,7 @@ struct RSPhaseOneWidget : ModuleWidget {
 		setModule(module);
 		this->module = module;
 
-		box.size = Vec(RACK_GRID_WIDTH * 72, RACK_GRID_HEIGHT);
+		box.size = Vec(RACK_GRID_WIDTH * 75, RACK_GRID_HEIGHT);
 		int middle = box.size.x / 2 + 1;
 
 		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSPhaseOne::THEME_BUTTON));
@@ -430,7 +425,7 @@ struct RSPhaseOneWidget : ModuleWidget {
 		addChild(ss = new RSScribbleStrip(5, 5));
 		if(module) module->ss = ss;
 
-		addChild(new RSPhaseOneDisplay(module, 20, 20, 1000, 200));
+		addChild(new RSPhaseOneDisplay(module, 20, 20, 1040, 200));
 
 		int x, y;
 

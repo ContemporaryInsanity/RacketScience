@@ -28,6 +28,8 @@ struct RSVectorVictor : Module {
 	};
 
 	RSVectorVictor() {
+        INFO("Racket Science: %i params  %i inputs  %i outputs  %i lights", NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 	}
 
@@ -61,6 +63,7 @@ struct RSVectorVictor : Module {
 	}
 
     json_t* dataToJson() override {
+        INFO("Racket Science: d2j()");
         json_t* rootJ = json_object();
 
         json_t* samplesAJ = json_array();
@@ -78,6 +81,7 @@ struct RSVectorVictor : Module {
     }
 
     void dataFromJson(json_t* rootJ) override {
+        INFO("Racket Science: dfj()");
         json_t* samplesAJ = json_object_get(rootJ, "samplesA");
         json_t* samplesBJ = json_object_get(rootJ, "samplesB");
 
@@ -92,10 +96,14 @@ struct RSVectorVictor : Module {
 
 
 struct RSVectorVictorWidget : ModuleWidget {
+    RSVectorVictor *module;
+
 	RSVectorVictorWidget(RSVectorVictor *module) {
         INFO("Racket Science: RSVectorVictorWidget()");
 
 		setModule(module);
+        this->module = module;
+
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/RSVectorVictor.svg")));
 
 		addInput(createInputCentered<RSJackMonoIn>(mm2px(Vec(7.398, 33.299)), module, RSVectorVictor::PHASEA_INPUT));
@@ -110,6 +118,8 @@ struct RSVectorVictorWidget : ModuleWidget {
 
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(18.102, 23.655)), module, RSVectorVictor::WRITEA_LIGHT));
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(18.097, 70.5)), module, RSVectorVictor::WRITEB_LIGHT));
+
+        INFO("Racket Science: exiting RSVectorVictorWidget()");
 	}
 };
 

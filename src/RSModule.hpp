@@ -29,6 +29,30 @@ static void saveRSGlobal() {
     }
 }
 
+/*
+void PatchManager::save(std::string path) {
+	INFO("Saving patch %s", path.c_str());
+	json_t* rootJ = toJson();
+	if (!rootJ)
+		return;
+	DEFER({
+		json_decref(rootJ);
+	});
+
+	// Write to temporary path and then rename it to the correct path
+	std::string tmpPath = path + ".tmp";
+	FILE* file = std::fopen(tmpPath.c_str(), "w");
+	if (!file) {
+		// Fail silently
+		return;
+	}
+
+	json_dumpf(rootJ, file, JSON_INDENT(2) | JSON_REAL_PRECISION(9));
+	std::fclose(file);
+	system::moveFile(tmpPath, path);
+}
+*/
+
 static void loadRSGlobal() {
 	INFO("Racket Science: loadRSGlobal()");
 
@@ -62,3 +86,35 @@ static void loadRSGlobal() {
         }
     }
 }
+
+/*
+bool PatchManager::load(std::string path) {
+	INFO("Loading patch %s", path.c_str());
+	FILE* file = std::fopen(path.c_str(), "r");
+	if (!file) {
+		// Exit silently
+		return false;
+	}
+	DEFER({
+		std::fclose(file);
+	});
+
+	json_error_t error;
+	json_t* rootJ = json_loadf(file, 0, &error);
+	if (!rootJ) {
+		std::string message = string::f("JSON parsing error at %s %d:%d %s", error.source, error.line, error.column, error.text);
+		osdialog_message(OSDIALOG_WARNING, OSDIALOG_OK, message.c_str());
+		return false;
+	}
+	DEFER({
+		json_decref(rootJ);
+	});
+
+	APP->history->clear();
+	APP->scene->rack->clear();
+	APP->scene->rackScroll->reset();
+	legacy = 0;
+	fromJson(rootJ);
+	return true;
+}
+*/

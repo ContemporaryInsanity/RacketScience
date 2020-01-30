@@ -50,7 +50,7 @@ extern Model *modelRSBoogieBayH8;
 extern Model *modelRSMFH;
 extern Model *modelRSBlank;
 extern Model *modelRSShades;
-extern Model *modelRS16Step;
+extern Model *modelRSFido316;
 extern Model *modelRSPhaseOne;
 extern Model *modelRSMissionControl;
 extern Model *modelRSLaunchControl;

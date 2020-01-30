@@ -2,7 +2,7 @@
 
 #include "RS.hpp"
 
-struct RS16Step : RSModule {
+struct RSFido316 : RSModule {
     static const int patterns = 16;
     static const int steps = 16;
     static const int rows = 4;
@@ -185,7 +185,7 @@ struct RS16Step : RSModule {
     dsp::PulseGenerator eocPulse[rows];	bool eoc[rows];
 
 
-    RS16Step() {
+    RSFido316() {
         INFO("Racket Science: %i params  %i inputs  %i outputs  %i lights", NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
         config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -747,15 +747,15 @@ struct RS16Step : RSModule {
 };
 
 
-struct RS16StepWidget : ModuleWidget {
-    RS16Step* module;
+struct RSFido316Widget : ModuleWidget {
+    RSFido316* module;
 
     int x, y, smlGap, lrgGap, labOfs;
 
     RSLabelCentered *patternLabel;
 
-    RS16StepWidget(RS16Step *module) {
-        INFO("Racket Science: RS16StepWidget()");
+    RSFido316Widget(RSFido316 *module) {
+        INFO("Racket Science: RSFido316Widget()");
         
         setModule(module);
         this->module = module;
@@ -763,9 +763,9 @@ struct RS16StepWidget : ModuleWidget {
         box.size = Vec(RACK_GRID_WIDTH * 104, RACK_GRID_HEIGHT);
         int middle = box.size.x / 2 + 1;
 
-        addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RS16Step::THEME_BUTTON));
+        addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSFido316::THEME_BUTTON));
 
-        addChild(new RSLabelCentered(middle, box.pos.y + 13, "PHYDEAUX III", 14, module));
+        addChild(new RSLabelCentered(middle, box.pos.y + 13, "PHYDEAUX III 16", 14, module));
         addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12, module));
 
         x = 60; y = 50;
@@ -776,15 +776,15 @@ struct RS16StepWidget : ModuleWidget {
         addChild(new RSLabelCentered(x, y - (labOfs * 1.5), "PATTERN", 10, module));
 
         // Pattern copy & paste
-        addParam(createParamCentered<RSButtonMomentary>(Vec(x - 30, y - smlGap + 3), module, RS16Step::COPY_PATTERN_BUTTON));
+        addParam(createParamCentered<RSButtonMomentary>(Vec(x - 30, y - smlGap + 3), module, RSFido316::COPY_PATTERN_BUTTON));
         addChild(new RSLabelCentered(x - 30, y - smlGap + 6, "COPY", 10, module));
 
-        addParam(createParamCentered<RSButtonMomentary>(Vec(x + 30, y - smlGap + 3), module, RS16Step::PASTE_PATTERN_BUTTON));
+        addParam(createParamCentered<RSButtonMomentary>(Vec(x + 30, y - smlGap + 3), module, RSFido316::PASTE_PATTERN_BUTTON));
         addChild(new RSLabelCentered(x + 30, y - smlGap + 6, "PASTE", 10, module));
         y += smlGap;
 
         // Pattern knob
-        addParam(createParamCentered<RSKnobDetentLrg>(Vec(x, y), module, RS16Step::PATTERN_KNOB));
+        addParam(createParamCentered<RSKnobDetentLrg>(Vec(x, y), module, RSFido316::PATTERN_KNOB));
         patternLabel = new RSLabelCentered(x, y + 5, "0", 22, module);
         addChild(patternLabel);
         y += smlGap + 12;
@@ -792,21 +792,21 @@ struct RS16StepWidget : ModuleWidget {
         // Pattern name scribble strip
         if(module) {
             addChild(module->ssPatternDescription = new RSScribbleStrip(x - 50, y, 100));
-            module->ssPatternDescription->setText(module->patternStore[(int)module->params[RS16Step::PATTERN_KNOB].getValue()].description);
+            module->ssPatternDescription->setText(module->patternStore[(int)module->params[RSFido316::PATTERN_KNOB].getValue()].description);
         }
         y += smlGap - 2;
 
         // Pattern prev / rand / next ins
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x - 30, y), module, RS16Step::PREV_PATTERN_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x - 30, y), module, RS16Step::PREV_PATTERN_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x - 30, y), module, RSFido316::PREV_PATTERN_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x - 30, y), module, RSFido316::PREV_PATTERN_IN));
         addChild(new RSLabelCentered(x - 30, y + 23, "PREV", 10, module));
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_PATTERN_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_PATTERN_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_PATTERN_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_PATTERN_IN));
         addChild(new RSLabelCentered(x, y + 23, "RAND", 10, module));
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x + 30, y), module, RS16Step::NEXT_PATTERN_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x + 30, y), module, RS16Step::NEXT_PATTERN_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x + 30, y), module, RSFido316::NEXT_PATTERN_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x + 30, y), module, RSFido316::NEXT_PATTERN_IN));
         addChild(new RSLabelCentered(x + 30, y + 23, "NEXT", 10, module));
 
         y += smlGap + 10;
@@ -815,33 +815,33 @@ struct RS16StepWidget : ModuleWidget {
         addChild(new RSLabelCentered(x, y, "RANDOMIZE", 10, module));
         x = 30; y += 18;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_PATTERN_STEPS_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_PATTERN_STEPS_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_PATTERN_STEPS_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_PATTERN_STEPS_IN));
         addChild(new RSLabelCentered(x, y + 23, "STEPS", 10, module));
         x += smlGap;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_PATTERN_DOORS_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_PATTERN_DOORS_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_PATTERN_DOORS_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_PATTERN_DOORS_IN));
         addChild(new RSLabelCentered(x, y + 23, "DOORS", 10, module));
         x += smlGap;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_PATTERN_PULSES_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_PATTERN_PULSES_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_PATTERN_PULSES_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_PATTERN_PULSES_IN));
         addChild(new RSLabelCentered(x, y + 23, "PULSES", 10, module));
         x = 30; y += smlGap + 10;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_PATTERN_SCALINGS_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_PATTERN_SCALINGS_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_PATTERN_SCALINGS_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_PATTERN_SCALINGS_IN));
         addChild(new RSLabelCentered(x, y + 23, "SCALING", 10, module));
         x += smlGap;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_PATTERN_IDXS_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_PATTERN_IDXS_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_PATTERN_IDXS_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_PATTERN_IDXS_IN));
         addChild(new RSLabelCentered(x, y + 23, "INDEX", 10, module));
         x += smlGap;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_PATTERN_ALL_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_PATTERN_ALL_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_PATTERN_ALL_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_PATTERN_ALL_IN));
         addChild(new RSLabelCentered(x, y + 23, "ALL", 10, module));
         y += smlGap + 10;
 
@@ -850,33 +850,33 @@ struct RS16StepWidget : ModuleWidget {
         addChild(new RSLabelCentered(x, y, "RESET", 10, module));
         x = 30; y += 18;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_PATTERN_STEPS_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_PATTERN_STEPS_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RESET_PATTERN_STEPS_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RESET_PATTERN_STEPS_IN));
         addChild(new RSLabelCentered(x, y + 23, "STEPS", 10, module));
         x += smlGap;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_PATTERN_DOORS_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_PATTERN_DOORS_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RESET_PATTERN_DOORS_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RESET_PATTERN_DOORS_IN));
         addChild(new RSLabelCentered(x, y + 23, "DOORS", 10, module));
         x += smlGap;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_PATTERN_PULSES_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_PATTERN_PULSES_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RESET_PATTERN_PULSES_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RESET_PATTERN_PULSES_IN));
         addChild(new RSLabelCentered(x, y + 23, "PULSES", 10, module));
         x = 30; y += smlGap + 10;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_PATTERN_SCALINGS_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_PATTERN_SCALINGS_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RESET_PATTERN_SCALINGS_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RESET_PATTERN_SCALINGS_IN));
         addChild(new RSLabelCentered(x, y + 23, "SCALING", 10, module));
         x += smlGap;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_PATTERN_IDXS_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_PATTERN_IDXS_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RESET_PATTERN_IDXS_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RESET_PATTERN_IDXS_IN));
         addChild(new RSLabelCentered(x, y + 23, "INDEX", 10, module));
         x += smlGap;
 
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_PATTERN_ALL_BUTTON));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_PATTERN_ALL_IN));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RESET_PATTERN_ALL_BUTTON));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RESET_PATTERN_ALL_IN));
         addChild(new RSLabelCentered(x, y + 23, "ALL", 10, module));
         x += smlGap;
 
@@ -945,78 +945,78 @@ struct RS16StepWidget : ModuleWidget {
 
     void addStepSeqRow(int row, int x, int y) {
         // Add prev step in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::PREV_STEP_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::PREV_STEP_INS + row));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::PREV_STEP_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::PREV_STEP_INS + row));
         x += smlGap;
 
         // Add next step in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::NEXT_STEP_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::NEXT_STEP_INS + row));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::NEXT_STEP_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::NEXT_STEP_INS + row));
         x -= smlGap; y += 30;
 
         // Add phase step in
-        addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RS16Step::PHASE_STEP_INS + row));
+        addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSFido316::PHASE_STEP_INS + row));
         x += smlGap;
 
         // Add rand step in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_STEP_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_STEP_INS + row));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_STEP_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_STEP_INS + row));
         x += smlGap; y -= 30;
 
         // Add CV in
-        addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RS16Step::CV_INS + row));
+        addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSFido316::CV_INS + row));
         y += 30;
 
         // Add write in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::WRITE_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::WRITE_INS + row));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::WRITE_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::WRITE_INS + row));
         x += smlGap; y -= 30;
         
         // Add randomize all in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_ALL_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_ALL_INS + row));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_ALL_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_ALL_INS + row));
         x += smlGap;
         
         // Add randomize steps in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_STEPS_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_STEPS_INS  + row ));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_STEPS_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_STEPS_INS  + row ));
         x -= smlGap; y += 30;
 
         // Add randomize doors in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_DOORS_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_DOORS_INS  + row ));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_DOORS_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_DOORS_INS  + row ));
         x += smlGap;
 
         // Add randomize pulses in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RAND_PULSES_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RAND_PULSES_INS  + row ));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RAND_PULSES_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RAND_PULSES_INS  + row ));
         x += smlGap; y -= 30;
 
         // Add reset step in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_STEP_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_STEP_INS + row));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RESET_STEP_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RESET_STEP_INS + row));
         x += smlGap;
 
         // Add reset steps in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_STEPS_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_STEPS_INS + row));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RESET_STEPS_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RESET_STEPS_INS + row));
         x -= smlGap; y += 30;
 
         // Add reset doors in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_DOORS_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_DOORS_INS + row));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RESET_DOORS_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RESET_DOORS_INS + row));
         x += smlGap;
 
         // Add reset pulses in
-        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RS16Step::RESET_PULSES_BUTTONS + row));
-        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RS16Step::RESET_PULSES_INS + row));
+        addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::RESET_PULSES_BUTTONS + row));
+        addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::RESET_PULSES_INS + row));
         x += smlGap; y -= 30;
 
         // Add copy & paste
-        addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RS16Step::COPY_ROW_BUTTONS + row));
+        addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSFido316::COPY_ROW_BUTTONS + row));
         addChild(new RSLabelCentered(x, y + 3, "COPY", 10, module));
         y += 30;
-        addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RS16Step::PASTE_ROW_BUTTONS + row));
+        addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSFido316::PASTE_ROW_BUTTONS + row));
         addChild(new RSLabelCentered(x, y + 3, "PASTE", 10, module));
         x += smlGap; y -= 30;
         
@@ -1024,49 +1024,49 @@ struct RS16StepWidget : ModuleWidget {
 
         // Add step knobs & lights, door & pulse buttons, door & pulse outputs
         for(int step = 0; step < module->steps; step++, x += lrgGap) {
-            addParam(createParamCentered<RSKnobMed>(Vec(x, y), module, RS16Step::STEP_KNOBS + (row * module->steps) + step));
-            addChild(createLightCentered<LargeLight<GreenLight>>(Vec(x, y), module, RS16Step::STEP_LIGHTS + (row * module->steps) + step));
+            addParam(createParamCentered<RSKnobMed>(Vec(x, y), module, RSFido316::STEP_KNOBS + (row * module->steps) + step));
+            addChild(createLightCentered<LargeLight<GreenLight>>(Vec(x, y), module, RSFido316::STEP_LIGHTS + (row * module->steps) + step));
 
-            addParam(createParamCentered<RSButtonToggle>(Vec(x - 15, y + 42), module, RS16Step::DOOR_BUTTONS + (row * module->steps) + step));
-            addOutput(createOutputCentered<RSStealthJackSmallMonoOut>(Vec(x - 15, y + 42), module, RS16Step::DOORS_OUTS + (row * module->steps) + step));
+            addParam(createParamCentered<RSButtonToggle>(Vec(x - 15, y + 42), module, RSFido316::DOOR_BUTTONS + (row * module->steps) + step));
+            addOutput(createOutputCentered<RSStealthJackSmallMonoOut>(Vec(x - 15, y + 42), module, RSFido316::DOORS_OUTS + (row * module->steps) + step));
 
-            addParam(createParamCentered<RSButtonToggle>(Vec(x + 15, y + 42), module, RS16Step::PULSE_BUTTONS + (row * module->steps) + step));
-            addOutput(createOutputCentered<RSStealthJackSmallMonoOut>(Vec(x + 15, y + 42), module, RS16Step::PULSES_OUTS + (row * module->steps) + step));
+            addParam(createParamCentered<RSButtonToggle>(Vec(x + 15, y + 42), module, RSFido316::PULSE_BUTTONS + (row * module->steps) + step));
+            addOutput(createOutputCentered<RSStealthJackSmallMonoOut>(Vec(x + 15, y + 42), module, RSFido316::PULSES_OUTS + (row * module->steps) + step));
         }
 
         // Add scale knob
-        addParam(createParamCentered<RSKnobSml>(Vec(x, y), module, RS16Step::SCALE_KNOBS + row));
+        addParam(createParamCentered<RSKnobSml>(Vec(x, y), module, RSFido316::SCALE_KNOBS + row));
         y += 30;
 
         // Add offset knob
-        addParam(createParamCentered<RSKnobSml>(Vec(x, y), module, RS16Step::OFFSET_KNOBS + row));
+        addParam(createParamCentered<RSKnobSml>(Vec(x, y), module, RSFido316::OFFSET_KNOBS + row));
         x += smlGap; y -= 30;
 
         // Add door out
-        addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RS16Step::DOOR_OUTS + row));
+        addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSFido316::DOOR_OUTS + row));
         x += smlGap;
 
         // add pulse out
-        addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RS16Step::PULSE_OUTS + row));
+        addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSFido316::PULSE_OUTS + row));
         x += smlGap;
 
         // Add EOC out
-        addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RS16Step::EOC_OUTS + row));
+        addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSFido316::EOC_OUTS + row));
         x -= smlGap * 2; x += 15; y += 30;
 
         // Add raw CV out
-        addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RS16Step::RAW_CV_OUTS + row));
+        addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSFido316::RAW_CV_OUTS + row));
         x += smlGap;
 
         // Add scaled CV out
-        addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RS16Step::SCALED_CV_OUTS + row));
+        addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSFido316::SCALED_CV_OUTS + row));
     }
 
     void step() override {
         if(!module) return;
 
         // Pattern selection
-        module->pattern = (int)module->params[RS16Step::PATTERN_KNOB].getValue();
+        module->pattern = (int)module->params[RSFido316::PATTERN_KNOB].getValue();
         if(module->pattern != module->priorPattern) {
             patternLabel->text = std::to_string(module->pattern + 1);
             module->savePattern(module->priorPattern);
@@ -1075,19 +1075,19 @@ struct RS16StepWidget : ModuleWidget {
         }
 
         // Pattern copy & paste
-        if(module->copyPatternTrigger.process(module->params[RS16Step::COPY_PATTERN_BUTTON].getValue())) {
+        if(module->copyPatternTrigger.process(module->params[RSFido316::COPY_PATTERN_BUTTON].getValue())) {
             module->copyPattern();
         }
-        if(module->pastePatternTrigger.process(module->params[RS16Step::PASTE_PATTERN_BUTTON].getValue())) {
+        if(module->pastePatternTrigger.process(module->params[RSFido316::PASTE_PATTERN_BUTTON].getValue())) {
             module->pastePattern();
         }
 
         // Row copy & paste
         for(int row = 0; row < module->rows; row++) {
-            if(module->copyRowTrigger[row].process(module->params[RS16Step::COPY_ROW_BUTTONS + row].getValue())) {
+            if(module->copyRowTrigger[row].process(module->params[RSFido316::COPY_ROW_BUTTONS + row].getValue())) {
                 module->copyRow(row);
             }
-            if(module->pasteRowTrigger[row].process(module->params[RS16Step::PASTE_ROW_BUTTONS + row].getValue())) {
+            if(module->pasteRowTrigger[row].process(module->params[RSFido316::PASTE_ROW_BUTTONS + row].getValue())) {
                 module->pasteRow(row);
             }
         }
@@ -1099,4 +1099,4 @@ struct RS16StepWidget : ModuleWidget {
     #include "RSModuleWidgetDraw.hpp"
 };
 
-Model *modelRS16Step = createModel<RS16Step, RS16StepWidget>("RS16Step");
+Model *modelRSFido316 = createModel<RSFido316, RSFido316Widget>("RSFido316");

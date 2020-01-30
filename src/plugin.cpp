@@ -21,7 +21,7 @@ void init(Plugin *p) {
 	p->addModel(modelRSMFH);
 	p->addModel(modelRSBlank);
 	p->addModel(modelRSShades);
-	p->addModel(modelRS16Step);
+	p->addModel(modelRSFido316);
 	p->addModel(modelRSPhaseOne);
 	p->addModel(modelRSMissionControl);
 	p->addModel(modelRSLaunchControl);

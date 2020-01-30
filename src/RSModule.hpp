@@ -23,13 +23,6 @@ static void updateRSTheme(int themeIdx) {
 static void saveRSGlobal() {
 	INFO("Racket Science: saveRsGlobal()");
 
-    // std::string RSGFile = asset::user("RacketScience/RSGlobal.dat");
-    // FILE *file = fopen(RSGFile.c_str(), "w");
-    // if(file) {
-    //     fwrite(&RSGlobal, sizeof(struct rsglobal), 1, file);
-    //     fclose(file);
-    // }
-
     std::string RSGFile = asset::user("RacketScience/RSGlobal.json");;
     FILE *file = fopen(RSGFile.c_str(), "w");
     if(file) {
@@ -85,15 +78,11 @@ static void loadRSGlobal() {
             // LEDs here too once complete
             updateRSTheme(i);
         }
-
-        //RSGlobal.themeIdx = 0;
-        //updateRSTheme(RSGlobal.themeIdx);
         saveRSGlobal();
     }
     else {
         FILE *file = fopen(RSGFile.c_str(), "r");
         if(file) {
-            //fread(&RSGlobal, sizeof(struct rsglobal), 1, file);
             json_error_t error;
             json_t* rootJ = json_loadf(file, 0, &error);
             if(!rootJ) {
@@ -147,35 +136,3 @@ static void loadRSGlobal() {
         }
     }
 }
-
-/*
-bool PatchManager::load(std::string path) {
-	INFO("Loading patch %s", path.c_str());
-	FILE* file = std::fopen(path.c_str(), "r");
-	if (!file) {
-		// Exit silently
-		return false;
-	}
-	DEFER({
-		std::fclose(file);
-	});
-
-	json_error_t error;
-	json_t* rootJ = json_loadf(file, 0, &error);
-	if (!rootJ) {
-		std::string message = string::f("JSON parsing error at %s %d:%d %s", error.source, error.line, error.column, error.text);
-		osdialog_message(OSDIALOG_WARNING, OSDIALOG_OK, message.c_str());
-		return false;
-	}
-	DEFER({
-		json_decref(rootJ);
-	});
-
-	APP->history->clear();
-	APP->scene->rack->clear();
-	APP->scene->rackScroll->reset();
-	legacy = 0;
-	fromJson(rootJ);
-	return true;
-}
-*/

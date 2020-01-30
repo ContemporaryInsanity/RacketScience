@@ -1,8 +1,8 @@
 # Racket Science
 Modules for the VCV Rack virtual modular synthesizer.
-![](./img/fido3.png)
 
 ## PHYDEAUX III
+![](./img/fido3.png)
 
 I know, yet another bloody step sequencer, in fact it nearly got called YABSS.  I built this as an exercise and as a result feel much more confident developing for VCV now.  It's the size of a bus so I named it after one of Frank Zappa's.
 
@@ -10,9 +10,10 @@ You get sixteen patterns of four rows of sixteen steps with pulses and doors (ga
 
 There are also phase inputs so it can be driven by modules such as ZZC and run backwards if you like.
 
-![](./img/boogie.png) 
 
 ## Boogie Bay
+
+![](./img/boogie.png) 
 
 You've seen flying faders, with Boogie Bay you have sliding sockets for all of your wire wobbling needs.
 These modules also double up as voltage indicators, right click on the vertical 2 channel BB for range menu, BBH8 range can be selected for each channel by clicking on the individual voltage labels, also BBH8 has invisible scribble strips, click on an underscore to enter text to describe each channel.

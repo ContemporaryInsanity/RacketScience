@@ -26,6 +26,8 @@ struct rsglobal {
     static const int themeCount = 16;
     int themeIdx;
     rstheme themes[themeCount];
+    int logLevel;
+    int rateDivider;
 };
 
 extern rsglobal RSGlobal;

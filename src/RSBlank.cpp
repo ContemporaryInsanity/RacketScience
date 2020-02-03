@@ -26,7 +26,7 @@
 
 struct RSBlank : RSModule {
 	enum ParamIds {
-		THEME_BUTTON,
+		THEME_KNOB,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -44,14 +44,10 @@ struct RSBlank : RSModule {
 	RSBlank() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-        configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
+		configParam(THEME_KNOB, 1.f, 16.f, 1.f, "THEME");
 	}
 
 	void process(const ProcessArgs &args) override {
-		if(themeTrigger.process(params[THEME_BUTTON].getValue())) {
-			RSTheme++;
-			if(RSTheme > RSGlobal.themeCount) RSTheme = 1;
-		}
 
 	}
 
@@ -81,7 +77,7 @@ struct RSBlankWidget : ModuleWidget {
         box.size = Vec(RACK_GRID_WIDTH * 3, RACK_GRID_HEIGHT);
 		int middle = box.size.x / 2 + 1;
 
-		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSBlank::THEME_BUTTON));
+		addParam(createParamCentered<RSKnobDetentInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSBlank::THEME_KNOB));
 
         addChild(new RSLabelCentered(middle, box.size.y - 15, "Racket", 12, module));
         addChild(new RSLabelCentered(middle, box.size.y - 4, "Science", 12, module));
@@ -94,6 +90,9 @@ struct RSBlankWidget : ModuleWidget {
 
     void step() override {
         rightHandle->box.pos.x = box.size.x - rightHandle->box.size.x;
+
+		if(module) module->RSTheme = module->params[RSBlank::THEME_KNOB].getValue();
+
         ModuleWidget::step();
     }
 

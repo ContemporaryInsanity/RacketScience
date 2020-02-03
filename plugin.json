@@ -118,6 +118,15 @@
       ]
     },
     {
+      "slug": "RSPhaseFour",
+      "name": "RSPhaseFour",
+      "description": "Phase Recorder / Step Sequencer",
+      "tags": [
+        "Recorder",
+        "Sequencer"
+      ]
+    },
+    {
       "slug": "RSMissionControl",
       "name": "RSMissionControl",
       "description": "Seuqncer Launcher Sequencer",

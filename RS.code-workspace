@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "/home/ewen/Rack-SDK"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"atomic": "cpp",
+			"memory_resource": "cpp",
+			"*.tcc": "cpp",
+			"tuple": "cpp"
+		}
+	}
+}

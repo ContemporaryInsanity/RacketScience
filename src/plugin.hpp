@@ -52,5 +52,6 @@ extern Model *modelRSBlank;
 extern Model *modelRSShades;
 extern Model *modelRSFido316;
 extern Model *modelRSPhaseOne;
+extern Model *modelRSPhaseFour;
 extern Model *modelRSMissionControl;
 extern Model *modelRSLaunchControl;

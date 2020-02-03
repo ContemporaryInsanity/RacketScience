@@ -940,10 +940,10 @@ struct RSFido316Widget : ModuleWidget {
         addChild(new RSLabelCentered(x, y, "SCALED", 10, module));
 
         x = 130; y = 50;
-        for(int row = 0, rowGap = 85; row < module->rows; row++, y += rowGap) addStepSeqRow(row, x, y);
+        for(int row = 0, rowGap = 85; row < module->rows; row++, y += rowGap) addRow(row, x, y);
     }
 
-    void addStepSeqRow(int row, int x, int y) {
+    void addRow(int row, int x, int y) {
         // Add prev step in
         addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSFido316::PREV_STEP_BUTTONS + row));
         addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSFido316::PREV_STEP_INS + row));

@@ -304,7 +304,7 @@ struct RSPhaseOneDisplay : TransparentWidget {
 			nvgText(args.vg, box.pos.x + box.size.x / 2, box.pos.y + 180, "Please consider donating : )", NULL);
 			nvgStroke(args.vg);
 			
-			return; // Down here so the module browser thumbnailer gets to see above
+			return;
 		}
 
 		// Centre line

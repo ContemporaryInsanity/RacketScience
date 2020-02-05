@@ -29,8 +29,9 @@ struct RSPhaseFour : RSModule {
 		ENUMS(DIVIDE_KNOBS, rows),
 		ENUMS(SELECT_KNOBS, rows),
 		ENUMS(ADJUST_KNOBS, rows),
+		ENUMS(MOVE_KNOBS, rows),
 
-		ENUMS(BAKE_BUTTONS, rows),		
+		ENUMS(BAKE_BUTTONS, rows),
 
 		NUM_PARAMS
 	};
@@ -50,6 +51,9 @@ struct RSPhaseFour : RSModule {
 		NUM_INPUTS
 	};
 	enum OutputIds {
+		ENUMS(REC_CV_OUTS, rows),
+		ENUMS(OVL_CV_OUTS, rows),
+
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -59,8 +63,11 @@ struct RSPhaseFour : RSModule {
 
 	dsp::BooleanTrigger themeTrigger;
 
-	RSScribbleStrip *ss = NULL;
+	dsp::BooleanTrigger clearTrigger[rows];
+	dsp::BooleanTrigger randTrigger[rows];
+	dsp::BooleanTrigger bakeTrigger[rows];
 
+	RSScribbleStrip *ss = NULL;
 
 	int pattern;
 
@@ -87,6 +94,17 @@ struct RSPhaseFour : RSModule {
 
 		for(int row = 0; row < rows; row++) {
 			configParam(SCRUB_KNOBS + row, -INFINITY, INFINITY, 0.f, "SCRUB");
+			
+			configParam(ENABLE_BUTTONS + row, 0.f, 1.f, 1.f, "WRITE ENABLE");
+			configParam(WRITE_BUTTONS + row, 0.f, 1.f, 0.f, "WRITE");
+
+			configParam(CLEAR_BUTTONS + row, 0.f, 1.f, 0.f, "CLEAR");
+			configParam(RAND_BUTTONS + row, 0.f, 1.f, 0.f, "RANDOMIZE");
+
+			configParam(DIVIDE_KNOBS + row, 1.f, 64.f, 1.f, "DIVIDE");
+			configParam(SELECT_KNOBS + row, 1.f, 64.f, 1.f, "SELECT");
+			configParam(ADJUST_KNOBS + row, -10.f, 10.f, 0.f, "ADJUST");
+			configParam(MOVE_KNOBS + row, -INFINITY, INFINITY, 0.f, "MOVE");
 			
 			recIdx[row] = 0; ovlIdx[row] = 0;
 			enable[row] = false; write[row] = false;
@@ -126,43 +144,70 @@ struct RSPhaseFour : RSModule {
 			if(params[ENABLE_BUTTONS + row].getValue()) {
 				if(inputs[WRITE_INS + row].isConnected()) write[row] = RSclamp(inputs[WRITE_INS + row].getVoltage(), 0.f, 1.f) ? true : false;
 				else                                      write[row] = params[WRITE_BUTTONS + row].getValue() ? true : false;
-				if(write[row]) recBuffer[row][recIdx[row]] = cvIn;
+				if(write[row]) {
+					recBuffer[row][recIdx[row]] = cvIn;
+					// Calc / recalc min / max here
+				}
 			}
 
+			// Should do following in widget step()
+			divide[row] = (int)params[DIVIDE_KNOBS + row].getValue();
+			if(divide[row] != priorDivide[row]) updateOverlay(row);
+
+			if(clearTrigger[row].process(params[CLEAR_BUTTONS + row].getValue() > 0.f)) onClear(row);
+			if(randTrigger[row].process(params[RAND_BUTTONS + row].getValue() > 0.f)) onRand(row);
+
+			// Bake
+			if(bakeTrigger[row].process(params[BAKE_BUTTONS + row].getValue() > 0.f)) onBake(row);
 
 
+			// rec CV out
+			outputs[REC_CV_OUTS + row].setVoltage(recBuffer[row][recIdx[row]]);
 
+			// ovl CV out
+			outputs[OVL_CV_OUTS + row].setVoltage(ovlBuffer[row][recIdx[row]]); // [ovlIdx[row]]
 
 		}
 	}
 
 	void updateOverlay(int row) {
 		float step = (float)samples / (float)divide[row];
-		for(unsigned int i = 0; i < samples - 1; i += step) {
-			for(unsigned int j = i; j < i + step; j++) {
+		for(int i = 0; i < samples - 1; i += step) {
+			for(int j = i; j < i + step; j++) {
 				if(j < samples) ovlBuffer[row][j] = recBuffer[row][i];
 			}
 		}
 	}
 
+	void onClear(int row) {
+		for(int i = 0; i < samples; i ++) {
+			recBuffer[row][i] = 0.f;
+			ovlBuffer[row][i] = 0.f;
+		}
+	}
+
+	void onRand(int row) {
+		std::random_device rd;
+		std::mt19937 e2(rd());
+		std::uniform_real_distribution<> dist(-10.f, 10.f);
+		for(int i = 0; i < samples; i++) recBuffer[row][i] = dist(e2);
+		updateOverlay(row);
+	}
+
+	void onBake(int row) {
+		for(int i = 0; i < samples; i++) recBuffer[row][i] = ovlBuffer[row][i];
+	}
+
 	void onReset() override {
-		for(int row = 0; row < rows; row++) std::memset(recBuffer[row], 0, sizeof(recBuffer[row]));
+		for(int row = 0; row < rows; row++) onClear(row);
 	}
 
 	void onRandomize() override {
 		std::random_device rd;
 		std::mt19937 e2(rd());
 		std::uniform_real_distribution<> dist(-10.f, 10.f);
-		for(int row = 0; row < rows; row++) {
-			for(int i = 0; i < samples; i++) recBuffer[row][i] = dist(e2);
-			updateOverlay(row);
-		}
+		for(int row = 0; row < rows; row++) onRand(row);
 	}
-
-	void onBake(int row) {
-		std::memcpy(recBuffer[row], ovlBuffer[row], sizeof(recBuffer[row]));
-	}
-
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
@@ -235,7 +280,7 @@ struct RSPhaseDisplay : TransparentWidget {
 		// Bounding box
 		nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
 		nvgFillColor(args.vg, COLOR_BLACK);
-		nvgStrokeWidth(args.vg, 2.f);
+		nvgStrokeWidth(args.vg, 1.5f);
 
 		nvgBeginPath(args.vg);
 		nvgRoundedRect(args.vg, box.pos.x, box.pos.y, box.size.x, box.size.y, 5);
@@ -275,7 +320,6 @@ struct RSPhaseDisplay : TransparentWidget {
 		// Center line
 		int centerLine = box.pos.y + (box.size.y / 2);
 		nvgStrokeColor(args.vg, COLOR_BLUE);
-		nvgStrokeWidth(args.vg, 2);
 		nvgBeginPath(args.vg);
 		nvgMoveTo(args.vg, box.pos.x, centerLine);
 		nvgLineTo(args.vg, box.pos.x + box.size.x, centerLine);
@@ -291,6 +335,28 @@ struct RSPhaseDisplay : TransparentWidget {
 			nvgLineTo(args.vg, box.pos.x + i, centerLine - val);
 		}
 		nvgStroke(args.vg);
+
+		// ovlBuffer
+		nvgStrokeColor(args.vg, COLOR_RED);
+		nvgBeginPath(args.vg);
+		nvgMoveTo(args.vg, box.pos.x, centerLine - (module->ovlBuffer[row][0] / 20 * box.size.y));
+		for(int i = 0; i < box.size.x; i++) {
+			unsigned int idx = module->samples / box.size.x * i;
+			int val = module->ovlBuffer[row][idx] / 20 * box.size.y;
+			nvgLineTo(args.vg, box.pos.x + i, centerLine - val);
+		}
+		nvgStroke(args.vg);
+
+		// Divisions
+		nvgStrokeColor(args.vg, COLOR_WHITE);
+		for(int i = 0; i < box.size.x; i += box.size.x / module->divide[row]) {
+				nvgBeginPath(args.vg);
+				nvgMoveTo(args.vg, box.pos.x + i, box.pos.y);
+				nvgLineTo(args.vg, box.pos.x + i, box.pos.y + box.size.y);
+				nvgStroke(args.vg);
+		}
+
+
 
 
 
@@ -330,7 +396,7 @@ struct RSPhaseFourWidget : ModuleWidget {
 
 		x = 60; y = 50;
 		smlGap = 30; lrgGap = 65;
-		labOfs = 20;
+		labOfs = 22;
 
 		// Pattern section
 		addChild(new RSLabelCentered(x, y - (labOfs * 1.5), "PATTERN", 10, module));
@@ -359,7 +425,7 @@ struct RSPhaseFourWidget : ModuleWidget {
 		// Right side labels
 
 		
-		x = 145; y = 50;
+		x = 145; y = 55;
 		for(int row = 0, rowGap = 90; row < module->rows; row++, y += rowGap) addRow(row, x, y, 70);
 	}
 
@@ -371,6 +437,7 @@ struct RSPhaseFourWidget : ModuleWidget {
 
 		// Add CV in
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSPhaseFour::CV_INS + row));
+		addChild(new RSLabelCentered(x, y + labOfs, "CV IN", 10, module));
 		x += smlGap;
 
 		// Add write enable, button & in
@@ -380,13 +447,50 @@ struct RSPhaseFourWidget : ModuleWidget {
 		y += 30;
 		addParam(createParamCentered<RSRoundButtonMomentary>(Vec(x, y), module, RSPhaseFour::WRITE_BUTTONS + row));
 		addInput(createInputCentered<RSStealthJackMonoIn>(Vec(x, y), module, RSPhaseFour::WRITE_INS + row));
+		addChild(new RSLabelCentered(x, y + labOfs, "WRITE"));
+		x += smlGap;
+		y -= 30;
 
+		// Add clear & randomize
+		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSPhaseFour::CLEAR_BUTTONS + row));
+		addChild(new RSLabelCentered(x, y - 14, "CLEAR", 10, module));
+		y += 30;
+		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSPhaseFour::RAND_BUTTONS + row));
+		addChild(new RSLabelCentered(x, y + 22, "RAND", 10, module));
+		x += smlGap;
+		y -= 30;
 
+		// Add divide, select, adjust & move knobs
+		addParam(createParamCentered<RSKnobDetentSml>(Vec(x, y), module, RSPhaseFour::DIVIDE_KNOBS + row));
+		addChild(new RSLabelCentered(x, y - 14, "DIVIDE", 10, module));
+		y += 30;
+		addParam(createParamCentered<RSKnobDetentSml>(Vec(x, y), module, RSPhaseFour::ADJUST_KNOBS + row));
+		addChild(new RSLabelCentered(x, y + 22, "ADJUST", 10, module));
+		x += smlGap;
+		y -= 30;
+		addParam(createParamCentered<RSKnobDetentSml>(Vec(x, y), module, RSPhaseFour::SELECT_KNOBS + row));
+		addChild(new RSLabelCentered(x, y - 14, "SELECT", 10, module));
+		y += 30;
+		addParam(createParamCentered<RSKnobDetentSml>(Vec(x, y), module, RSPhaseFour::MOVE_KNOBS + row));
+		addChild(new RSLabelCentered(x, y + 22, "MOVE", 10, module));
+		x += smlGap;
 
+		// Add bake buttons
+		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSPhaseFour::BAKE_BUTTONS + row));
+		addChild(new RSLabelCentered(x, y -14, "BAKE", 10, module));
+		x += smlGap;
 
-		x = 370; // So we line up with Fido3 steps
-		addChild(new RSPhaseDisplay(module, row, x, y - smlGap, 1040, h));
+		//x = 370; // So we line up with Fido3 steps
+		addChild(new RSPhaseDisplay(module, row, x, y - 45, 1040, h));
+		x += 1040 + smlGap;
+		y -= smlGap;
 
+		// rec CV out
+		addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSPhaseFour::REC_CV_OUTS + row));
+		y += smlGap;
+
+		// ovl CV out
+		addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSPhaseFour::OVL_CV_OUTS + row));
 	}
 
 	void step() override {

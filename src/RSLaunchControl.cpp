@@ -146,7 +146,7 @@ struct RSLaunchControlWidget : ModuleWidget {
         setModule(module);
         this->module = module;
 
-        box.size = Vec(RACK_GRID_WIDTH * 30, RACK_GRID_HEIGHT);
+        box.size = Vec(RACK_GRID_WIDTH * 26, RACK_GRID_HEIGHT);
         int middle = box.size.x / 2 + 1;
 
         addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSLaunchControl::THEME_BUTTON));

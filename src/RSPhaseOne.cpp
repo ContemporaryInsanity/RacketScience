@@ -136,7 +136,10 @@ struct RSPhaseOne : RSModule {
 		if(params[ENABLE_PARAM].getValue() > 0.f) {
 			if(inputs[WRITE_INPUT].isConnected()) write = RSclamp(inputs[WRITE_INPUT].getVoltage(), 0.f, 1.f) > 0.f ? true : false;
 			else								  write = params[WRITE_PARAM].getValue() > 0.f ? true : false;
-			if(write) recBuffer[recIdx] = in;
+			if(write) {
+				recBuffer[recIdx] = in;
+				// Get min / max for scaling here
+			}
 		}
 
 		// Get divide
@@ -159,6 +162,8 @@ struct RSPhaseOne : RSModule {
 
 		// Get adjust
 
+
+		// Get move
 
 
 		//if(phaseIn < priorPhaseIn) INFO("Racket Science: EOC");

@@ -373,7 +373,7 @@ struct RSFido316 : RSModule {
             for(int row = 0; row < rows; row++) {
                 // Process write CV in
                 // Subtle bug solved, using a door to update a step via CV in & write could touch the next step if this is processed after 
-                //   step processing as step index could change before door closes
+                //   step processing as step index could change before door closes, only took one sample
                 if(inputs[CV_INS + row].isConnected())
                     if(inputs[WRITE_INS + row].getVoltage() or params[WRITE_BUTTONS + row].getValue()) 
                         params[STEP_KNOBS + (row * steps) + stepIdx[row]].setValue(RSclamp(inputs[CV_INS + row].getVoltage(), -10.f, 10.f));

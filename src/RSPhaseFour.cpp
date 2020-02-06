@@ -153,6 +153,7 @@ struct RSPhaseFour : RSModule {
 			// Should do following in widget step()
 			divide[row] = (int)params[DIVIDE_KNOBS + row].getValue();
 			if(divide[row] != priorDivide[row]) updateOverlay(row);
+			priorDivide[row] = divide[row]; // Else we eat CPU
 
 			if(clearTrigger[row].process(params[CLEAR_BUTTONS + row].getValue() > 0.f)) onClear(row);
 			if(randTrigger[row].process(params[RAND_BUTTONS + row].getValue() > 0.f)) onRand(row);
@@ -349,16 +350,12 @@ struct RSPhaseDisplay : TransparentWidget {
 
 		// Divisions
 		nvgStrokeColor(args.vg, COLOR_WHITE);
-		for(int i = 0; i < box.size.x; i += box.size.x / module->divide[row]) {
+		for(int i = box.size.x / module->divide[row]; i < box.size.x; i += box.size.x / module->divide[row]) {
 				nvgBeginPath(args.vg);
 				nvgMoveTo(args.vg, box.pos.x + i, box.pos.y);
 				nvgLineTo(args.vg, box.pos.x + i, box.pos.y + box.size.y);
 				nvgStroke(args.vg);
 		}
-
-
-
-
 
 		// Index
 		nvgStrokeColor(args.vg, *write == true ? COLOR_RED : COLOR_RS_GREY);
@@ -368,8 +365,6 @@ struct RSPhaseDisplay : TransparentWidget {
 		nvgMoveTo(args.vg, box.pos.x + (box.size.x / module->samples * *idx), box.pos.y);
 		nvgLineTo(args.vg, box.pos.x + (box.size.x / module->samples * *idx), box.pos.y + box.size.y);
 		nvgStroke(args.vg);
-
-
 	};
 };
 

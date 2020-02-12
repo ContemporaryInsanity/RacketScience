@@ -13,11 +13,11 @@ struct RSMajorTom : RSModule {
 
 		PULSE_A_BUTTON,
 		GATE_A_BUTTON,
-		TOGGLE_A_BUTTON,
+		DOOR_A_BUTTON,
 
 		PULSE_B_BUTTON,
 		GATE_B_BUTTON,
-		TOGGLE_B_BUTTON,
+		DOOR_B_BUTTON,
 
 		NUM_PARAMS
 	};
@@ -59,11 +59,11 @@ struct RSMajorTom : RSModule {
 
 		configParam(PULSE_A_BUTTON, 0.f, 1.f, 0.f, "PULSE");
 		configParam(GATE_A_BUTTON, 0.f, 1.f, 0.f, "GATE");
-		configParam(TOGGLE_A_BUTTON, 0.f, 1.f, 0.f, "TOGGLE");
+		configParam(DOOR_A_BUTTON, 0.f, 1.f, 0.f, "DOOR");
 
 		configParam(PULSE_B_BUTTON, 0.f, 1.f, 0.f, "PULSE");
 		configParam(GATE_B_BUTTON, 0.f, 1.f, 0.f, "GATE");
-		configParam(TOGGLE_B_BUTTON, 0.f, 1.f, 0.f, "TOGGLE");
+		configParam(DOOR_B_BUTTON, 0.f, 1.f, 0.f, "DOOR");
 
 		pulseA = pulseB = false;
 	}
@@ -86,7 +86,7 @@ struct RSMajorTom : RSModule {
 		outputs[ATT_B_OUT].setVoltage(cvOut);
 
 		// Pulses / gates
-		if(params[TOGGLE_A_BUTTON].getValue()) pulseA = true;
+		if(params[DOOR_A_BUTTON].getValue()) pulseA = true;
 		else {
 			pulseA = false;
 			if(pulseTiggerA.process(params[PULSE_A_BUTTON].getValue() > 0.f)) pulseGeneratorA.trigger(1e-3f);
@@ -94,7 +94,7 @@ struct RSMajorTom : RSModule {
 			if(params[GATE_A_BUTTON].getValue()) pulseA = true;
 		}
 
-		if(params[TOGGLE_B_BUTTON].getValue()) pulseB = true;
+		if(params[DOOR_B_BUTTON].getValue()) pulseB = true;
 		else {
 			pulseB = false;
 			if(pulseTriggerB.process(params[PULSE_B_BUTTON].getValue() > 0.f)) pulseGeneratorB.trigger(1e-3f);
@@ -166,7 +166,7 @@ struct RSMajorTomWidget : ModuleWidget {
 		y += smlGap;
 
 		// Pulses / gates
-		addChild(new RSLabelCentered(middle, y, "PULSES / GATES", 10, module));
+		addChild(new RSLabelCentered(middle, y, "PULSES / GATES / DOORS", 10, module));
 		x = 25; y += labOfs;
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSMajorTom::PULSE_A_BUTTON));
 		addChild(new RSLabelCentered(x, y + 3, "PULSE", 10, module));
@@ -174,8 +174,8 @@ struct RSMajorTomWidget : ModuleWidget {
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSMajorTom::GATE_A_BUTTON));
 		addChild(new RSLabelCentered(x, y + 3, "GATE", 10, module));
 		x += smlGap;
-		addParam(createParamCentered<RSButtonToggle>(Vec(x, y), module, RSMajorTom::TOGGLE_A_BUTTON));
-		addChild(new RSLabelCentered(x, y + 3, "TOGGLE", 9, module));
+		addParam(createParamCentered<RSButtonToggle>(Vec(x, y), module, RSMajorTom::DOOR_A_BUTTON));
+		addChild(new RSLabelCentered(x, y + 3, "DOOR", 10, module));
 		x += smlGap;
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSMajorTom::PULSEGATE_A_OUT));
 
@@ -186,8 +186,8 @@ struct RSMajorTomWidget : ModuleWidget {
 		addParam(createParamCentered<RSButtonMomentary>(Vec(x, y), module, RSMajorTom::GATE_B_BUTTON));
 		addChild(new RSLabelCentered(x, y + 3, "GATE", 10, module));
 		x += smlGap;
-		addParam(createParamCentered<RSButtonToggle>(Vec(x, y), module, RSMajorTom::TOGGLE_B_BUTTON));
-		addChild(new RSLabelCentered(x, y + 3, "TOGGLE", 9, module));
+		addParam(createParamCentered<RSButtonToggle>(Vec(x, y), module, RSMajorTom::DOOR_B_BUTTON));
+		addChild(new RSLabelCentered(x, y + 3, "DOOR", 10, module));
 		x += smlGap;
 		addOutput(createOutputCentered<RSJackMonoOut>(Vec(x, y), module, RSMajorTom::PULSEGATE_B_OUT));
 		y += smlGap;

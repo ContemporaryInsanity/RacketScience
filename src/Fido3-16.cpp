@@ -157,7 +157,8 @@ struct RSFido316 : RSModule {
     PatternBuffer patternStore[patterns] = {};
     RSScribbleStrip *ssPatternDescription;
     int pattern, priorPattern;
-    
+    bool jsonLoaded = false;
+
 
     dsp::BooleanTrigger copyPatternTrigger, pastePatternTrigger;
 
@@ -417,7 +418,10 @@ struct RSFido316 : RSModule {
 
                     // Process pulses
                     if(stepIdx[row] != priorStepIdx[row]) {
-                        if(params[PULSE_BUTTONS + (row * steps) + stepIdx[row]].getValue()) rowPulse[row][stepIdx[row]].trigger();
+                        if(params[PULSE_BUTTONS + (row * steps) + stepIdx[row]].getValue()) {
+                            rowPulse[row][stepIdx[row]].trigger();
+                            stepPulse[row][stepIdx[row]].trigger();
+                        }
                     }
                     else rowPulse[row][stepIdx[row]].reset();
                     priorStepIdx[row] = stepIdx[row];
@@ -499,15 +503,9 @@ struct RSFido316 : RSModule {
 
                 // Output step doors & pulses
                 for(int step = 0; step < steps; step++) {
-                    if(step == stepIdx[row]) {
-                        outputs[DOORS_OUTS + (row * steps) + step].setVoltage(params[DOOR_BUTTONS + (row * steps) + step].getValue() ? 10.f : 0.f);
-                        if(params[PULSE_BUTTONS + (row * steps) + step].getValue()) stepPulse[row][step].trigger();
-                    }
-                    else {
-                        outputs[DOORS_OUTS + (row * steps) + step].setVoltage(0.f);
-                    }
-
-                    outputs[PULSES_OUTS + (row * steps) + step].setVoltage(stepPulse[row][step].process(1.f /  args.sampleRate));
+                    if(step == stepIdx[row]) outputs[DOORS_OUTS + (row * steps) + step].setVoltage(params[DOOR_BUTTONS + (row * steps) + step].getValue() ? 10.f : 0.f);
+                    else outputs[DOORS_OUTS + (row * steps) + step].setVoltage(0.f);
+                    outputs[PULSES_OUTS + (row * steps) + step].setVoltage(stepPulse[row][step].process(1.f /  args.sampleRate) ? 10.f : 0.f);
                 }
             }
         }
@@ -680,6 +678,8 @@ struct RSFido316 : RSModule {
     }
 
     json_t* dataToJson() override {
+        INFO("Racket Science: toJson pattern %i", pattern);
+
         json_t* rootJ = json_object();
         json_object_set_new(rootJ, "theme", json_integer(RSTheme));
 
@@ -705,11 +705,13 @@ struct RSFido316 : RSModule {
             }
             json_object_set_new(rootJ, ("pattern" + std::to_string(pattern)).c_str(), patternJ);
         }
-        
+
         return rootJ;
     }
 
     void dataFromJson(json_t* rootJ) override {
+        INFO("Racket Science: fromJson pattern %i", pattern);
+
         json_t* themeJ = json_object_get(rootJ, "theme");
         if(themeJ) RSTheme = json_integer_value(themeJ);
 
@@ -727,6 +729,7 @@ struct RSFido316 : RSModule {
                         json_t* offsetJ = json_object_get(rowJ, "offset");
                         if(offsetJ) patternStore[pattern].rowBuffer[row].offset = json_real_value(offsetJ);
                     }
+                    else INFO("Racket Science: rowJ %i NULL", row);
 
                     for(int step = 0; step < steps; step++) {
                         json_t* stepsJ = json_object_get(rowJ, ("step" + std::to_string(step)).c_str());
@@ -738,11 +741,15 @@ struct RSFido316 : RSModule {
                             json_t* pulseJ = json_object_get(stepsJ, "pulse");
                             if(pulseJ) patternStore[pattern].rowBuffer[row].step[step].pulse = json_boolean_value(pulseJ);
                         }
+                        else INFO("Racket Science: stepsJ %i NULL", step);
                     }
                 }
             }
+            else INFO("Racket Science: patternJ %i NULL", pattern);
         }
-        loadPattern(pattern);
+        INFO("Racket Science: fromJson end pattern %i desc15 %s", pattern, patternStore[15].description);
+        //loadPattern(pattern);
+        jsonLoaded = true;
     }
 };
 
@@ -1069,7 +1076,8 @@ struct RSFido316Widget : ModuleWidget {
         module->pattern = (int)module->params[RSFido316::PATTERN_KNOB].getValue();
         if(module->pattern != module->priorPattern) {
             patternLabel->text = std::to_string(module->pattern + 1);
-            module->savePattern(module->priorPattern);
+            if(module->jsonLoaded) module->jsonLoaded = false;
+            else module->savePattern(module->priorPattern);
             module->loadPattern(module->pattern);
             module->priorPattern = module->pattern;
         }

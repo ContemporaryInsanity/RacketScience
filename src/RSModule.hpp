@@ -21,7 +21,7 @@ static void updateRSTheme(int themeIdx) {
 }
 
 static void saveRSGlobal() {
-	INFO("Racket Science: saveRsGlobal()");
+	INFO("Racket Science: saveRSGlobal()");
 
     std::string RSGFile = asset::user("RacketScience/RSGlobal.json");;
     FILE *file = fopen(RSGFile.c_str(), "w");

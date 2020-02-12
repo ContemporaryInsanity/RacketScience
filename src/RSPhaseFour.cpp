@@ -141,6 +141,7 @@ struct RSPhaseFour : RSModule {
 			float cvIn = RSclamp(inputs[CV_INS + row].getVoltage(), -10.f, 10.f);
 
 			// Get write from write in or button if enabled
+			write[row] = false;
 			if(params[ENABLE_BUTTONS + row].getValue()) {
 				if(inputs[WRITE_INS + row].isConnected()) write[row] = RSclamp(inputs[WRITE_INS + row].getVoltage(), 0.f, 1.f) ? true : false;
 				else                                      write[row] = params[WRITE_BUTTONS + row].getValue() ? true : false;
@@ -359,7 +360,7 @@ struct RSPhaseDisplay : TransparentWidget {
 
 		// Index
 		nvgStrokeColor(args.vg, *write == true ? COLOR_RED : COLOR_RS_GREY);
-		nvgStrokeWidth(args.vg, 2.f);
+		nvgStrokeWidth(args.vg, 1.f);
 
 		nvgBeginPath(args.vg);
 		nvgMoveTo(args.vg, box.pos.x + (box.size.x / module->samples * *idx), box.pos.y);

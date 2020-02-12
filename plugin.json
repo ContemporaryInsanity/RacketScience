@@ -26,7 +26,6 @@
       "name": "RSMajorTom",
       "description": "Colour cycling",
       "tags": [
-        "Visual",
         "Utility"
       ]
     },
@@ -88,6 +87,7 @@
       "name": "RSBlank",
       "description": "Resizeable blank panel",
       "tags": [
+        "Visual",
         "Utility"
       ]
     },

@@ -391,7 +391,10 @@ struct RSFido316 : RSModule {
                            eocPulse[row].trigger();
 
                     if(phaseStep[row] != priorPhaseStep[row]) {
-                        if(params[PULSE_BUTTONS + (row * steps) + stepIdx[row]].getValue()) rowPulse[row][stepIdx[row]].trigger();
+                        if(params[PULSE_BUTTONS + (row * steps) + stepIdx[row]].getValue()) {
+                            rowPulse[row][stepIdx[row]].trigger();
+                            stepPulse[row][stepIdx[row]].trigger();
+                        }
                     }
                     else rowPulse[row][stepIdx[row]].reset();
 

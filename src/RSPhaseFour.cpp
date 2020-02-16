@@ -3,20 +3,11 @@
 #include "RS.hpp"
 
 struct RSPhaseFour : RSModule {
-	static const int patterns = 16;
 	static const int samples = 1000;
 	static const int rows = 4;
 
 	enum ParamIds {
 		THEME_BUTTON,
-
-		PATTERN_KNOB,
-		COPY_PATTERN_BUTTON,
-		PASTE_PATTERN_BUTTON,
-
-		NEXT_PATTERN_BUTTON,
-		RAND_PATTERN_BUTTON,
-		PREV_PATTERN_BUTTON,
 
 		ENUMS(SCRUB_KNOBS, rows),
 
@@ -36,10 +27,6 @@ struct RSPhaseFour : RSModule {
 		NUM_PARAMS
 	};
 	enum InputIds {
-		NEXT_PATTERN_IN,
-		RAND_PATTERN_IN,
-		PREV_PATTERN_IN,
-
 		ENUMS(PHASE_INS, rows),
 
 		ENUMS(WRITE_INS, rows),
@@ -69,8 +56,6 @@ struct RSPhaseFour : RSModule {
 
 	RSScribbleStrip *ss = NULL;
 
-	int pattern;
-
 	float recBuffer[rows][samples] = {}; unsigned int recIdx[rows];
 	float ovlBuffer[rows][samples] = {}; unsigned int ovlIdx[rows];
 	bool enable[rows], write[rows];
@@ -83,14 +68,6 @@ struct RSPhaseFour : RSModule {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
         configParam(THEME_BUTTON, 0.f, 1.f, 0.f, "THEME");
-
-		configParam(PATTERN_KNOB, 0.f, (float) patterns - 1, 0.f, "PATTERN SELECT");
-        configParam(COPY_PATTERN_BUTTON, 0.f, 1.f, 0.f, "COPY PATTERN");
-        configParam(PASTE_PATTERN_BUTTON, 0.f, 1.f, 0.f, "PASTE PATTERN");
-
-        configParam(PREV_PATTERN_BUTTON, 0.f, 1.f, 0.f, "PREV PATTERN");
-        configParam(RAND_PATTERN_BUTTON, 0.f, 1.f, 0.f, "RAND PATTERN");
-        configParam(NEXT_PATTERN_BUTTON, 0.f, 1.f, 0.f, "NEXT PATTERN");
 
 		for(int row = 0; row < rows; row++) {
 			configParam(SCRUB_KNOBS + row, -INFINITY, INFINITY, 0.f, "SCRUB");
@@ -223,10 +200,12 @@ struct RSPhaseFour : RSModule {
 		json_t* recSamples = json_array();
 		json_t* ovlSamples = json_array();
 
-		// for(int i = 0; i < samples; i++) {
-		// 	json_array_append_new(recSamples, json_real(recBuffer[i]));
-		// 	json_array_append_new(ovlSamples, json_real(ovlBuffer[i]));
-		// }
+		for(int row = 0; row < rows; row++) {
+			for(int i = 0; i < samples; i++) {
+				json_array_append_new(recSamples, json_real(recBuffer[row][i]));
+				json_array_append_new(ovlSamples, json_real(ovlBuffer[row][i]));
+			}
+		}
 
 		json_object_set_new(rootJ, "recSamples", recSamples);
 		json_object_set_new(rootJ, "ovlSamples", ovlSamples);
@@ -245,10 +224,12 @@ struct RSPhaseFour : RSModule {
 		json_t* ovlSamples = json_object_get(rootJ, "ovlSamples");
 
 		if(recSamples && ovlSamples) {
-			// for(int i = 0; i < samples; i++) {
-			// 	recBuffer[i] = json_number_value(json_array_get(recSamples, i));
-			// 	ovlBuffer[i] = json_number_value(json_array_get(ovlSamples, i));
-			// }
+			for(int row = 0; row < rows; row++) {
+				for(int i = 0; i < samples; i++) {
+					recBuffer[row][i] = json_number_value(json_array_get(recSamples, i));
+					ovlBuffer[row][i] = json_number_value(json_array_get(ovlSamples, i));
+				}
+			}
 		}
 	}
 };
@@ -382,7 +363,7 @@ struct RSPhaseFourWidget : ModuleWidget {
 		setModule(module);
 		this->module = module;
 
-		box.size = Vec(RACK_GRID_WIDTH * 104, RACK_GRID_HEIGHT);
+		box.size = Vec(RACK_GRID_WIDTH * 97, RACK_GRID_HEIGHT);
 		int middle = box.size.x / 2 + 1;
 
 		addParam(createParamCentered<RSButtonMomentaryInvisible>(Vec(box.pos.x + 5, box.pos.y + 5), module, RSPhaseFour::THEME_BUTTON));
@@ -390,28 +371,9 @@ struct RSPhaseFourWidget : ModuleWidget {
 		addChild(new RSLabelCentered(middle, box.pos.y + 13, "PHASE IV", 14, module));
 		addChild(new RSLabelCentered(middle, box.size.y - 4, "Racket Science", 12, module));
 
-		x = 60; y = 50;
+		x = 40; y = 50;
 		smlGap = 30; lrgGap = 65;
 		labOfs = 22;
-
-		// Pattern section
-		addChild(new RSLabelCentered(x, y - (labOfs * 1.5), "PATTERN", 10, module));
-
-		// Pattern copy & paste
-        addParam(createParamCentered<RSButtonMomentary>(Vec(x - 30, y - smlGap + 3), module, RSPhaseFour::COPY_PATTERN_BUTTON));
-        addChild(new RSLabelCentered(x - 30, y - smlGap + 6, "COPY", 10, module));
-
-        addParam(createParamCentered<RSButtonMomentary>(Vec(x + 30, y - smlGap + 3), module, RSPhaseFour::PASTE_PATTERN_BUTTON));
-        addChild(new RSLabelCentered(x + 30, y - smlGap + 6, "PASTE", 10, module));
-        y += smlGap;
-
-        // Pattern knob
-        addParam(createParamCentered<RSKnobDetentLrg>(Vec(x, y), module, RSPhaseFour::PATTERN_KNOB));
-        patternLabel = new RSLabelCentered(x, y + 5, "0", 22, module);
-        addChild(patternLabel);
-        y += smlGap + 12;
-
-		// More pattern stuff here
 
 
 		// Left side labels
@@ -420,8 +382,7 @@ struct RSPhaseFourWidget : ModuleWidget {
 
 		// Right side labels
 
-		
-		x = 145; y = 55;
+	
 		for(int row = 0, rowGap = 90; row < module->rows; row++, y += rowGap) addRow(row, x, y, 70);
 	}
 
@@ -429,7 +390,7 @@ struct RSPhaseFourWidget : ModuleWidget {
 		// Add scrub knob & phase in
 		addParam(createParamCentered<RSKnobMed>(Vec(x, y), module, RSPhaseFour::SCRUB_KNOBS + row));
 		addInput(createInputCentered<RSStealthJackSmallMonoIn>(Vec(x, y), module, RSPhaseFour::PHASE_INS + row));
-		x += lrgGap;
+		x += lrgGap - 15;
 
 		// Add CV in
 		addInput(createInputCentered<RSJackMonoIn>(Vec(x, y), module, RSPhaseFour::CV_INS + row));

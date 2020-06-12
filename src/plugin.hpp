@@ -55,3 +55,4 @@ extern Model *modelRSPhaseOne;
 extern Model *modelRSPhaseFour;
 extern Model *modelRSMissionControl;
 extern Model *modelRSLaunchControl;
+extern Model *modelRSXYGLR;

@@ -145,6 +145,15 @@
       ]
     },
     {
+      "slug": "RSXYGLR",
+      "name": "RSXYGLR",
+      "description": "XY Pad Loop Recorder",
+      "tags": [
+        "Recorder",
+        "Sequencer"
+      ]
+    },
+    {
       "slug": "RSVectorVictor",
       "name": "RSVectorVictor",
       "description": "Phase Driven CV Looper",

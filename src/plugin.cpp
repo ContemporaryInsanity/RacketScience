@@ -26,6 +26,7 @@ void init(Plugin *p) {
 	p->addModel(modelRSPhaseFour);	
 	p->addModel(modelRSMissionControl);
 	p->addModel(modelRSLaunchControl);
+	p->addModel(modelRSXYGLR);
 
 	p->addModel(modelRSVectorVictor);
 	

@@ -68,7 +68,7 @@ struct RSXYGLR : RSModule {
 
             outputs[X_OUT].setVoltage(x[idx]);
             outputs[Y_OUT].setVoltage(y[idx]);
-            outputs[G_OUT].setVoltage(g[idx]);
+            outputs[G_OUT].setVoltage(g[idx] ? 10.f : 0.f);
         }
 
         if(params[CLEAR_BUTTON].getValue()) std::memset(g, 0, sizeof(g));
@@ -85,6 +85,20 @@ struct RSXYGLR : RSModule {
 
         json_object_set_new(rootJ, "theme", json_integer(RSTheme));
 
+        json_t* xSamples = json_array();
+        json_t* ySamples = json_array();
+        json_t* gSamples = json_array();
+
+        for(int i = 0; i < samples; i++) {
+            json_array_append_new(xSamples, json_real(x[i]));
+            json_array_append_new(ySamples, json_real(y[i]));
+            json_array_append_new(gSamples, json_boolean(g[i]));
+        }
+
+        json_object_set_new(rootJ, "x", xSamples);
+        json_object_set_new(rootJ, "y", ySamples);
+        json_object_set_new(rootJ, "g", gSamples);
+
         return rootJ;
     }
 
@@ -92,6 +106,18 @@ struct RSXYGLR : RSModule {
         json_t* themeJ = json_object_get(rootJ, "theme");
 
         if(themeJ) RSTheme = json_integer_value(themeJ);
+
+        json_t* xSamples = json_object_get(rootJ, "x");
+        json_t* ySamples = json_object_get(rootJ, "y");
+        json_t* gSamples = json_object_get(rootJ, "g");
+
+        if(xSamples && ySamples && gSamples) {
+            for(int i = 0; i < samples; i++) {
+                x[i] = json_number_value(json_array_get(xSamples, i));
+                y[i] = json_number_value(json_array_get(ySamples, i));
+                g[i] = json_boolean_value(json_array_get(gSamples, i));
+            }
+        }
     }
 };
 
@@ -200,6 +226,10 @@ struct RSXYGBufferDisplay : TransparentWidget {
         nvgLineTo(args.vg, box.pos.x + (box.size.x / module->samples * module->idx), box.pos.y + box.size.y);
         nvgStroke(args.vg);
 
+        nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
+        nvgBeginPath(args.vg);
+        nvgRoundedRect(args.vg, box.pos.x, box.pos.y, box.size.x, box.size.y, 5);
+        nvgStroke(args.vg);
     };
 };
 

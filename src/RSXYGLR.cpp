@@ -35,7 +35,7 @@ struct RSXYGLR : RSModule {
 
     float phaseIn, xIn, yIn;
     bool gIn;
-    unsigned int idx;
+    unsigned int idx = 0;
 
     RSXYGLR() {
         config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -51,14 +51,14 @@ struct RSXYGLR : RSModule {
 			if(RSTheme > RSGlobal.themeCount) RSTheme = 1;
 		}
 
+        xIn = RSclamp(inputs[X_IN].getVoltage(), 0.f, 10.f);
+        yIn = RSclamp(inputs[Y_IN].getVoltage(), 0.f, 10.f);
+        gIn = inputs[G_IN].getVoltage() > 0.f ? true : false;
+
         if(inputs[PHASE_IN].isConnected()) {
             phaseIn = RSclamp(inputs[PHASE_IN].getVoltage(), 0.f, 10.f);
             idx = phaseIn * samples / 10.f;
             if(idx >= samples) idx = samples - 1;
-
-            xIn = RSclamp(inputs[X_IN].getVoltage(), 0.f, 10.f);
-            yIn = RSclamp(inputs[Y_IN].getVoltage(), 0.f, 10.f);
-            gIn = inputs[G_IN].getVoltage() > 0.f ? true : false;
 
             if(gIn) {
                 x[idx] = xIn;
@@ -71,7 +71,7 @@ struct RSXYGLR : RSModule {
             outputs[G_OUT].setVoltage(g[idx] ? 10.f : 0.f);
         }
 
-        if(params[CLEAR_BUTTON].getValue()) std::memset(g, 0, sizeof(g));
+        if(params[CLEAR_BUTTON].getValue()) onReset();
     }
 
     void onReset() override {
@@ -173,7 +173,6 @@ struct RSXYGBufferDisplay : TransparentWidget {
     };
 
     void draw(const DrawArgs& args) override {
-
         // Bounding box
         nvgStrokeColor(args.vg, COLOR_RS_BRONZE);
         nvgFillColor(args.vg, COLOR_BLACK);

@@ -70,6 +70,11 @@ struct RSXYGLR : RSModule {
             outputs[Y_OUT].setVoltage(y[idx]);
             outputs[G_OUT].setVoltage(g[idx] ? 10.f : 0.f);
         }
+        else {
+            outputs[X_OUT].setVoltage(xIn);
+            outputs[Y_OUT].setVoltage(yIn);
+            outputs[G_OUT].setVoltage(gIn);
+        }
 
         if(params[CLEAR_BUTTON].getValue()) onReset();
     }
